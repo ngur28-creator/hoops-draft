@@ -1,0 +1,8 @@
+# 82-0 Hoops Draft: a static game page plus one leaderboard function.
+[build]
+  publish = "site"
+  # Runs the leaderboard tests on every deploy; if they fail, the live site stays on the last good version
+  command = "npm test"
+
+[functions]
+  node_bundler = "esbuild"
