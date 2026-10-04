@@ -4,5 +4,8 @@
   # Runs the leaderboard tests on every deploy; if they fail, the live site stays on the last good version
   command = "npm test"
 
+[build.environment]
+  NODE_VERSION = "22"
+
 [functions]
   node_bundler = "esbuild"
