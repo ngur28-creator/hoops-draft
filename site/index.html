@@ -26,18 +26,25 @@
   --board-dim: #a9b2c4;
   --display: "Big Shoulders Display", "Oswald", "Arial Narrow", Impact, sans-serif;
   --body: "Barlow", "Segoe UI", system-ui, sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --sub: var(--muted);
+  --bronze: #9a5b22;
+  --silver: #6d7785;
+  --plat: #2f86a8;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #0f1520; --plank: #121a27; --panel: #172133; --ink: #f0e7d7; --ink-2: #0b111b; --muted: #a59d8b;
     --line: #2a3850; --court: #e0704f; --accent: #f07a38; --accent-ink: #1a0f08; --navy: #94b4ea; --gold: #e2b24a;
     --win: #4cbb7c; --loss: #e5625b; --warn: #e3a54a; --empty: #222e43; --board-fg: #f6ead6; --board-dim: #8d97ab; color-scheme: dark;
+    --bronze: #d79a5e; --silver: #b8c2cf; --plat: #6cc4e6;
   }
 }
 :root[data-theme="dark"] {
   --bg: #0f1520; --plank: #121a27; --panel: #172133; --ink: #f0e7d7; --ink-2: #0b111b; --muted: #a59d8b;
   --line: #2a3850; --court: #e0704f; --accent: #f07a38; --accent-ink: #1a0f08; --navy: #94b4ea; --gold: #e2b24a;
   --win: #4cbb7c; --loss: #e5625b; --warn: #e3a54a; --empty: #222e43; --board-fg: #f6ead6; --board-dim: #8d97ab; color-scheme: dark;
+  --bronze: #d79a5e; --silver: #b8c2cf; --plat: #6cc4e6;
 }
 * { box-sizing: border-box; }
 html, body { overflow-x: hidden; }
@@ -256,6 +263,76 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
 .toast b { color: var(--gold); }
 #confetti { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 25; }
 
+/* Career: level bar */
+.xpb { font-size: 12px; font-weight: 700; color: var(--gold); }
+.career { display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: auto auto; gap: 4px 14px; align-items: center; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; }
+.career .lvl { display: flex; align-items: center; gap: 10px; grid-row: 1 / 3; }
+.lvlnum { display: grid; place-items: center; min-width: 50px; height: 50px; padding: 0 8px; border-radius: 10px; background: var(--ink); color: var(--bg); font-family: var(--display); font-weight: 900; font-size: 30px; font-variant-numeric: tabular-nums; }
+.career .lvl b { display: block; font-family: var(--display); font-weight: 900; font-size: 24px; line-height: 1; }
+.career .note { font-size: 13px; }
+.xpbar, .pbar { display: block; height: 10px; border-radius: 999px; background: var(--empty); overflow: hidden; }
+.xpbar i, .pbar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--accent), var(--gold)); border-radius: inherit; transition: width .6s ease; }
+
+/* Challenges */
+.chs { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+.chcard { display: grid; gap: 6px; align-content: start; border: 1px solid var(--line); border-left: 5px solid var(--win); border-radius: 10px; padding: 10px 12px; background: var(--bg); min-width: 0; }
+.chcard.t2 { border-left-color: var(--navy); }
+.chcard.t3 { border-left-color: var(--accent); }
+.chcard b { font-weight: 700; line-height: 1.3; }
+.chcard .btn { justify-self: start; }
+
+/* Rules */
+.rulesbar { display: grid; gap: 6px; padding-bottom: 12px; border-bottom: 1px dashed var(--line); }
+.rules { display: flex; flex-wrap: wrap; gap: 6px; }
+.rule { border: 1px solid var(--line); background: var(--bg); color: var(--ink); padding: 5px 11px; border-radius: 999px; font-size: 13px; font-weight: 700; }
+.rule span { color: var(--muted); font-weight: 600; margin-left: 2px; }
+.rule.on { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.rule.on span { color: var(--gold); }
+.rule:disabled { opacity: .5; cursor: not-allowed; }
+.rule.on:disabled { opacity: .9; }
+
+/* XP after a season */
+.xpsum { border: 1px solid color-mix(in srgb, var(--gold) 55%, var(--line)); background: color-mix(in srgb, var(--gold) 10%, var(--bg)); border-radius: 10px; padding: 10px 12px; display: grid; gap: 8px; }
+.xpsum h3 { color: var(--accent); font-size: 26px; }
+.xplog { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px; font-size: 14px; }
+.xplog li { display: flex; justify-content: space-between; gap: 12px; }
+.xplog b { font-variant-numeric: tabular-nums; color: var(--win); white-space: nowrap; }
+
+/* Trophy tiers */
+.tcat { grid-column: 1 / -1; display: flex; align-items: baseline; gap: 10px; margin-top: 8px; }
+.tcat:first-child { margin-top: 0; }
+.badge .tiername { font-size: 10.5px; font-weight: 700; letter-spacing: .6px; text-transform: uppercase; }
+.badge.tier1 .tiername { color: var(--bronze); }
+.badge.tier2 .tiername { color: var(--silver); }
+.badge.tier3 .tiername { color: var(--gold); }
+.badge.tier4 .tiername { color: var(--plat); }
+.badge.got.tier4 { border-color: var(--plat); background: color-mix(in srgb, var(--plat) 12%, var(--bg)); }
+.badge .pbar { height: 6px; margin-top: 4px; }
+.badge .ptext { font-size: 11px; }
+
+/* Collection */
+.collbars { display: grid; gap: 8px; }
+.cbar { display: grid; grid-template-columns: 12em minmax(0, 1fr) 7.5em; gap: 10px; align-items: center; font-size: 14px; }
+.cbar .cn { text-align: right; font-variant-numeric: tabular-nums; color: var(--muted); font-size: 13px; }
+.cbar.legendary .pbar i { background: var(--gold); }
+.cbar.epic .pbar i { background: var(--plat); }
+.cbar.rare .pbar i { background: var(--navy); }
+.cbar.common .pbar i { background: var(--muted); }
+.cgroup { display: grid; gap: 6px; }
+.cgroup:empty { display: none; }
+.cchips { display: flex; flex-wrap: wrap; gap: 6px; }
+.cchip { border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px; font-size: 13px; font-weight: 700; background: var(--bg); }
+.cchip small { font-weight: 500; color: var(--muted); }
+.cchip.legendary { border-color: var(--gold); background: color-mix(in srgb, var(--gold) 14%, var(--bg)); }
+.cchip.epic { border-color: var(--plat); }
+.cchip.rare { border-color: var(--navy); }
+.boss { border: 1px dashed var(--line); border-radius: 6px; padding: 2px 8px; font-size: 12px; font-weight: 700; color: var(--muted); }
+.boss.got { border-style: solid; border-color: var(--accent); color: var(--ink); background: color-mix(in srgb, var(--accent) 10%, var(--bg)); }
+.round.boss { border-color: var(--gold); }
+.round .legend { font-size: 12px; color: var(--muted); }
+.chip.new { border-color: var(--win); color: var(--win); }
+.chip.new.legend { border-color: var(--gold); color: var(--gold); background: color-mix(in srgb, var(--gold) 12%, transparent); }
+
 @media (max-width: 860px) {
   .prow { grid-template-columns: minmax(0, 1fr) auto; }
   .prow .pstats { grid-column: 1 / -1; grid-row: 2; grid-template-columns: repeat(7, minmax(0, 1fr)); }
@@ -269,6 +346,10 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
   .brow { grid-template-columns: 1.6em minmax(0, 1fr); }
   .brow .po, .brow .lu, .brow .date { grid-column: 2; }
   .bests { margin-left: 0; }
+  .cbar { grid-template-columns: minmax(0, 1fr) auto; }
+  .cbar .pbar { grid-column: 1 / -1; grid-row: 2; }
+  .career { grid-template-columns: minmax(0, 1fr); }
+  .career .lvl { grid-row: auto; }
 }
 @media (prefers-reduced-motion: reduce) { .slot.flash, .reel.land .val { animation: none; } }
 </style>
@@ -281,7 +362,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
         <h1>82<span class="dash">–</span>0 Hoops Draft</h1>
         <p class="sub">Roll a random era and franchise, draft anyone who played there, five times over. Then chase 82–0, a 16–0 title run, and every trophy in the case.</p>
       </div>
-      <label class="hard" for="hardmode"><input type="checkbox" id="hardmode"> Hard mode (blind picks)</label>
+      <label class="hard" for="hardmode"><input type="checkbox" id="hardmode"> Hard mode (blind picks) <span class="xpb">+50% XP</span></label>
     </div>
     <div class="modebar">
       <div class="tabs" role="group" aria-label="Game mode">
@@ -290,7 +371,17 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
       <span class="confirm" id="modeAsk" hidden>Start over? Your current picks will be lost. <button class="btn sm" id="modeYes">Start over</button><button class="btn sm" id="modeNo">Keep drafting</button></span>
       <div class="bests" id="bests"></div>
     </div>
+    <div class="career" aria-label="Your level">
+      <div class="lvl"><span class="lvlnum" id="lvlNum">1</span><div><b id="lvlTitle">Rookie</b><span class="label" id="xpText">0 / 150 XP</span></div></div>
+      <span class="xpbar" aria-hidden="true"><i id="xpFill"></i></span>
+      <span class="note" id="xpNext"></span>
+    </div>
   </header>
+
+  <section class="panel stack" id="chPanel" aria-label="Challenges">
+    <div class="head"><h2>Challenges</h2><span class="label" id="chSum"></span></div>
+    <div class="chs" id="chList"></div>
+  </section>
 
   <section class="panel lineup" aria-label="Your starting five">
     <svg class="courtlines" viewBox="0 0 1000 240" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
@@ -308,6 +399,10 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
   </section>
 
   <section class="panel stack" id="drawPanel" aria-label="Current draw">
+    <div class="rulesbar">
+      <div class="head"><span class="label">Rules</span><span class="note" id="rulesNote"></span></div>
+      <div class="rules" id="rules" role="group" aria-label="Rules for this draft"></div>
+    </div>
     <div class="reels">
       <div class="reel" id="eraReel"><div class="label">Era</div><div class="val" id="eraVal">—</div></div>
       <div class="reel" id="teamReel"><div class="label">Franchise</div><div class="val" id="teamVal">—</div></div>
@@ -332,6 +427,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
 
   <section class="panel stack" id="simPanel" hidden aria-label="Projection">
     <div class="head"><h2>Projection</h2><span class="label">Use “Move to” above to try other setups</span></div>
+    <span class="label" id="simRules"></span>
     <div class="grades" id="projGrades"></div>
     <div class="chem" id="chem"></div>
     <div class="row-gap">
@@ -358,6 +454,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
     </div>
 
     <div class="panel stack" id="afterPanel" hidden>
+      <div class="xpsum" id="xpSum" hidden></div>
       <div class="awards" id="awards"></div>
       <div class="stack">
         <span class="label">Top performances</span>
@@ -400,14 +497,26 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
     <div class="plist" id="bookRows"></div>
     <div class="row-gap">
       <button class="btn sm" id="clearBook">Clear history</button>
-      <span class="confirm" id="clearAsk" hidden>Delete every saved season and trophy? <button class="btn sm" id="clearYes">Delete</button><button class="btn sm" id="clearNo">Keep</button></span>
+      <span class="confirm" id="clearAsk" hidden>Delete every saved season and trophy? Your level and collection stay. <button class="btn sm" id="clearYes">Delete</button><button class="btn sm" id="clearNo">Keep</button></span>
       <span class="note">Saved in this browser, along with any draft in progress.</span>
     </div>
   </section>
 
   <section class="panel stack" id="trophyPanel" aria-label="Trophy case">
     <div class="head"><h2>Trophy case</h2><span class="label" id="trophySum"></span></div>
+    <div class="seg" role="group" aria-label="Which trophies to show" id="trophyFilter">
+      <button data-v="all" aria-pressed="true">All</button><button data-v="got" aria-pressed="false">Unlocked</button><button data-v="locked" aria-pressed="false">Still to get</button>
+    </div>
     <div class="badges" id="badges"></div>
+  </section>
+
+  <section class="panel stack" id="collPanel" aria-label="Your collection">
+    <div class="head"><h2>Collection</h2><span class="label" id="collSum"></span></div>
+    <p class="note">Every player you draft joins your collection for good. Players you've never drafted are marked New on the roster.</p>
+    <div class="collbars" id="collBars"></div>
+    <div class="cgroup" id="collChase"></div>
+    <div class="cgroup" id="collRecent"></div>
+    <div class="cgroup" id="collBosses"></div>
   </section>
 
   <section class="panel stack" id="lbPanel" aria-label="Global leaderboard">
@@ -501,12 +610,22 @@ let view = "team";
 let query = "";
 let speed = "normal";
 function fresh() {
-  S = { lineup: { PG: null, SG: null, SF: null, PF: null, C: null }, draw: null, teamRedraw: 1, eraRedraw: 1, spinning: false, done: false, mode, day: todayKey(), drawCount: 0 };
+  const rules = (career.rules || []).filter(id => ruleUnlocked(id));
+  S = { lineup: { PG: null, SG: null, SF: null, PF: null, C: null }, draw: null, teamRedraw: 1, eraRedraw: 1, spinning: false, done: false, mode, day: todayKey(), drawCount: 0,
+    rules, lockDec: null, lockName: null, redrawsUsed: 0, draftXp: 0 };
+  if (rules.includes("noredraw")) S.teamRedraw = S.eraRedraw = 0;
 }
+const hasRule = id => !!(S && S.rules && S.rules.includes(id));
 const picks = () => SLOTS.filter(k => S.lineup[k]).length;
 const drafted = id => SLOTS.some(k => S.lineup[k] && S.lineup[k].id === id);
 const openSlots = () => SLOTS.filter(k => !S.lineup[k]);
-const pickable = p => !drafted(p.id) && openSlots().length > 0;
+const pickable = p => !drafted(p.id) && openSlots().length > 0 && !ruleBlock(p);
+// Why a rule stops you drafting this player, or "" if it doesn't
+function ruleBlock(p) {
+  if (hasRule("budget") && p.ovr > 85) return "Over budget";
+  if (hasRule("onestar") && p.ovr >= 90 && SLOTS.some(k => S.lineup[k] && S.lineup[k].ovr >= 90)) return "Superstar limit";
+  return "";
+}
 const hasPickable = (d, f) => DATA[d][f] && DATA[d][f].players.some(pickable);
 const dist = (p, slot) => Math.min(...p.pos.map(x => { const i = SLOTS.indexOf(x); return i < 0 ? 2 : Math.abs(i - SLOTS.indexOf(slot)); }));
 const penalty = (p, slot) => PEN[dist(p, slot)];
@@ -589,34 +708,52 @@ function spin(final) {
   };
   tick();
 }
-function newDraw() {
-  const final = seeded(() => {
-    const opts = S.mode === "daily" ? ALL_DRAWS : ALL_DRAWS.filter(x => hasPickable(x.dec, x.fid));
-    return rnd(opts);
-  });
-  spin(final);
+// Every roll this draft may land on, given the rules and any lock set by your first pick
+function allowedDraws() {
+  let opts = ALL_DRAWS.filter(x => hasPickable(x.dec, x.fid));
+  if (hasRule("throwback")) opts = opts.filter(x => x.dec <= "1980s");
+  if (S.lockDec) opts = opts.filter(x => x.dec === S.lockDec);
+  if (S.lockName) opts = opts.filter(x => DATA[x.dec][x.fid].name === S.lockName);
+  return opts.length ? opts : ALL_DRAWS.filter(x => hasPickable(x.dec, x.fid));
 }
+function newDraw() {
+  spin(seeded(() => rnd(allowedDraws())));
+}
+// Re-draw team: another franchise from the same decade (blocked once Franchise lock has locked in)
+const teamOpts = () => !S.draw || S.lockName ? [] : allowedDraws().filter(x => x.dec === S.draw.dec && x.fid !== S.draw.fid);
 function redrawTeam() {
   if (!S.teamRedraw || S.spinning || !S.draw) return;
-  const opts = Object.keys(DATA[S.draw.dec]).sort().filter(f => f !== S.draw.fid && hasPickable(S.draw.dec, f));
+  const opts = teamOpts();
   if (!opts.length) return;
-  S.teamRedraw--;
-  spin(seeded(() => ({ dec: S.draw.dec, fid: rnd(opts) })));
+  S.teamRedraw--; S.redrawsUsed++;
+  spin(seeded(() => rnd(opts)));
 }
-const eraOpts = () => S.draw ? DECS.filter(d => d !== S.draw.dec && hasPickable(d, S.draw.fid)) : [];
+// Re-draw era: the same franchise name from another decade (blocked once Era lock has locked in)
+const eraOpts = () => {
+  if (!S.draw || S.lockDec) return [];
+  const name = DATA[S.draw.dec][S.draw.fid].name;
+  return allowedDraws().filter(x => x.dec !== S.draw.dec && DATA[x.dec][x.fid].name === name);
+};
 function redrawEra() {
   if (!S.eraRedraw || S.spinning) return;
   const opts = eraOpts();
   if (!opts.length) return;
-  S.eraRedraw--;
-  spin(seeded(() => ({ dec: rnd(opts), fid: S.draw.fid })));
+  S.eraRedraw--; S.redrawsUsed++;
+  spin(seeded(() => rnd(opts)));
 }
 function flash(slot) {
   const el = document.querySelector(`.slot[data-slot="${slot}"]`);
   if (el) { el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash"); }
 }
 function draft(p, slot) {
-  S.lineup[slot] = { ...p, dec: S.draw.dec, fid: S.draw.fid, team: DATA[S.draw.dec][S.draw.fid].name };
+  const team = DATA[S.draw.dec][S.draw.fid].name;
+  if (!picks()) {
+    if (hasRule("eralock")) S.lockDec = S.draw.dec;
+    if (hasRule("franlock")) S.lockName = team;
+  }
+  const isNew = !career.coll[collKey(S.draw.dec, team, p.name)];
+  S.lineup[slot] = { ...p, dec: S.draw.dec, fid: S.draw.fid, team, fresh: isNew };
+  if (isNew) collectPlayer(S.lineup[slot]);
   render(); flash(slot);
   if (picks() < 5) newDraw(); else { S.draw = null; render(); }
 }
@@ -714,9 +851,12 @@ function renderRoster(hard) {
     row.className = "prow" + (ok ? "" : " off");
     const chips = p.pos.map(x => `<span class="chip${S.lineup[x] ? "" : " open"}">${x}</span>`).join("");
     const vals = COLS.map(([k, l]) => [k, l, statVal(p, k)]);
-    row.innerHTML = `<div class="pname"><b>${esc(p.name)}</b><span class="chips">${chips}</span></div><div class="pstats">${statCells(vals, hard, sort.key)}</div><div class="pdraft"></div>`;
+    const isNew = !career.coll[collKey(S.draw.dec, team.name, p.name)];
+    const newChip = isNew ? `<span class="chip new${!hard && p.ovr >= 95 ? " legend" : ""}">${!hard && p.ovr >= 95 ? "New legend" : "New"}</span>` : "";
+    row.innerHTML = `<div class="pname"><b>${esc(p.name)}</b><span class="chips">${chips}${newChip}</span></div><div class="pstats">${statCells(vals, hard, sort.key)}</div><div class="pdraft"></div>`;
     const cell = row.querySelector(".pdraft");
     if (drafted(p.id)) cell.innerHTML = `<span class="note">Drafted</span>`;
+    else if (ruleBlock(p) && open.length) cell.innerHTML = `<span class="note">${ruleBlock(p)}</span>`;
     else if (ok) {
       const natural = open.filter(s => p.pos.includes(s));
       const other = open.filter(s => !p.pos.includes(s));
@@ -752,7 +892,7 @@ function renderHeader() {
   $("mFree").setAttribute("aria-pressed", mode === "free");
   const sorted = [...runs].sort((a, b) => runScore(b) - runScore(a));
   const titles = runs.filter(r => r.champ).length;
-  const got = Object.keys(trophies).length;
+  const got = ACH.filter(a => trophies[a.id]).length;
   $("bests").innerHTML = (sorted[0] ? `<span class="pill">Best <b>${sorted[0].w}–${sorted[0].l}</b></span>` : "") +
     `<span class="pill">Titles <b>${titles}</b></span><span class="pill">Trophies <b>${got}/${ACH.length}</b></span>`;
 }
@@ -762,6 +902,7 @@ function renderInner() {
   const hard = $("hardmode").checked;
   $("hardmode").disabled = picks() > 0 || S.done;
   renderHeader();
+  renderRules();
   renderSlots(hard);
   $("redrawLeft").textContent = `Re-draws left: team ${S.teamRedraw} · era ${S.eraRedraw}`;
   const full = picks() === 5;
@@ -770,7 +911,7 @@ function renderInner() {
   $("seasonPanel").hidden = !S.done;
   if (full) { if (!S.done) renderProjection(hard); return; }
   $("pickNo").textContent = `Pick ${picks() + 1} / 5`;
-  $("rTeam").disabled = S.spinning || !S.teamRedraw || !S.draw;
+  $("rTeam").disabled = S.spinning || !S.teamRedraw || !S.draw || !teamOpts().length;
   $("rEra").disabled = S.spinning || !S.eraRedraw || !S.draw || !eraOpts().length;
   $("rTeam").textContent = `Re-draw team (${S.teamRedraw})`;
   $("rEra").textContent = `Re-draw era (${S.eraRedraw})`;
@@ -838,12 +979,20 @@ function simulate() {
   S.done = true; render(); resetPlayoffs();
   $("afterPanel").hidden = true;
   const prevR = R; R = seasonRng();
-  const L = { ...S.lineup };
+  const result = seasonSim({ ...S.lineup });
+  R = prevR;
+  animateSeason(result);
+}
+
+// The whole regular season as data (no screen updates), so the game and the achievement tests share one engine
+function seasonSim(L) {
   const r = teamRatings(L);
   const means = lineMeans(L);
   const games = [];
   const tot = {}; SLOTS.forEach(k => tot[k] = { pts: 0, reb: 0, ast: 0, stl: 0, blk: 0 });
   const perfs = [];
+  // Single-game feats for trophies and challenges
+  const feats = { td: 0, fiveX5: false, maxPts: 0, maxReb: 0, maxAst: 0, maxBlk: 0, maxStl: 0, otWins: 0, bigWin: 0, maxScore: 0, minAllowed: 999, close: 0, firstLoss: 0 };
   let pf = 0, pa = 0;
   for (let g = 0; g < 82; g++) {
     const q = Math.min(95, Math.max(64, 75 + gauss() * 5));
@@ -851,16 +1000,26 @@ function simulate() {
     const x = playGame(r, q + gauss() * 2, q + gauss() * 2, isHome, 110);
     x.opp = rnd(TEAM_LABELS);
     pf += x.us; pa += x.them;
+    if (x.won) {
+      feats.bigWin = Math.max(feats.bigWin, x.us - x.them);
+      if (x.us - x.them <= 3) feats.close++;
+      if (x.ot) feats.otWins++;
+    } else if (!feats.firstLoss) feats.firstLoss = g + 1;
+    feats.maxScore = Math.max(feats.maxScore, x.us);
+    feats.minAllowed = Math.min(feats.minAllowed, x.them);
     for (const k of SLOTS) {
       const pl = playerGame(means[k], x.won);
       for (const s in tot[k]) tot[k][s] += pl[s];
       const score = pl.pts + pl.reb * 1.2 + pl.ast * 1.5 + pl.stl * 2 + pl.blk * 2;
       const td = [pl.pts, pl.reb, pl.ast].filter(v => v >= 10).length >= 3;
+      if (td) feats.td++;
+      if (pl.pts >= 5 && pl.reb >= 5 && pl.ast >= 5 && pl.stl >= 5 && pl.blk >= 5) feats.fiveX5 = true;
+      feats.maxPts = Math.max(feats.maxPts, pl.pts); feats.maxReb = Math.max(feats.maxReb, pl.reb);
+      feats.maxAst = Math.max(feats.maxAst, pl.ast); feats.maxBlk = Math.max(feats.maxBlk, pl.blk); feats.maxStl = Math.max(feats.maxStl, pl.stl);
       perfs.push({ k, g: g + 1, ...pl, score: score + (td ? 15 : 0) + (pl.pts >= 50 ? 20 : 0), td, won: x.won, us: x.us, them: x.them, opp: x.opp });
     }
     games.push(x);
   }
-  R = prevR;
   const box = SLOTS.map(k => {
     const p = L[k], t = tot[k];
     return { slot: k, name: p.name, dec: p.dec, team: p.team, ovr: p.ovr, ppg: t.pts / 82, rpg: t.reb / 82, apg: t.ast / 82, spg: t.stl / 82, bpg: t.blk / 82 };
@@ -878,8 +1037,7 @@ function simulate() {
   const dpoy = [...box].sort((a, b) => defScore(b) - defScore(a))[0];
   const home = [0, 0], away = [0, 0];
   games.forEach(x => (x.home ? home : away)[x.won ? 0 : 1]++);
-  const result = { r, games, box, highs, mvp, dpoy, seasonHigh: { name: L[sh.k].name, pts: sh.pts }, pf, pa, home, away };
-  animateSeason(result);
+  return { r, games, box, highs, mvp, dpoy, seasonHigh: { name: L[sh.k].name, pts: sh.pts }, pf, pa, home, away, feats };
 }
 
 function animateSeason(res) {
@@ -906,11 +1064,28 @@ function animateSeason(res) {
   else { const step = () => { paint(); if (i < 82) setTimeout(step, delay + (w + l > 70 && l <= 1 ? 60 : 0)); else finishSeason(w, l, res); }; step(); }
 }
 
+// One season's saved record (shared by the game and the achievement tests)
+function makeRun(res, L, meta = {}) {
+  const { games, pf, pa, home, away, r } = res;
+  let w = 0, best = 0, cur = 0;
+  for (const g of games) { if (g.won) w++; cur = g.won ? cur + 1 : 0; best = Math.max(best, cur); }
+  return {
+    id: meta.id || Date.now(), mode: "free", hard: !!meta.hard, rules: meta.rules || [], redraws: meta.redraws || 0,
+    date: new Date().toLocaleDateString(undefined, { month: "short", day: "numeric" }),
+    w, l: 82 - w, po: w >= 42 ? "pending" : "missed", pw: 0, pl: 0, reached: 0, champ: false, seed: w >= 42 ? seedFor(w) : null,
+    off: +r.off.toFixed(1), def: +r.def.toFixed(1), pf, pa, home, away, streak: best,
+    games: games.map(x => [x.us, x.them, x.home ? 1 : 0, x.opp]),
+    box: res.box.map(b => ({ ...b, ppg: +b.ppg.toFixed(1), rpg: +b.rpg.toFixed(1), apg: +b.apg.toFixed(1), spg: +b.spg.toFixed(1), bpg: +b.bpg.toFixed(1) })),
+    players: SLOTS.map(k => ({ slot: k, name: L[k].name, dec: L[k].dec, team: L[k].team, ovr: L[k].ovr, natural: dist(L[k], k) === 0, pos: L[k].pos })),
+    highs: res.highs, mvp: res.mvp.name, dpoy: res.dpoy.name, seasonHigh: res.seasonHigh, feats: res.feats, rounds: [], ach: []
+  };
+}
+
 function finishSeason(w, l, res) {
   simRunning = false;
-  const { games, pf, pa, home, away, r } = res;
-  let best = 0, cur = 0;
-  for (const g of games) { cur = g.won ? cur + 1 : 0; best = Math.max(best, cur); }
+  const { pf, pa, home, away, r } = res;
+  const run = makeRun(res, S.lineup, { hard: $("hardmode").checked, rules: S.rules || [], redraws: S.redrawsUsed || 0 });
+  const best = run.streak;
   const diff = (pf - pa) / 82;
   let v;
   if (w === 82) v = "Perfect season. 82–0. Nobody in NBA history has done this.";
@@ -932,24 +1107,15 @@ function finishSeason(w, l, res) {
   $("afterPanel").hidden = false;
   if (w === 82) confetti();
 
-  curRun = {
-    id: Date.now(), mode: S.mode, day: S.day, hard: $("hardmode").checked,
-    date: new Date().toLocaleDateString(undefined, { month: "short", day: "numeric" }),
-    w, l, po: w >= 42 ? "pending" : "missed", pw: 0, pl: 0, reached: 0, champ: false, seed: w >= 42 ? seedFor(w) : null,
-    off: +r.off.toFixed(1), def: +r.def.toFixed(1), pf, pa, home, away, streak: best,
-    games: games.map(x => [x.us, x.them, x.home ? 1 : 0, x.opp]),
-    box: res.box.map(b => ({ ...b, ppg: +b.ppg.toFixed(1), rpg: +b.rpg.toFixed(1), apg: +b.apg.toFixed(1), spg: +b.spg.toFixed(1), bpg: +b.bpg.toFixed(1) })),
-    players: SLOTS.map(k => ({ slot: k, name: S.lineup[k].name, dec: S.lineup[k].dec, team: S.lineup[k].team, ovr: S.lineup[k].ovr, natural: dist(S.lineup[k], k) === 0 })),
-    highs: res.highs, mvp: res.mvp.name, dpoy: res.dpoy.name, seasonHigh: res.seasonHigh, rounds: [], ach: []
-  };
+  curRun = run;
   runs.push(curRun);
   if (runs.length > 150) runs = runs.slice(-150);
+  afterSeason(curRun, "season");
   saveRuns();
-  checkTrophies(curRun);
   renderBook(); renderHeader();
   updateLbSubmit();
   $("poBtn").hidden = !(w >= 42);
-  lastResult = `82-0 Hoops Draft${S.mode === "daily" ? ` · Daily ${niceDay(S.day)}` : ""}: ${w}-${l}\n` + SLOTS.map(k => { const p = S.lineup[k]; return `${k} ${p.name} (${short(p.dec)} ${p.team})`; }).join("\n");
+  lastResult = `82-0 Hoops Draft: ${w}-${l}\n` + SLOTS.map(k => { const p = S.lineup[k]; return `${k} ${p.name} (${short(p.dec)} ${p.team})`; }).join("\n");
 }
 
 function awardCards(res) {
@@ -970,7 +1136,7 @@ function boxRows(box, showTeam) {
   const avg = k => (sum(k) / box.length);
   const tppg = sum("ppg"), trpg = sum("rpg"), tapg = sum("apg"), tspg = sum("spg"), tbpg = sum("bpg");
   const teamCells = [["OVR","—"],["PPG",fmt(tppg)],["RPG",fmt(trpg)],["APG",fmt(tapg)],["SPG",fmt(tspg)],["BPG",fmt(tbpg)]];
-  const teamRow = `<div class="prow team-total"><div class="pname"><b>TEAM TOTALS</b><span class="chips"><span class="chip">82 GP</span></span></div><div class="pstats" style="grid-template-columns:repeat(6,2.9em)">${teamCells.map(([l,v]) => `<div class="st"><span class="label">${l}</span><span class="v">${v}</span></div>`).join("")}</div><div></div></div>`;
+  const teamRow = `<div class="prow team-total"><div class="pname"><b>TEAM TOTALS</b><span class="chips"><span class="chip">82 GP</span></span></div><div class="pstats" style="grid-template-columns:repeat(6,2.9em)">${teamCells.map(([l,v]) => `<div class="st"><span class="k">${l}</span><span class="v">${v}</span></div>`).join("")}</div><div></div></div>`;
   return rows + teamRow;
 }
 
@@ -984,72 +1150,104 @@ function resetPlayoffs() {
 }
 function roundCard(rd) {
   const [a, b] = rd.res;
-  return `<div class="round"><div class="rhead"><span class="label">${rd.n}</span><span class="res ${a > b ? "w" : "l"}">${a > b ? "Won" : "Lost"} ${a}–${b}</span></div>
-    <div class="opp">vs ${rd.seed ? `#${rd.seed} ` : ""}${esc(rd.opp)}${rd.hc ? " · home court" : ""}</div>
+  return `<div class="round${rd.boss ? " boss" : ""}"><div class="rhead"><span class="label">${rd.n}</span><span class="res ${a > b ? "w" : "l"}">${a > b ? "Won" : "Lost"} ${a}–${b}</span></div>
+    <div class="opp">vs ${rd.seed ? `#${rd.seed} ` : ""}${esc(rd.opp)}${rd.hc ? " · home court" : ""}</div>${rd.stars ? `<div class="legend">Legendary team: ${rd.stars.map(esc).join(", ")}</div>` : ""}
     <div class="series">${rd.g.map((x, i) => `<div class="g ${x[0] > x[1] ? "w" : "l"}" title="Game ${i + 1} · ${x[2] ? "Home" : "Road"} · ${x[0] > x[1] ? "W" : "L"} ${x[0]}–${x[1]}">${x[0] > x[1] ? "W" : "L"}</div>`).join("")}</div></div>`;
 }
-async function playoffs() {
-  if (!curRun || poRunning) return;
-  poRunning = true;
-  $("poBtn").hidden = true; $("poWrap").hidden = false;
-  const prevR = R;
-  const rng = S.mode === "daily" ? mulberry32(hashStr(S.day + ":po:" + curRun.players.map(p => p.name).join("|"))) : Math.random;
-  const r = teamRatings(S.lineup);
-  const seed = curRun.seed;
-  $("poSeed").textContent = `#${seed} seed`;
+// The strongest real rosters in the data are the legendary teams you can meet in the NBA Finals
+function bestLineup(players) {
+  const pool = [...players].sort((a, b) => b.ovr - a.ovr).slice(0, 12), used = new Set(), L = {};
+  for (const k of ["C", "PF", "PG", "SF", "SG"]) {
+    let best = null, bv = -1e9;
+    for (const p of pool) { if (used.has(p.id)) continue; const v = p.ovr - penalty(p, k) * 1.5; if (v > bv) { bv = v; best = p; } }
+    used.add(best.id); L[k] = best;
+  }
+  return L;
+}
+const LEGENDS = (() => {
+  const all = [];
+  for (const d of DECS) for (const f of Object.keys(DATA[d])) {
+    const t = DATA[d][f];
+    const L = bestLineup(t.players.map(p => ({ ...p, dec: d, fid: f, team: t.name })));
+    all.push({ key: d + "|" + f, label: `${short(d)} ${t.name}`, power: teamRatings(L).team, stars: SLOTS.map(k => L[k].name) });
+  }
+  all.sort((a, b) => b.power - a.power);
+  const top = all.slice(0, 24), hi = top[0].power, lo = top[top.length - 1].power;
+  // Their strength spans 84.5 to 88, centred near the old Finals average of 86, so titles stay about as reachable
+  top.forEach(t => { t.q = 84.5 + (t.power - lo) / Math.max(1, hi - lo) * 3.5; });
+  return top;
+})();
+
+// Four best-of-seven rounds as data: { rounds, pw, pl, reached, champ }
+function playoffSim(r, seed, w) {
   let pw = 0, pl = 0, reached = 0, champ = false;
   const rounds = [];
   for (let i = 0; i < 4; i++) {
     reached = i;
-    R = rng;
-    const q = [78, 82, 84, 86][i] + gauss() * 1.5;
+    let q = [78, 82, 84, 86][i] + gauss() * 1.5, opp = rnd(TEAM_LABELS), boss = null;
+    if (i === 3) { boss = rnd(LEGENDS); q = boss.q + gauss() * 1; opp = boss.label; }
     const oOff = q + gauss() * 2, oDef = q + gauss() * 2;
     const oppSeed = i === 0 ? 9 - seed : null;
-    const hc = i === 0 ? seed <= 4 : curRun.w >= [0, 55, 58, 62][i];
-    const opp = rnd(TEAM_LABELS);
-    const card = document.createElement("div");
-    card.className = "round";
-    card.innerHTML = `<div class="rhead"><span class="label">${ROUNDS[i]}</span><span class="res">0–0</span></div>
-      <div class="opp">vs ${oppSeed ? `#${oppSeed} ` : ""}${esc(opp)}${hc ? " · home court" : ""}</div><div class="series"></div>`;
-    $("rounds").appendChild(card);
-    const res = card.querySelector(".res"), ser = card.querySelector(".series");
+    const hc = i === 0 ? seed <= 4 : w >= [0, 55, 58, 62][i];
+    const pattern = [1, 1, 0, 0, 1, 0, 1], gl = [];
     let a = 0, b = 0, n = 0;
-    const pattern = [1, 1, 0, 0, 1, 0, 1];
-    const gl = [];
     while (a < 4 && b < 4) {
       const home = hc ? !!pattern[n] : !pattern[n];
-      R = rng;
       const g = playGame(r, oOff, oDef, home, 106);
-      R = prevR;
       g.won ? a++ : b++;
       n++;
-      gl.push([g.us, g.them, home ? 1 : 0]);
-      const chip = document.createElement("div");
-      chip.className = "g " + (g.won ? "w" : "l");
-      chip.textContent = g.won ? "W" : "L";
-      chip.title = `Game ${n} · ${home ? "Home" : "Road"} · ${g.won ? "W" : "L"} ${g.us}–${g.them}${g.ot ? " (OT)" : ""}`;
-      ser.appendChild(chip);
-      res.textContent = `${a}–${b}`;
-      $("ticker").textContent = `${ROUNDS[i]} · Game ${n}: ${g.won ? "W" : "L"} ${g.us}–${g.them}`;
-      $("boardLabel").textContent = "Playoffs";
-      await sleep(170);
+      gl.push([g.us, g.them, home ? 1 : 0, g.ot ? 1 : 0]);
     }
-    R = prevR;
     pw += a; pl += b;
-    res.textContent = `${a > b ? "Won" : "Lost"} ${a}–${b}`;
-    res.classList.add(a > b ? "w" : "l");
-    rounds.push({ n: ROUNDS[i], opp, seed: oppSeed, hc, res: [a, b], g: gl });
-    await sleep(380);
+    const rd = { n: ROUNDS[i], opp, seed: oppSeed, hc, res: [a, b], g: gl };
+    if (boss) { rd.boss = boss.key; rd.stars = boss.stars; }
+    rounds.push(rd);
     if (b === 4) break;
     if (i === 3) champ = true;
   }
+  return { rounds, pw, pl, reached, champ };
+}
+
+async function playoffs() {
+  if (!curRun || poRunning) return;
+  poRunning = true;
+  $("poBtn").hidden = true; $("poWrap").hidden = false;
+  $("poSeed").textContent = `#${curRun.seed} seed`;
+  const po = playoffSim(teamRatings(S.lineup), curRun.seed, curRun.w);
+  for (const rd of po.rounds) {
+    const card = document.createElement("div");
+    card.className = "round" + (rd.boss ? " boss" : "");
+    const legend = rd.boss ? `<div class="legend">Legendary team${career.bosses[rd.boss] ? " · beaten before" : ""}: ${rd.stars.map(esc).join(", ")}</div>` : "";
+    card.innerHTML = `<div class="rhead"><span class="label">${rd.n}</span><span class="res">0–0</span></div>
+      <div class="opp">vs ${rd.seed ? `#${rd.seed} ` : ""}${esc(rd.opp)}${rd.hc ? " · home court" : ""}</div>${legend}<div class="series"></div>`;
+    $("rounds").appendChild(card);
+    const res = card.querySelector(".res"), ser = card.querySelector(".series");
+    let a = 0, b = 0;
+    for (const [us, them, home, ot] of rd.g) {
+      const won = us > them;
+      won ? a++ : b++;
+      const chip = document.createElement("div");
+      chip.className = "g " + (won ? "w" : "l");
+      chip.textContent = won ? "W" : "L";
+      chip.title = `Game ${a + b} · ${home ? "Home" : "Road"} · ${won ? "W" : "L"} ${us}–${them}${ot ? " (OT)" : ""}`;
+      ser.appendChild(chip);
+      res.textContent = `${a}–${b}`;
+      $("ticker").textContent = `${rd.n} · Game ${a + b}: ${won ? "W" : "L"} ${us}–${them}`;
+      $("boardLabel").textContent = "Playoffs";
+      await sleep(170);
+    }
+    res.textContent = `${a > b ? "Won" : "Lost"} ${a}–${b}`;
+    res.classList.add(a > b ? "w" : "l");
+    await sleep(380);
+  }
+  const { pw, pl, reached, champ, rounds } = po;
   const c = $("champ");
   if (champ) { c.textContent = pl === 0 ? "Champions. 16–0, a perfect postseason." : `NBA Champions · ${pw}–${pl} in the playoffs`; c.className = "champ yes"; confetti(); }
   else c.textContent = `Eliminated in the ${ROUNDS[reached]} · ${pw}–${pl}`;
   $("watch").textContent = champ ? "CHAMPIONS" : `Out in the ${ROUNDS[reached]}`;
   Object.assign(curRun, { po: "played", pw, pl, reached, champ, rounds });
+  afterSeason(curRun, "playoffs");
   saveRuns();
-  checkTrophies(curRun);
   renderBook(); renderHeader();
   updateLbSubmit();
   lastResult += `\nPlayoffs: ${poText(curRun)}`;
@@ -1057,83 +1255,485 @@ async function playoffs() {
 }
 
 /* ---------- Trophies ---------- */
-const ACH = [
-  ["first", "Opening night", "Finish a season", r => true],
-  ["playoffs", "Postseason bound", "Make the playoffs", r => r.w >= 42],
-  ["w60", "60-win club", "Win 60 games", r => r.w >= 60],
-  ["w70", "70-win club", "Win 70 games", r => r.w >= 70],
-  ["record", "Record breaker", "Beat 73–9", r => r.w >= 74],
-  ["perfect", "82–0", "A perfect regular season", r => r.w === 82],
-  ["finals", "Finals run", "Reach the NBA Finals", r => r.po === "played" && r.reached === 3],
-  ["champ", "Champions", "Win the title", r => r.champ],
-  ["sweep", "Fo' fo' fo' fo'", "Win the title 16–0", r => r.champ && r.pl === 0],
-  ["goat", "Greatest ever", "82–0 and a 16–0 title", r => r.w === 82 && r.champ && r.pl === 0],
-  ["daily", "Daily grinder", "Finish a daily challenge", r => r.mode === "daily"],
-  ["dailychamp", "Daily champion", "Win the title in a daily challenge", r => r.mode === "daily" && r.champ],
-  ["decades", "Time traveler", "Five different decades in one lineup", r => new Set(r.players.map(p => p.dec)).size === 5],
-  ["loyal", "Franchise loyalty", "All five from the same franchise name", r => new Set(r.players.map(p => p.team)).size === 1],
-  ["blind", "Blindfolded", "Win the title in hard mode", r => r.hard && r.champ],
-  ["underdog", "Underdog", "Win the title with a team OVR under 80", r => r.champ && r.players.reduce((a, p) => a + p.ovr, 0) / 5 < 80],
-  ["book", "By the book", "60+ wins with all five in natural positions", r => r.w >= 60 && r.players.every(p => p.natural)],
-  ["oldschool", "Old school", "Make the playoffs with no one after the 1980s", r => r.w >= 42 && r.players.every(p => p.dec <= "1980s")],
-  ["fifty", "Fifty piece", "Have a starter score 50+ in a game", r => r.seasonHigh && r.seasonHigh.pts >= 50],
-  ["w50", "50-win season", "Win 50 or more games", r => r.w >= 50],
-  ["lockdown", "Lockdown defense", "Hold opponents under 95 PPG for a season", (r) => r.pa && r.pa / 82 < 95],
-  ["highflying", "High octane", "Team averages 120+ PPG for a season", (r) => r.pf && r.pf / 82 >= 120],
-  ["bucket", "Bucket getter", "Have a starter average 35+ PPG", r => r.box && r.box.some(b => b.ppg >= 35)],
-  ["triple_threat", "Triple-double machine", "Average 10+ pts, reb & ast with one player", r => r.box && r.box.some(b => b.ppg >= 10 && b.rpg >= 10 && b.apg >= 10)],
-  ["dynasty", "Back-to-back", "Win 2 championships total", (r, rs) => r.champ && (rs || []).filter(x => x.champ).length >= 2],
-  ["three_peat", "Three-peat", "Win 3 championships total", (r, rs) => r.champ && (rs || []).filter(x => x.champ).length >= 3],
-  ["modern_era", "New money", "Win the title with all 2020s players", r => r.champ && r.players.every(p => p.dec === "2020s")],
-  ["vintage", "Vintage", "Win the title with all 1980s or older players", r => r.champ && r.players.every(p => p.dec <= "1980s")],
-  ["on_fire", "On fire", "Win 20 or more games in a row", r => r.streak >= 20],
-  ["elite_squad", "All-Stars everywhere", "Field a team with 92+ average OVR", r => r.players && r.players.reduce((a, p) => a + p.ovr, 0) / 5 >= 92],
-  ["iron_curtain", "Iron curtain", "Hold every opponent to under 90 PPG for a season", (r) => r.pa && r.pa / 82 < 90],
-  // — Scoring feats —
-  ["point_god", "Point god", "Have a starter average 12+ APG", r => r.box && r.box.some(b => b.apg >= 12)],
-  ["board_man", "Board man gets paid", "Have a starter average 15+ RPG", r => r.box && r.box.some(b => b.rpg >= 15)],
-  ["swat_team", "Swat team", "Have a starter average 4+ BPG", r => r.box && r.box.some(b => b.bpg >= 4)],
-  ["heist", "The heist", "Have a starter average 3+ SPG", r => r.box && r.box.some(b => b.spg >= 3)],
-  ["complete", "Complete package", "One player averages 20+ pts, 10+ reb and 8+ ast", r => r.box && r.box.some(b => b.ppg >= 20 && b.rpg >= 10 && b.apg >= 8)],
-  ["five_scorers", "Five-headed monster", "All five starters average 15+ PPG", r => r.box && r.box.every(b => b.ppg >= 15)],
-  ["balanced", "No weak links", "All five starters average 12+ PPG", r => r.box && r.box.every(b => b.ppg >= 12)],
-  // — Teambuilding —
-  ["five_fives", "Starting five hall of famers", "All five starters are OVR 90+", r => r.players && r.players.every(p => p.ovr >= 90)],
-  ["all_diff_teams", "United nations", "All five from different franchises", r => r.players && new Set(r.players.map(p => p.team + p.dec)).size === 5],
-  ["same_decade", "Dynasty era", "Win the title with all five from the same decade", r => r.champ && r.players && new Set(r.players.map(p => p.dec)).size === 1],
-  ["1960s_only", "Vintage 60s", "Make the playoffs with all 1960s players", r => r.w >= 42 && r.players && r.players.every(p => p.dec === "1960s")],
-  ["2020s_only", "Next gen", "Win the title with all 2020s players (any decade label)", r => r.champ && r.players && r.players.every(p => p.dec >= "2010s")],
-  // — Season milestones —
-  ["win_streak", "Hot streak", "Win 10 or more games in a row", r => r.streak >= 10],
-  ["close_call", "On the bubble", "Make the playoffs with exactly 42 wins", r => r.w === 42],
-  ["century", "Centurion", "Play 100 or more total seasons", (r, rs) => (rs || []).length >= 100],
-  ["rookie", "Rookie of the year", "Win the title on your very first season ever", (r, rs) => r.champ && (rs || []).length === 1],
-  ["hard_road", "Hard road", "Reach the Finals having gone 7 games in a round", r => r.po === "played" && r.reached >= 3 && r.rounds && r.rounds.some(rd => rd.res && (rd.res[0] + rd.res[1]) === 7)],
-  ["shutout", "Shutdown artist", "Win a playoff series 4–0", r => r.rounds && r.rounds.some(rd => rd.res && rd.res[0] === 4 && rd.res[1] === 0)]
-];
+// tier: 1 bronze, 2 silver, 3 gold, 4 platinum (worth more XP). test(run, ctx): ctx.prev / ctx.prev2 are the seasons before it.
+// Career trophies (category 5) don't depend on one season; prog() gives [have, need] for their progress bars.
 let trophies = {};
-function checkTrophies(run) {
-  const allRuns = runs;
+const TIERS = ["", "Bronze", "Silver", "Gold", "Platinum"];
+const TIER_XP = [0, 25, 50, 100, 200];
+const ACH_CATS = ["Regular season", "Playoffs", "Stars and stats", "Team building", "Rules", "Career and collection"];
+const avgOvr = r => r.players.reduce((a, p) => a + p.ovr, 0) / 5;
+const played = r => r.po === "played";
+const hasR = (r, id) => (r.rules || []).includes(id);
+const boxAny = (r, f) => !!(r.box && r.box.some(f));
+const feat = (r, k) => (r.feats && r.feats[k]) || 0;
+const series = r => (r.rounds || []).filter(rd => rd.res);
+const won7 = rd => rd.res[0] === 4 && rd.res[1] === 3;
+const lvl = () => levelOf(career.xp).level;
+const A = (cat, tier, id, name, desc, test, prog) => ({ cat, tier, id, name, desc, test, prog });
+const ACH = [
+  // Regular season
+  A(0, 1, "first", "Opening night", "Finish a season", r => true),
+  A(0, 1, "playoffs", "Postseason bound", "Make the playoffs", r => r.w >= 42),
+  A(0, 1, "w50", "50-win season", "Win 50 games", r => r.w >= 50),
+  A(0, 2, "w60", "60-win club", "Win 60 games", r => r.w >= 60),
+  A(0, 3, "w70", "70-win club", "Win 70 games", r => r.w >= 70),
+  A(0, 3, "record", "Record breaker", "Beat 73–9", r => r.w >= 74),
+  A(0, 4, "perfect", "82–0", "A perfect regular season", r => r.w === 82),
+  A(0, 3, "so_close", "So close", "Finish 81–1", r => r.w === 81),
+  A(0, 2, "close_call", "On the bubble", "Make the playoffs with exactly 42 wins", r => r.w === 42),
+  A(0, 1, "win_streak", "Hot streak", "Win 10 games in a row", r => r.streak >= 10),
+  A(0, 2, "on_fire", "On fire", "Win 20 games in a row", r => r.streak >= 20),
+  A(0, 3, "fortress", "Fortress", "Go 41–0 at home", r => !!r.home && r.home[0] === 41),
+  A(0, 3, "road_warriors", "Road warriors", "Go 41–0 on the road", r => !!r.away && r.away[0] === 41),
+  A(0, 3, "slow_start", "Slow start", "Lose your opener, then win 70+", r => !!(r.games && r.games[0]) && r.games[0][0] < r.games[0][1] && r.w >= 70),
+  A(0, 2, "blowout", "Blowout", "Win a game by 60 or more", r => feat(r, "bigWin") >= 60),
+  A(0, 2, "nail_biter", "Ice in the veins", "Win 9 games by 3 points or fewer in one season", r => feat(r, "close") >= 9),
+  A(0, 2, "bonus_ball", "Bonus basketball", "Win 3 overtime games in one season", r => feat(r, "otWins") >= 3),
+  A(0, 3, "video_game", "Video game numbers", "Score 150 points in a game", r => feat(r, "maxScore") >= 150),
+  A(0, 2, "clampdown", "Clampdown", "Hold an opponent under 75 points", r => !!r.feats && r.feats.minAllowed < 75),
+  A(0, 2, "highflying", "High octane", "Average 120+ points for a season", r => r.pf / 82 >= 120),
+  A(0, 3, "lockdown", "Lockdown defense", "Hold opponents under 98 points a game for a season (draft defenders)", r => !!r.pa && r.pa / 82 < 98),
+  A(0, 4, "iron_curtain", "Iron curtain", "Hold opponents under 97 points a game for a season", r => !!r.pa && r.pa / 82 < 97),
+  A(0, 3, "differential", "Point differential", "Outscore opponents by 25+ a game", r => !!r.pf && (r.pf - r.pa) / 82 >= 25),
+
+  // Playoffs
+  A(1, 2, "finals", "Finals run", "Reach the NBA Finals", r => played(r) && r.reached === 3),
+  A(1, 3, "champ", "Champions", "Win the title", r => r.champ),
+  A(1, 4, "sweep", "Fo' fo' fo' fo'", "Win the title 16–0", r => r.champ && r.pl === 0),
+  A(1, 4, "goat", "Greatest ever", "82–0 and a 16–0 title", r => r.w === 82 && r.champ && r.pl === 0),
+  A(1, 1, "shutout", "Shutdown artist", "Win a playoff series 4–0", r => series(r).some(rd => rd.res[0] === 4 && rd.res[1] === 0)),
+  A(1, 2, "game7", "Game 7", "Win a Game 7", r => series(r).some(won7)),
+  A(1, 3, "survivor", "Survivor", "Win two Game 7s in one playoff run", r => series(r).filter(won7).length >= 2),
+  A(1, 2, "hard_road", "Hard road", "Reach the Finals after a seven-game series", r => played(r) && r.reached >= 3 && series(r).some(rd => rd.res[0] + rd.res[1] === 7)),
+  A(1, 2, "brooms", "Brooms out", "Sweep the NBA Finals", r => r.champ && !!series(r)[3] && series(r)[3].res[1] === 0),
+  A(1, 3, "clinical", "Clinical", "Win the title losing 2 or fewer playoff games", r => r.champ && r.pl <= 2),
+  A(1, 2, "cinderella", "Cinderella", "Win a playoff series as a 6th seed or lower", r => played(r) && r.seed >= 6 && series(r).some(rd => rd.res[0] === 4)),
+  A(1, 3, "home_sweet", "Home sweet home", "Win the title without losing a home game", r => r.champ && series(r).every(rd => rd.g.every(x => !x[2] || x[0] > x[1]))),
+  A(1, 2, "redemption", "Redemption", "Win the title the season after missing the playoffs", (r, c) => r.champ && !!c.prev && c.prev.po === "missed"),
+  A(1, 3, "dynasty", "Back-to-back", "Win titles in back-to-back seasons", (r, c) => r.champ && !!c.prev && c.prev.champ),
+  A(1, 4, "three_peat", "Three-peat", "Win three titles in a row", (r, c) => r.champ && !!c.prev && c.prev.champ && !!c.prev2 && c.prev2.champ),
+  A(1, 3, "top_boss", "Dynasty killer", `Beat the strongest legendary team, the ${LEGENDS[0].label}, in the Finals`, r => r.champ && !!series(r)[3] && series(r)[3].boss === LEGENDS[0].key),
+
+  // Stars and stats
+  A(2, 2, "fifty", "Fifty piece", "Have a starter score 50+ in a game", r => !!r.seasonHigh && r.seasonHigh.pts >= 50),
+  A(2, 2, "bucket", "Bucket getter", "Have a starter average 35+ points", r => boxAny(r, b => b.ppg >= 35)),
+  A(2, 2, "point_god", "Point god", "Have a starter average 12+ assists", r => boxAny(r, b => b.apg >= 12)),
+  A(2, 2, "board_man", "Board man gets paid", "Have a starter average 15+ rebounds", r => boxAny(r, b => b.rpg >= 15)),
+  A(2, 3, "swat_team", "Swat team", "Have a starter average 4+ blocks", r => boxAny(r, b => b.bpg >= 4)),
+  A(2, 3, "heist", "The heist", "Have a starter average 3+ steals", r => boxAny(r, b => b.spg >= 3)),
+  A(2, 3, "triple_threat", "Triple-double machine", "One player averages 10+ points, rebounds and assists", r => boxAny(r, b => b.ppg >= 10 && b.rpg >= 10 && b.apg >= 10)),
+  A(2, 3, "complete", "Complete package", "One player averages 20+ points, 10+ rebounds and 8+ assists", r => boxAny(r, b => b.ppg >= 20 && b.rpg >= 10 && b.apg >= 8)),
+  A(2, 2, "balanced", "No weak links", "All five starters average 12+ points", r => !!r.box && r.box.every(b => b.ppg >= 12)),
+  A(2, 3, "five_scorers", "Five-headed monster", "All five starters average 15+ points", r => !!r.box && r.box.every(b => b.ppg >= 15)),
+  A(2, 3, "big_three", "Big three", "Three starters average 25+ points", r => !!r.box && r.box.filter(b => b.ppg >= 25).length >= 3),
+  A(2, 3, "td_season", "Triple-double season", "Rack up 10 triple-doubles in one season", r => feat(r, "td") >= 10),
+  A(2, 3, "five_by_five", "Stuffed the stat sheet", "One player gets 5+ points, rebounds, assists, steals and blocks in a game", r => !!r.feats && r.feats.fiveX5),
+  A(2, 3, "thirty_boards", "Thirty boards", "Grab 30 rebounds in a game", r => feat(r, "maxReb") >= 30),
+  A(2, 3, "twenty_dimes", "Twenty dimes", "Dish 20 assists in a game", r => feat(r, "maxAst") >= 20),
+  A(2, 3, "ten_blocks", "Ten swats", "Block 10 shots in a game", r => feat(r, "maxBlk") >= 10),
+
+  // Team building
+  A(3, 2, "decades", "Time traveler", "Five different decades in one lineup", r => new Set(r.players.map(p => p.dec)).size === 5),
+  A(3, 2, "all_diff_teams", "United nations", "Five different franchises from five different decades", r => new Set(r.players.map(p => p.team)).size === 5 && new Set(r.players.map(p => p.dec)).size === 5),
+  A(3, 1, "reunion", "Reunion", "Start two teammates from the same team and decade", r => new Set(r.players.map(p => p.dec + p.team)).size < 5),
+  A(3, 3, "loyal", "Franchise loyalty", "All five from the same franchise (try the Franchise lock rule)", r => new Set(r.players.map(p => p.team)).size === 1),
+  A(3, 3, "run_it_back", "Run it back", "All five from the same team in the same decade (Era lock + Franchise lock)", r => new Set(r.players.map(p => p.dec + p.team)).size === 1),
+  A(3, 2, "book", "By the book", "Win 60+ with all five in natural positions", r => r.w >= 60 && r.players.every(p => p.natural)),
+  A(3, 3, "chaos", "Chaos theory", "Make the playoffs with all five out of position", r => r.w >= 42 && r.players.every(p => p.natural === false)),
+  A(3, 2, "twin_towers", "Twin towers", "Win 60+ games with two starters averaging 2+ blocks", r => r.w >= 60 && !!r.box && r.box.filter(b => b.bpg >= 2).length >= 2),
+  A(3, 3, "small_ball", "Small ball", "Win the title with no centers or power forwards", r => r.champ && r.players.every(p => !!p.pos && !p.pos.includes("C") && !p.pos.includes("PF"))),
+  A(3, 2, "elite_squad", "All-Stars everywhere", "Field a team with a 92+ average rating", r => avgOvr(r) >= 92),
+  A(3, 3, "five_fives", "Starting five Hall of Famers", "All five starters rated 90+", r => r.players.every(p => p.ovr >= 90)),
+  A(3, 3, "mount_rushmore", "Mount Rushmore", "All five starters rated 95+", r => r.players.every(p => p.ovr >= 95)),
+  A(3, 4, "underdog", "Underdog", "Win the title with a team rating under 80", r => r.champ && avgOvr(r) < 80),
+  A(3, 3, "deep_cuts", "Deep cuts", "Make the playoffs with a team rating under 72", r => r.w >= 42 && avgOvr(r) < 72),
+  A(3, 2, "oldschool", "Old school", "Make the playoffs with nobody from after the 1980s", r => r.w >= 42 && r.players.every(p => p.dec <= "1980s")),
+  A(3, 3, "vintage", "Vintage", "Win the title with nobody from after the 1980s", r => r.champ && r.players.every(p => p.dec <= "1980s")),
+  A(3, 3, "1960s_only", "Vintage 60s", "Make the playoffs with all 1960s players", r => r.w >= 42 && r.players.every(p => p.dec === "1960s")),
+  A(3, 3, "same_decade", "Dynasty era", "Win the title with all five from one decade (try Era lock)", r => r.champ && new Set(r.players.map(p => p.dec)).size === 1),
+  A(3, 3, "modern_era", "New money", "Win the title with all 2020s players", r => r.champ && r.players.every(p => p.dec === "2020s")),
+  A(3, 2, "2020s_only", "Next gen", "Win the title with every player from the 2010s or later", r => r.champ && r.players.every(p => p.dec >= "2010s")),
+  A(3, 3, "rookie", "Rookie of the year", "Win the title with five players you'd never drafted before", r => r.champ && !!r.allNew),
+  A(3, 2, "no_mulligans", "No mulligans", "Win the title without using a re-draw", r => r.champ && r.redraws === 0),
+
+  // Rules
+  A(4, 3, "blind", "Blindfolded", "Win the title in hard mode", r => r.hard && r.champ),
+  A(4, 3, "blind70", "Seeing is overrated", "Win 70+ games in hard mode", r => r.hard && r.w >= 70),
+  A(4, 2, "time_capsule", "Time capsule", "Win 60+ games with Era lock on", r => hasR(r, "eralock") && r.w >= 60),
+  A(4, 2, "lifelong_fan", "Lifelong fan", "Make the playoffs with Franchise lock on", r => hasR(r, "franlock") && r.w >= 42),
+  A(4, 3, "black_white", "Black-and-white TV", "Win the title with Throwback on", r => hasR(r, "throwback") && r.champ),
+  A(4, 3, "moneyball", "Moneyball", "Reach the NBA Finals with Budget squad on", r => hasR(r, "budget") && played(r) && r.reached === 3),
+  A(4, 3, "one_man_army", "One-man army", "Win 65+ games with One superstar on", r => hasR(r, "onestar") && r.w >= 65),
+  A(4, 4, "house_rules", "House rules", "Win the title with 3 or more rules on", r => (r.rules || []).length >= 3 && r.champ),
+
+  // Career and collection (no single season; checked whenever your career changes)
+  A(5, 3, "century", "Centurion", "Play 100 seasons", () => career.life.seasons >= 100, () => [career.life.seasons, 100]),
+  A(5, 3, "rings10", "Ring collector", "Win 10 titles", () => career.life.titles >= 10, () => [career.life.titles, 10]),
+  A(5, 2, "lvl10", "Rising star", "Reach level 10", () => lvl() >= 10, () => [lvl(), 10]),
+  A(5, 3, "lvl25", "Franchise player", "Reach level 25", () => lvl() >= 25, () => [lvl(), 25]),
+  A(5, 4, "lvl50", "Living legend", "Reach level 50", () => lvl() >= 50, () => [lvl(), 50]),
+  A(5, 1, "coll50", "Scout", "Collect 50 players", () => collStats().total >= 50, () => [collStats().total, 50]),
+  A(5, 2, "coll250", "Talent evaluator", "Collect 250 players", () => collStats().total >= 250, () => [collStats().total, 250]),
+  A(5, 3, "coll1000", "Encyclopedia", "Collect 1,000 players", () => collStats().total >= 1000, () => [collStats().total, 1000]),
+  A(5, 2, "legends10", "Legend hunter", "Collect 10 legends (rated 95+)", () => collStats().by.legendary >= 10, () => [collStats().by.legendary, 10]),
+  A(5, 3, "legends50", "Legend collector", "Collect 50 legends", () => collStats().by.legendary >= 50, () => [collStats().by.legendary, 50]),
+  A(5, 4, "legends_all", "Every legend", "Collect every legend in the game", () => collStats().by.legendary >= RARITY_TOTALS.legendary, () => [collStats().by.legendary, RARITY_TOTALS.legendary]),
+  A(5, 2, "all_decades", "Through the decades", "Collect a star (80+) from every decade", () => collStats().decStars.size >= DECS.length, () => [collStats().decStars.size, DECS.length]),
+  A(5, 3, "league_pass", "League pass", "Collect a player from every franchise", () => collStats().teams.size >= FRANCHISE_NAMES.length, () => [collStats().teams.size, FRANCHISE_NAMES.length]),
+  A(5, 2, "ch10", "Contract fulfilled", "Complete 10 challenges", () => (career.chDone || 0) >= 10, () => [career.chDone || 0, 10]),
+  A(5, 3, "ch50", "Workhorse", "Complete 50 challenges", () => (career.chDone || 0) >= 50, () => [career.chDone || 0, 50]),
+  A(5, 3, "bosses5", "Boss rush", "Beat 5 different legendary teams in the Finals", () => Object.keys(career.bosses).length >= 5, () => [Object.keys(career.bosses).length, 5]),
+  A(5, 4, "bosses_all", "Undisputed", "Beat every legendary team in the Finals", () => Object.keys(career.bosses).length >= LEGENDS.length, () => [Object.keys(career.bosses).length, LEGENDS.length]),
+];
+
+function checkTrophies(run, log = []) {
+  const i = runs.indexOf(run);
+  const ctx = { prev: i > 0 ? runs[i - 1] : null, prev2: i > 1 ? runs[i - 2] : null };
   const fresh = [];
-  for (const [id, name, , test] of ACH) {
-    if (trophies[id]) continue;
+  for (const a of ACH) {
+    if (a.cat === 5 || trophies[a.id]) continue;
     let ok = false;
-    try { ok = !!test(run, allRuns); } catch (e) { ok = false; }
-    if (ok) { trophies[id] = { day: run.date, run: run.id }; fresh.push(name); if (!run.ach.includes(id)) run.ach.push(id); }
+    try { ok = !!a.test(run, ctx); } catch (e) { ok = false; }
+    if (ok) { trophies[a.id] = { day: run.date, run: run.id }; fresh.push(a); if (!run.ach.includes(a.id)) run.ach.push(a.id); }
   }
-  if (fresh.length) { store.set(KEY_TROPHY, trophies); saveRuns(); toast(`Trophy unlocked: <b>${fresh.map(esc).join(", ")}</b>`); }
+  if (fresh.length) {
+    store.set(KEY_TROPHY, trophies);
+    const xp = fresh.reduce((t, a) => t + TIER_XP[a.tier], 0);
+    log.push([`Trophies: ${fresh.map(a => a.name).join(", ")}`, xp]);
+    toast(`Trophy unlocked: <b>${fresh.map(a => esc(a.name)).join(", ")}</b> +${xp} XP`);
+    gainXp(xp);
+  }
+  checkCareerTrophies(log);
   renderTrophies();
 }
-function renderTrophies() {
-  const got = Object.keys(trophies).length;
-  $("trophySum").textContent = `${got} of ${ACH.length} unlocked`;
-  $("badges").innerHTML = ACH.map(([id, name, desc]) => `<div class="badge${trophies[id] ? " got" : ""}"><b>${esc(name)}</b><span>${esc(desc)}${trophies[id] ? ` · ${esc(trophies[id].day)}` : ""}</span></div>`).join("");
+// Career trophies can unlock from anything (a level-up, a new player), and unlocking one gives XP that can unlock another
+function checkCareerTrophies(log) {
+  for (let pass = 0; pass < 6; pass++) {
+    const fresh = ACH.filter(a => {
+      if (a.cat !== 5 || trophies[a.id]) return false;
+      try { return !!a.test(); } catch (e) { return false; }
+    });
+    if (!fresh.length) break;
+    const day = new Date().toLocaleDateString(undefined, { month: "short", day: "numeric" });
+    fresh.forEach(a => { trophies[a.id] = { day }; });
+    store.set(KEY_TROPHY, trophies);
+    const xp = fresh.reduce((t, a) => t + TIER_XP[a.tier], 0);
+    if (log) log.push([`Trophies: ${fresh.map(a => a.name).join(", ")}`, xp]);
+    toast(`Trophy unlocked: <b>${fresh.map(a => esc(a.name)).join(", ")}</b> +${xp} XP`);
+    gainXp(xp);
+  }
+  renderTrophies();
 }
-let toastT = 0;
+let trophyFilter = "all";
+function renderTrophies() {
+  const got = ACH.filter(a => trophies[a.id]).length;
+  $("trophySum").textContent = `${got} of ${ACH.length} unlocked`;
+  document.querySelectorAll("#trophyFilter button").forEach(b => b.setAttribute("aria-pressed", b.dataset.v === trophyFilter));
+  const show = a => trophyFilter === "all" || (trophyFilter === "got") === !!trophies[a.id];
+  $("badges").innerHTML = ACH_CATS.map((cat, ci) => {
+    const inCat = ACH.filter(a => a.cat === ci), list = inCat.filter(show);
+    if (!list.length) return "";
+    return `<div class="tcat"><h3>${cat}</h3><span class="label">${inCat.filter(a => trophies[a.id]).length}/${inCat.length}</span></div>` + list.map(a => {
+      const t = trophies[a.id];
+      let bar = "";
+      if (!t && a.prog) {
+        const [h, n] = a.prog();
+        bar = `<span class="pbar"><i style="width:${Math.min(100, h / n * 100).toFixed(1)}%"></i></span><span class="ptext">${fmtPts(Math.min(h, n))} / ${fmtPts(n)}</span>`;
+      }
+      return `<div class="badge tier${a.tier}${t ? " got" : ""}"><b>${esc(a.name)}</b><span>${esc(a.desc)}${t ? ` · ${esc(t.day)}` : ""}</span><span class="tiername">${TIERS[a.tier]} · ${TIER_XP[a.tier]} XP</span>${bar}</div>`;
+    }).join("");
+  }).join("") || `<p class="note">Nothing here yet.</p>`;
+}
+
+/* ---------- Collection ---------- */
+// Every player you draft is collected for good. Rarity comes from their rating with that team.
+const collKey = (dec, team, name) => `${dec}|${team}|${name}`;
+const RARITY = [[95, "legendary", "Legend"], [90, "epic", "Epic"], [80, "rare", "Star"], [0, "common", "Role player"]];
+const rarityOf = ovr => RARITY.find(([min]) => ovr >= min);
+const COLL_XP = { legendary: 50, epic: 25, rare: 10, common: 3 };
+const PLAYER_INDEX = {};
+const RARITY_TOTALS = { legendary: 0, epic: 0, rare: 0, common: 0 };
+for (const d of DECS) for (const f of Object.keys(DATA[d])) {
+  const t = DATA[d][f];
+  for (const p of t.players) {
+    const k = collKey(d, t.name, p.name);
+    if (PLAYER_INDEX[k]) continue;
+    PLAYER_INDEX[k] = { ovr: p.ovr, dec: d, team: t.name, name: p.name };
+    RARITY_TOTALS[rarityOf(p.ovr)[1]]++;
+  }
+}
+const FRANCHISE_NAMES = [...new Set(ALL_DRAWS.map(x => DATA[x.dec][x.fid].name))];
+const LEGEND_KEYS = Object.keys(PLAYER_INDEX).filter(k => PLAYER_INDEX[k].ovr >= 95);
+let collCache = null;
+function collStats() {
+  if (collCache) return collCache;
+  const by = { legendary: 0, epic: 0, rare: 0, common: 0 }, decStars = new Set(), teams = new Set();
+  let total = 0;
+  for (const k in career.coll) {
+    const p = PLAYER_INDEX[k];
+    if (!p) continue;
+    total++; by[rarityOf(p.ovr)[1]]++; teams.add(p.team);
+    if (p.ovr >= 80) decStars.add(p.dec);
+  }
+  return (collCache = { total, by, decStars, teams });
+}
+function collectPlayer(p) {
+  const k = collKey(p.dec, p.team, p.name);
+  if (career.coll[k] || !PLAYER_INDEX[k]) return;
+  career.coll[k] = Math.floor(Date.now() / 1000);
+  collCache = null;
+  const [, rar, label] = rarityOf(p.ovr), xp = COLL_XP[rar];
+  S.draftXp = (S.draftXp || 0) + xp;
+  // In hard mode a "new legend" message would give away the rating, so stay quiet until the season is played
+  if (!$("hardmode").checked && (rar === "legendary" || rar === "epic")) toast(`New ${label.toLowerCase()} in your collection: <b>${esc(p.name)}</b> +${xp} XP`);
+  gainXp(xp);
+  saveCareer();
+  checkCareerTrophies();
+  renderCollection();
+}
+let chaseKeys = null;
+function renderCollection() {
+  const c = collStats();
+  $("collSum").textContent = `${fmtPts(c.total)} players · ${c.by.legendary} of ${RARITY_TOTALS.legendary} legends`;
+  const bars = [["legendary", "Legends", "95+"], ["epic", "Epics", "90–94"], ["rare", "Stars", "80–89"], ["common", "Role players", "under 80"]];
+  $("collBars").innerHTML = bars.map(([k, l, range]) => `<div class="cbar ${k}"><span class="cl"><b>${l}</b> ${range}</span><span class="pbar"><i style="width:${Math.min(100, c.by[k] / RARITY_TOTALS[k] * 100).toFixed(2)}%"></i></span><span class="cn">${fmtPts(c.by[k])} / ${fmtPts(RARITY_TOTALS[k])}</span></div>`).join("");
+  // A few legends you haven't drafted yet, so there's always someone to hunt for
+  const missing = LEGEND_KEYS.filter(k => !career.coll[k]);
+  if (!chaseKeys || chaseKeys.some(k => career.coll[k])) chaseKeys = [...missing].sort(() => Math.random() - .5).slice(0, 4);
+  $("collChase").innerHTML = missing.length
+    ? `<span class="label">Legends still out there</span><div class="cchips">${chaseKeys.map(k => { const p = PLAYER_INDEX[k]; return `<span class="cchip legendary">${esc(p.name)} <small>${short(p.dec)} ${esc(p.team)}</small></span>`; }).join("")}</div>`
+    : `<span class="label">Every legend collected</span>`;
+  const recent = Object.entries(career.coll).sort((a, b) => b[1] - a[1]).slice(0, 10).filter(([k]) => PLAYER_INDEX[k]);
+  $("collRecent").innerHTML = recent.length ? `<span class="label">Latest pulls</span><div class="cchips">${recent.map(([k]) => { const p = PLAYER_INDEX[k]; return `<span class="cchip ${rarityOf(p.ovr)[1]}">${esc(p.name)} <small>${short(p.dec)} ${esc(p.team)}</small></span>`; }).join("")}</div>` : "";
+  const beaten = LEGENDS.filter(t => career.bosses[t.key]).length;
+  $("collBosses").innerHTML = `<span class="label">Legendary teams beaten in the Finals · ${beaten} of ${LEGENDS.length}</span><div class="cchips">${LEGENDS.map(t => `<span class="boss${career.bosses[t.key] ? " got" : ""}" title="${esc(t.stars.join(", "))}">${esc(t.label)}</span>`).join("")}</div>`;
+}
+
+/* ---------- Levels and XP ---------- */
+const xpStep = L => Math.min(150 + 50 * (L - 1), 1500);
+function levelOf(xp) { let L = 1, need = xpStep(1); while (xp >= need) { xp -= need; L++; need = xpStep(L); } return { level: L, into: xp, need }; }
+const LEVEL_TITLES = [[75, "GOAT"], [50, "Hall of Famer"], [40, "Legend"], [30, "Champion"], [25, "MVP"], [20, "All-NBA"], [15, "All-Star"], [10, "Starter"], [5, "Rotation player"], [1, "Rookie"]];
+const levelTitle = L => { const t = LEVEL_TITLES.find(([n]) => L >= n)[1]; return L >= 100 ? `${t} ${"★".repeat(Math.min(5, Math.floor((L - 75) / 25)))}` : t; };
+let quietXp = false;
+function gainXp(n) {
+  if (!n) return;
+  const before = levelOf(career.xp).level;
+  career.xp += n;
+  const after = levelOf(career.xp).level;
+  if (after > before && !quietXp) levelUp(before, after);
+  renderCareer();
+}
+function levelUp(from, to) {
+  career.skips = Math.min(5, (career.skips || 0) + (to - from));
+  const opened = RULES.filter(r => r.lvl > from && r.lvl <= to);
+  toast(`Level up! <b>Level ${to} · ${levelTitle(to)}</b>${opened.length ? ` · New rule: ${opened.map(r => esc(r.name)).join(", ")}` : ""} · +1 challenge swap`);
+  confetti();
+  renderRules(); renderChallenges();
+}
+function renderCareer() {
+  const { level, into, need } = levelOf(career.xp);
+  $("lvlNum").textContent = level;
+  $("lvlTitle").textContent = levelTitle(level);
+  $("xpFill").style.width = `${(into / need * 100).toFixed(1)}%`;
+  $("xpText").textContent = `${fmtPts(into)} / ${fmtPts(need)} XP`;
+  const next = RULES.find(r => r.lvl > level);
+  $("xpNext").textContent = next ? `Level ${next.lvl} unlocks the ${next.name} rule` : `${fmtPts(career.xp)} career XP`;
+}
+function renderXpSummary(run) {
+  const box = $("xpSum");
+  const log = run.xpLog || [];
+  const total = log.reduce((t, [, x]) => t + x, 0);
+  const { level, into, need } = levelOf(career.xp);
+  box.hidden = !log.length;
+  box.innerHTML = `<div class="head"><h3>+${fmtPts(total)} XP</h3><span class="label">Level ${level} · ${esc(levelTitle(level))} · ${fmtPts(into)} / ${fmtPts(need)}</span></div>
+    <span class="pbar"><i style="width:${(into / need * 100).toFixed(1)}%"></i></span>
+    <ul class="xplog">${log.map(([l, x]) => `<li><span>${esc(l)}</span><b>+${fmtPts(x)}</b></li>`).join("")}</ul>`;
+}
+
+/* ---------- Rules ---------- */
+// Optional rules for a draft: harder or stranger, for bonus XP. They unlock as you level up.
+const RULES = [
+  { id: "noredraw", name: "No re-draws", desc: "No re-draw buttons this draft", bonus: .15, lvl: 2 },
+  { id: "throwback", name: "Throwback", desc: "Every roll comes from the 1960s, '70s or '80s", bonus: .15, lvl: 3 },
+  { id: "eralock", name: "Era lock", desc: "After your first pick, every roll comes from that decade", bonus: .2, lvl: 4 },
+  { id: "franlock", name: "Franchise lock", desc: "After your first pick, every roll comes from that franchise", bonus: .25, lvl: 6 },
+  { id: "budget", name: "Budget squad", desc: "Nobody rated over 85 can be drafted", bonus: .35, lvl: 8 },
+  { id: "onestar", name: "One superstar", desc: "Only one player rated 90+ on your team", bonus: .2, lvl: 10 },
+];
+const ruleUnlocked = id => { const r = RULES.find(x => x.id === id); return !!r && lvl() >= r.lvl; };
+const ruleName = id => (RULES.find(x => x.id === id) || {}).name || id;
+const xpMult = run => 1 + (run.hard ? .5 : 0) + (run.rules || []).reduce((a, id) => a + ((RULES.find(x => x.id === id) || {}).bonus || 0), 0);
+function renderRules() {
+  if (!S) return;
+  const locked = picks() > 0 || S.done || S.redrawsUsed > 0, L = lvl();
+  $("rules").innerHTML = RULES.map(r => {
+    const open = L >= r.lvl, on = S.rules.includes(r.id);
+    return `<button class="rule${on ? " on" : ""}" data-rule="${r.id}" aria-pressed="${on}"${!open || locked ? " disabled" : ""} title="${esc(r.desc)}">${open ? "" : "🔒 "}${esc(r.name)} <span>${open ? `+${Math.round(r.bonus * 100)}%` : `Lv ${r.lvl}`}</span></button>`;
+  }).join("");
+  const bonus = Math.round((xpMult({ hard: $("hardmode").checked, rules: S.rules }) - 1) * 100);
+  $("rulesNote").textContent = (locked ? (S.rules.length ? "Locked in for this draft" : "No rules this draft") : "Pick before your first pick") + (bonus ? ` · +${bonus}% XP` : "");
+  const on = S.rules.map(ruleName);
+  $("simRules").textContent = on.length ? `Rules: ${on.join(", ")}` : "";
+}
+function toggleRule(id) {
+  if (picks() > 0 || S.done || S.redrawsUsed > 0 || !ruleUnlocked(id)) return;
+  S.rules = S.rules.includes(id) ? S.rules.filter(x => x !== id) : [...S.rules, id];
+  career.rules = [...S.rules];
+  saveCareer();
+  S.teamRedraw = S.eraRedraw = S.rules.includes("noredraw") ? 0 : 1;
+  // Only re-roll if the current roll breaks the new rules
+  if (S.draw && !S.spinning && !allowedDraws().some(x => x.dec === S.draw.dec && x.fid === S.draw.fid)) newDraw(); else render();
+}
+
+/* ---------- Challenges ---------- */
+// Three at a time (easy, medium, hard). Finish one and a new one takes its place, forever. No timers.
+const CH_XP = [0, 60, 120, 250];
+const CH_TIER = ["", "Easy", "Medium", "Hard"];
+const BIG_FRANCHISES = FRANCHISE_NAMES.filter(n => ALL_DRAWS.filter(x => DATA[x.dec][x.fid].name === n).length >= 4);
+const T = (tier, gen, text, test, ok) => ({ tier, gen, text, test, ok });
+const CH_TPL = {
+  wins: T(1, () => ({ n: rnd([50, 52, 55]) }), p => `Win ${p.n}+ games`, (r, p) => r.w >= p.n),
+  decslot: T(1, () => ({ d: rnd(DECS), s: rnd(SLOTS) }), p => `Make the playoffs with a ${p.d} player at ${p.s}`, (r, p) => r.w >= 42 && r.players.some(x => x.slot === p.s && x.dec === p.d)),
+  fran: T(1, () => ({ t: rnd(BIG_FRANCHISES) }), p => `Make the playoffs with a ${p.t} player`, (r, p) => r.w >= 42 && r.players.some(x => x.team === p.t)),
+  teamppg: T(1, () => ({ n: rnd([112, 115]) }), p => `Average ${p.n}+ points as a team`, (r, p) => r.pf / 82 >= p.n),
+  defense: T(1, () => ({ n: rnd([102, 104]) }), p => `Hold opponents under ${p.n} points a game`, (r, p) => r.pa / 82 < p.n),
+  star: T(1, () => rnd([{ k: "ppg", n: 28, l: "points" }, { k: "rpg", n: 12, l: "rebounds" }, { k: "apg", n: 9, l: "assists" }]), p => `Have a starter average ${p.n}+ ${p.l}`, (r, p) => boxAny(r, b => b[p.k] >= p.n)),
+  series: T(1, () => ({}), () => "Win a playoff series", r => played(r) && series(r).some(rd => rd.res[0] === 4)),
+  streak: T(1, () => ({ n: rnd([10, 12]) }), p => `Win ${p.n} games in a row`, (r, p) => r.streak >= p.n),
+  capwins: T(2, () => ({ o: rnd([84, 85]) }), p => `Win 55+ games with a team rating under ${p.o}`, (r, p) => r.w >= 55 && avgOvr(r) < p.o),
+  nomodern: T(2, () => ({ d: rnd(["1980s", "1990s"]) }), p => `Reach the conference finals with nobody from after the ${p.d}`, (r, p) => played(r) && r.reached >= 2 && r.players.every(x => x.dec <= p.d)),
+  three20: T(2, () => ({}), () => "Have three starters average 20+ points", r => !!r.box && r.box.filter(b => b.ppg >= 20).length >= 3),
+  natural: T(2, () => ({}), () => "Win 60+ games with all five in natural positions", r => r.w >= 60 && r.players.every(x => x.natural)),
+  decades: T(2, () => ({}), () => "Make the playoffs with players from 4 different decades", r => r.w >= 42 && new Set(r.players.map(x => x.dec)).size >= 4),
+  sweep: T(2, () => ({}), () => "Sweep a playoff series 4–0", r => series(r).some(rd => rd.res[0] === 4 && rd.res[1] === 0)),
+  finals: T(2, () => ({}), () => "Reach the NBA Finals", r => played(r) && r.reached === 3),
+  wins62: T(2, () => ({ n: rnd([62, 65]) }), p => `Win ${p.n}+ games`, (r, p) => r.w >= p.n),
+  titledec: T(3, () => ({ d: rnd(DECS), s: rnd(SLOTS) }), p => `Win the title with a ${p.d} player at ${p.s}`, (r, p) => r.champ && r.players.some(x => x.slot === p.s && x.dec === p.d)),
+  titlecap: T(3, () => ({ o: rnd([90, 91, 92]) }), p => `Win the title with a team rating under ${p.o}`, (r, p) => r.champ && avgOvr(r) < p.o),
+  wins70: T(3, () => ({}), () => "Win 70+ games", r => r.w >= 70),
+  titlerule: T(3, () => ({ id: rnd(RULES.filter(x => ruleUnlocked(x.id) && x.id !== "budget").map(x => x.id)) }), p => `Win the title with the ${ruleName(p.id)} rule on`, (r, p) => r.champ && hasR(r, p.id), () => RULES.some(x => ruleUnlocked(x.id) && x.id !== "budget")),
+  titlefew: T(3, () => ({ n: rnd([3, 4]) }), p => `Win the title losing ${p.n} or fewer playoff games`, (r, p) => r.champ && r.pl <= p.n),
+  titlehard: T(3, () => ({}), () => "Win the title in hard mode", r => r.champ && r.hard),
+  titlefran: T(3, () => ({ t: rnd(BIG_FRANCHISES) }), p => `Win the title with a ${p.t} player`, (r, p) => r.champ && r.players.some(x => x.team === p.t)),
+};
+const chText = c => CH_TPL[c.t].text(c.p);
+function newChallenge(tier, avoid = []) {
+  const ids = Object.keys(CH_TPL).filter(id => CH_TPL[id].tier === tier && !avoid.includes(id) && (!CH_TPL[id].ok || CH_TPL[id].ok()));
+  const t = rnd(ids);
+  return { t, p: CH_TPL[t].gen(), tier, born: Date.now() };
+}
+function ensureChallenges() {
+  career.ch = (Array.isArray(career.ch) ? career.ch : []).filter(c => c && CH_TPL[c.t]);
+  for (const tier of [1, 2, 3]) if (!career.ch.some(c => c.tier === tier)) career.ch.push(newChallenge(tier, career.ch.map(c => c.t)));
+  career.ch.sort((a, b) => a.tier - b.tier);
+}
+function checkChallenges(run, log) {
+  let changed = false;
+  career.ch = career.ch.map(c => {
+    if (run.id < c.born) return c; // only seasons that started after the challenge appeared count
+    let ok = false;
+    try { ok = !!CH_TPL[c.t].test(run, c.p); } catch (e) { ok = false; }
+    if (!ok) return c;
+    changed = true;
+    career.chDone = (career.chDone || 0) + 1;
+    const xp = CH_XP[c.tier];
+    log.push([`Challenge: ${chText(c)}`, xp]);
+    toast(`Challenge complete: <b>${esc(chText(c))}</b> +${xp} XP`);
+    gainXp(xp);
+    return newChallenge(c.tier, career.ch.map(x => x.t));
+  });
+  if (changed) saveCareer();
+}
+function swapChallenge(i) {
+  if (!career.skips || !career.ch[i]) return;
+  career.skips--;
+  career.ch[i] = newChallenge(career.ch[i].tier, career.ch.map(x => x.t));
+  saveCareer(); renderChallenges();
+}
+function renderChallenges() {
+  $("chSum").textContent = `${career.chDone || 0} done · ${career.skips || 0} swap${career.skips === 1 ? "" : "s"} left`;
+  $("chList").innerHTML = career.ch.map((c, i) => `<div class="chcard t${c.tier}"><span class="label">${CH_TIER[c.tier]} · +${CH_XP[c.tier]} XP</span><b>${esc(chText(c))}</b><button class="btn sm" data-swap="${i}"${career.skips ? "" : " disabled"} aria-label="Swap this challenge for another">Swap</button></div>`).join("");
+}
+
+/* ---------- After each season and each playoff run ---------- */
+function afterSeason(run, phase) {
+  run.xpLog = run.xpLog || [];
+  const log = run.xpLog, m = xpMult(run), life = career.life;
+  if (phase === "season") {
+    // Players were collected while drafting; remember whether all five were new to you
+    run.allNew = SLOTS.every(k => S.lineup[k] && S.lineup[k].fresh);
+    if (S.draftXp) log.push(["New players for your collection", S.draftXp]);
+    life.seasons++; life.wins += run.w; if (run.w === 82) life.perfect++;
+    const xp = Math.round((20 + run.w + (run.w === 82 ? 150 : run.w >= 70 ? 25 : 0)) * m);
+    log.push([`Season: ${run.w} wins${m > 1 ? ` (×${m.toFixed(2)} for rules)` : ""}`, xp]);
+    gainXp(xp);
+  } else {
+    life.playoffWins += run.pw; if (run.champ) life.titles++;
+    const xp = Math.round((run.pw * 3 + (run.champ ? 60 : 0)) * m);
+    if (xp) { log.push([`Playoffs: ${run.pw} wins${run.champ ? " and the title" : ""}`, xp]); gainXp(xp); }
+    const fin = series(run)[3];
+    if (run.champ && fin && fin.boss && !career.bosses[fin.boss]) {
+      career.bosses[fin.boss] = run.date;
+      log.push([`First Finals win over the ${fin.opp}`, 75]);
+      gainXp(75);
+    }
+  }
+  checkChallenges(run, log);
+  checkTrophies(run, log);
+  saveCareer();
+  renderXpSummary(run);
+  renderCareer(); renderChallenges(); renderCollection();
+}
+
+/* ---------- Career save ---------- */
+const KEY_CAREER = "hoops82.career.v1";
+const blankCareer = () => ({ v: 1, xp: 0, coll: {}, ch: [], chDone: 0, skips: 2, rules: [], bosses: {}, life: { seasons: 0, wins: 0, titles: 0, playoffWins: 0, perfect: 0 }, seeded: false });
+let career = blankCareer();
+function saveCareer() { store.set(KEY_CAREER, career); }
+function loadCareer() {
+  const c = store.get(KEY_CAREER, null);
+  career = Object.assign(blankCareer(), c && typeof c === "object" ? c : {});
+  career.life = Object.assign(blankCareer().life, career.life || {});
+  collCache = null;
+  let seeded = null;
+  if (!career.seeded) seeded = seedCareer();
+  ensureChallenges();
+  saveCareer();
+  return seeded;
+}
+// First time on this version: credit everything already in the record book, so you start at the level you earned
+function seedCareer() {
+  let xp = 0;
+  for (const r of runs) {
+    const m = xpMult(r);
+    xp += Math.round((20 + r.w + (r.w === 82 ? 150 : r.w >= 70 ? 25 : 0)) * m);
+    if (r.po === "played") xp += Math.round(((r.pw || 0) * 3 + (r.champ ? 60 : 0)) * m);
+    career.life.seasons++; career.life.wins += r.w || 0; if (r.w === 82) career.life.perfect++;
+    if (r.po === "played") { career.life.playoffWins += r.pw || 0; if (r.champ) career.life.titles++; }
+    for (const p of r.players || []) {
+      const k = collKey(p.dec, p.team, p.name);
+      if (PLAYER_INDEX[k] && !career.coll[k]) { career.coll[k] = Math.floor((r.id || Date.now()) / 1000); xp += COLL_XP[rarityOf(PLAYER_INDEX[k].ovr)[1]]; }
+    }
+  }
+  for (const a of ACH) if (trophies[a.id] && a.cat !== 5) xp += TIER_XP[a.tier];
+  career.xp = xp;
+  career.seeded = true;
+  collCache = null;
+  return { seasons: runs.length, level: levelOf(xp).level };
+}
+
+let toastQ = [], toastBusy = false;
 function toast(html) {
-  const t = $("toast");
-  t.innerHTML = html; t.hidden = false;
-  clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; }, 3800);
+  if (quietXp) return;
+  if (toastQ.length > 5) toastQ.splice(1, toastQ.length - 4); // don't pile up a long backlog
+  toastQ.push(html);
+  if (!toastBusy) nextToast();
+}
+function nextToast() {
+  const t = $("toast"), h = toastQ.shift();
+  if (!h) { toastBusy = false; t.hidden = true; return; }
+  toastBusy = true; t.innerHTML = h; t.hidden = false;
+  setTimeout(nextToast, toastQ.length > 1 ? 1600 : 2800);
 }
 
 /* ---------- Leaderboard + Cloud Save ---------- */
@@ -1255,7 +1855,7 @@ async function cloudSave() {
   if (!lbDb || !lbMyId) return;
   try {
     const slim = runs.slice(-50).map(r => ({ id: r.id, date: r.date, mode: r.mode, hard: !!r.hard, w: r.w, l: r.l, champ: !!r.champ, reached: r.reached, pw: r.pw, pl: r.pl, players: r.players, box: r.box, ach: r.ach, pf: r.pf, pa: r.pa, streak: r.streak, highs: r.highs, mvp: r.mvp, dpoy: r.dpoy, seasonHigh: r.seasonHigh }));
-    await lbDb.doc("data/users/" + lbMyId + "/save").set({ runs: slim, trophies, ts: Date.now() });
+    await lbDb.doc("data/users/" + lbMyId + "/save").set({ runs: slim, trophies, career, ts: Date.now() });
   } catch (e) {}
 }
 async function cloudRestore() {
@@ -1273,6 +1873,12 @@ async function cloudRestore() {
     if (d.trophies) {
       trophies = Object.assign({}, d.trophies, trophies); // local wins on conflict
       store.set(KEY_TROPHY, trophies);
+    }
+    if (d.career && (d.career.xp || 0) > career.xp) {
+      career = Object.assign(blankCareer(), d.career);
+      career.life = Object.assign(blankCareer().life, career.life || {});
+      collCache = null; ensureChallenges(); saveCareer();
+      renderCareer(); renderChallenges(); renderCollection(); renderRules();
     }
     store.set(CLOUD_KEY, d.ts);
     renderBook(); renderHeader(); renderTrophies();
@@ -1742,7 +2348,8 @@ function saveRuns() {
 function saveCur() {
   if (!S) return;
   if (S.done) { store.del(KEY_CUR); return; }
-  store.set(KEY_CUR, { lineup: S.lineup, draw: S.spinning ? null : S.draw, teamRedraw: S.teamRedraw, eraRedraw: S.eraRedraw, hard: $("hardmode").checked, mode: S.mode, day: S.day, drawCount: S.drawCount });
+  store.set(KEY_CUR, { lineup: S.lineup, draw: S.spinning ? null : S.draw, teamRedraw: S.teamRedraw, eraRedraw: S.eraRedraw, hard: $("hardmode").checked, mode: S.mode, day: S.day, drawCount: S.drawCount,
+    rules: S.rules, lockDec: S.lockDec, lockName: S.lockName, redrawsUsed: S.redrawsUsed, draftXp: S.draftXp });
 }
 function poText(r) {
   if (r.po === "missed") return "Missed playoffs";
@@ -1758,7 +2365,6 @@ function renderBook() {
   $("bookPanel").hidden = !runs.length;
   if (!runs.length) return;
   let list = [...runs];
-  if (bookFilter === "daily") list = list.filter(r => r.mode === "daily");
   if (bookFilter === "titles") list = list.filter(r => r.champ);
   list.sort(bookSort === "best" ? (a, b) => runScore(b) - runScore(a) : (a, b) => b.id - a.id);
   const bestId = [...runs].sort((a, b) => runScore(b) - runScore(a))[0].id;
@@ -1774,7 +2380,7 @@ function renderBook() {
     const b = document.createElement("button");
     b.className = "brow" + (r.id === bestId ? " top" : "");
     const ppgSuffix = r.pf != null ? `<span class="brow-ppg"> · ${(r.pf/82).toFixed(1)} / ${(r.pa/82).toFixed(1)} pts</span>` : "";
-    b.innerHTML = `<span>${i + 1}</span><span class="rec">${r.w}–${r.l}</span><span class="po">${esc(poText(r))}${r.hard ? `<span class="mini">Hard</span>` : ""}${r.id === bestId ? `<span class="mini">Best</span>` : ""}</span><span class="date">${esc(r.date)}</span>
+    b.innerHTML = `<span>${i + 1}</span><span class="rec">${r.w}–${r.l}</span><span class="po">${esc(poText(r))}${r.hard ? `<span class="mini">Hard</span>` : ""}${(r.rules || []).map(id => `<span class="mini">${esc(ruleName(id))}</span>`).join("")}${r.id === bestId ? `<span class="mini">Best</span>` : ""}</span><span class="date">${esc(r.date)}</span>
       <span class="lu">${r.players.map(p => `${p.slot} ${esc(p.name)} ${short(p.dec)}`).join(" · ")}${ppgSuffix}</span>`;
     b.setAttribute("aria-label", `Open season ${r.w}–${r.l}, ${poText(r)}`);
     b.onclick = () => openRun(r, b);
@@ -1793,10 +2399,10 @@ function openRun(r, anchor) {
   if (r.home) extra.push(["Home", `${r.home[0]}–${r.home[1]}`]);
   if (r.away) extra.push(["Road", `${r.away[0]}–${r.away[1]}`]);
   if (r.streak != null) extra.push(["Streak", r.streak]);
-  const earned = (r.ach || []).map(id => ACH.find(a => a[0] === id)).filter(Boolean);
+  const earned = (r.ach || []).map(id => ACH.find(a => a.id === id)).filter(Boolean);
   $("mBox").innerHTML = `
     <div class="mtop">
-      <div><span class="label">${esc(r.date)}${r.mode === "daily" ? ` · Daily ${esc(niceDay(r.day))}` : " · Free play"}${r.hard ? " · Hard mode" : ""}</span>
+      <div><span class="label">${esc(r.date)}${r.hard ? " · Hard mode" : ""}${(r.rules || []).map(id => " · " + esc(ruleName(id))).join("")}</span>
         <h2 id="mTitle" style="font-size:44px">${r.w}–${r.l}</h2><b>${esc(poText(r))}</b></div>
       <button class="btn sm" id="mClose">Close</button>
     </div>
@@ -1806,7 +2412,7 @@ function openRun(r, anchor) {
     ${games.length ? `<div class="stack"><span class="label">All 82 games · tap a square for the score</span><div class="games">${games.map((x, i) => `<div class="g ${x[0] > x[1] ? "w" : "l"}" title="Game ${i + 1} · ${x[2] ? "vs" : "at"} ${esc(x[3] || "")} · ${x[0] > x[1] ? "W" : "L"} ${x[0]}–${x[1]}">${x[0] > x[1] ? "W" : "L"}</div>`).join("")}</div></div>` : `<p class="note">Game-by-game detail wasn't saved for this season.</p>`}
     ${r.highs && r.highs.length ? `<div class="stack"><span class="label">Top performances</span><ul class="hl">${highsList(r.highs)}</ul></div>` : ""}
     ${r.rounds && r.rounds.length ? `<div class="stack"><span class="label">Playoffs${r.seed ? ` · #${r.seed} seed` : ""}</span><div class="rounds">${r.rounds.map(roundCard).join("")}</div></div>` : ""}
-    ${earned.length ? `<div class="stack"><span class="label">Trophies earned this season</span><div class="badges">${earned.map(([, n, d]) => `<div class="badge got"><b>${esc(n)}</b><span>${esc(d)}</span></div>`).join("")}</div></div>` : ""}
+    ${earned.length ? `<div class="stack"><span class="label">Trophies earned this season</span><div class="badges">${earned.map(a => `<div class="badge got tier${a.tier}"><b>${esc(a.name)}</b><span>${esc(a.desc)}</span></div>`).join("")}</div></div>` : ""}
     <div class="row-gap"><button class="btn" id="mCopy">Copy this season</button><span class="note" id="mCopyNote"></span></div>`;
   $("modal").hidden = false;
   document.body.style.overflow = "hidden";
@@ -1833,12 +2439,16 @@ $("bookFilter").onclick = e => { const v = e.target.closest("button")?.dataset.v
 $("clearBook").onclick = () => { $("clearAsk").hidden = false; $("clearBook").hidden = true; };
 $("clearNo").onclick = () => { $("clearAsk").hidden = true; $("clearBook").hidden = false; };
 $("clearYes").onclick = () => {
-  runs = []; curRun = null; trophies = {};
+  runs = []; curRun = null;
+  trophies = Object.fromEntries(Object.entries(trophies).filter(([id]) => (ACH.find(a => a.id === id) || {}).cat === 5));
   store.set(KEY_RUNS, runs); store.set(KEY_TROPHY, trophies);
   $("clearAsk").hidden = true; $("clearBook").hidden = false;
   renderBook(); renderTrophies(); renderHeader();
 };
 $("poBtn").onclick = playoffs;
+$("rules").onclick = e => { const b = e.target.closest("[data-rule]"); if (b && !b.disabled) toggleRule(b.dataset.rule); };
+$("chList").onclick = e => { const b = e.target.closest("[data-swap]"); if (b && !b.disabled) swapChallenge(+b.dataset.swap); };
+$("trophyFilter").onclick = e => { const v = e.target.closest("button")?.dataset.v; if (v) { trophyFilter = v; renderTrophies(); } };
 $("rTeam").onclick = redrawTeam;
 $("rEra").onclick = redrawEra;
 $("simBtn").onclick = simulate;
@@ -1869,6 +2479,7 @@ $("copy").onclick = () => {
 };
 
 function boot() {
+  const seeded = loadCareer();
   fresh();
   const sv = store.get(KEY_CUR, null);
   const validDraw = d => d && DATA[d.dec] && DATA[d.dec][d.fid] ? d : null;
@@ -1879,10 +2490,21 @@ function boot() {
     for (const k of SLOTS) S.lineup[k] = sv.lineup[k] || null;
     S.draw = validDraw(sv.draw);
     S.teamRedraw = sv.teamRedraw ?? 1; S.eraRedraw = sv.eraRedraw ?? 1;
+    S.rules = Array.isArray(sv.rules) ? sv.rules : []; S.lockDec = sv.lockDec || null; S.lockName = sv.lockName || null;
+    S.redrawsUsed = sv.redrawsUsed || 0; S.draftXp = sv.draftXp || 0;
     $("hardmode").checked = !!sv.hard;
     if (picks() < 5 && (!S.draw || !hasPickable(S.draw.dec, S.draw.fid))) newDraw(); else render();
   } else newDraw();
-  renderBook(); renderTrophies();
+  renderBook(); renderTrophies(); renderCareer(); renderChallenges(); renderCollection(); renderRules();
+  if (seeded) {
+    // Welcome back: unlock any career trophies you already qualify for, without a pile of level-up pop-ups
+    const had = new Set(Object.keys(trophies));
+    quietXp = true; checkCareerTrophies(); quietXp = false;
+    saveCareer();
+    const L = levelOf(career.xp).level, earned = ACH.filter(a => trophies[a.id] && !had.has(a.id)).map(a => esc(a.name));
+    toast(seeded.seasons ? `Welcome back! Your ${seeded.seasons} seasons put you at <b>Level ${L} · ${esc(levelTitle(L))}</b>${earned.length ? ` and earned <b>${earned.join(", ")}</b>` : ""}. New: challenges, rules, a collection and ${ACH.length - 47} more trophies.` : `New: levels, challenges, rules and a player collection. Finish a season to start leveling up.`);
+    renderCareer(); renderChallenges(); renderRules(); renderHeader();
+  }
 }
 boot();
 </script>
