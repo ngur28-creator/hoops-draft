@@ -534,6 +534,20 @@ h3 { font-family: var(--display); font-weight: 400; font-size: 16px; line-height
 .h2hopp b { font-family: var(--body); font-weight: 800; font-size: 16px; }
 .h2hvs .vs { font-family: var(--display); font-weight: 400; font-size: 22px; }
 
+/* Game 7 shot */
+.clutch { display: grid; gap: 10px; padding: 16px; border-radius: 16px; background: var(--ink-2); color: var(--board-fg); border: 2px solid var(--accent); }
+.clutch .note { color: var(--board-dim); }
+.clutch .ctitle { font-family: var(--display); font-weight: 400; font-size: clamp(18px, 4.5vw, 26px); line-height: 1.1; color: #ffc93c; }
+.meter { position: relative; height: 38px; border-radius: 10px; background: linear-gradient(90deg, #ff5c7a33, #ff5c7a22); border: 2px solid color-mix(in srgb, var(--board-fg) 25%, transparent); overflow: hidden; }
+.meter .zone { position: absolute; top: 0; bottom: 0; background: #57e38a; box-shadow: 0 0 16px #57e38a; }
+.meter .mark { position: absolute; top: -4px; bottom: -4px; width: 6px; margin-left: -3px; left: 0; background: #fff4e0; border-radius: 3px; box-shadow: 0 0 10px #fff; }
+#shotNote { color: var(--board-fg); font-weight: 800; font-size: 16px; min-height: 1.3em; }
+.clutch .btn:not(.primary) { color: var(--board-fg); border-color: var(--board-dim); background: transparent; }
+.series .g.clutch { outline: 2px solid #ffc93c; outline-offset: 1px; }
+.reel.golden { box-shadow: inset 0 0 0 3px #ffc93c, 0 0 22px color-mix(in srgb, #ffc93c 45%, transparent); }
+.reel.golden .val { color: #ffc93c; }
+.soundbtn { border: 1px solid var(--line); color: var(--ink); cursor: pointer; font-weight: 700; }
+
 /* Rule help */
 .rulehelp { font-size: 14px; }
 .rulehelp summary { cursor: pointer; font-weight: 700; color: var(--accent-text); }
@@ -587,6 +601,7 @@ h3 { font-family: var(--display); font-weight: 400; font-size: 16px; line-height
       </div>
       <span class="confirm" id="modeAsk" hidden>Start over? Your current picks will be lost. <button class="btn sm" id="modeYes">Start over</button><button class="btn sm" id="modeNo">Keep drafting</button></span>
       <div class="bests" id="bests"></div>
+      <button class="pill soundbtn" id="soundBtn" aria-pressed="false">🔈 Sound off</button>
     </div>
     <div class="career" aria-label="Your level">
       <div class="lvl"><span class="lvlnum" id="lvlNum">1</span><div><b id="lvlTitle">Rookie</b><span class="label" id="xpText">0 / 150 XP</span></div></div>
@@ -692,6 +707,7 @@ h3 { font-family: var(--display); font-weight: 400; font-size: 16px; line-height
       </div>
       <div id="poWrap" class="stack" hidden>
         <div class="head"><h2>Playoffs</h2><span class="label" id="poSeed"></span></div>
+        <div class="clutch" id="clutch" hidden></div>
         <div class="rounds" id="rounds"></div>
         <p class="champ" id="champ"></p>
       </div>
@@ -790,7 +806,7 @@ h3 { font-family: var(--display); font-weight: 400; font-size: 16px; line-height
         <input class="lb-input" id="lbAddInput" placeholder="Paste a score code" autocomplete="off" spellcheck="false" aria-label="Score code">
         <button class="btn" id="lbAddBtn">Add to board</button>
       </div>
-      <span class="note" id="lbAddNote">Friends you invite as Editors (Share menu, with the public link off) post by themselves. Anyone else can send you a score code to paste here.</span>
+      <span class="note" id="lbAddNote">To let friends post by themselves: in Share, turn off "Anyone with the link", then invite each friend's email with "Can edit". Anyone else can send you a score code to paste here.</span>
     </div>
   </section>
 
@@ -803,7 +819,7 @@ h3 { font-family: var(--display); font-weight: 400; font-size: 16px; line-height
 <div class="toast" id="toast" hidden role="status"></div>
 
 <script>
-const APP_VERSION = 27;
+const APP_VERSION = 28;
 // Anything that goes wrong is noted (last 20, in this browser and in your private cloud save) so it can be fixed
 const KEY_ERRS = "hoops82.errors";
 let errSaveTimer = 0;
@@ -957,6 +973,7 @@ function spin(final) {
   S.spinning = true; render();
   const done = () => {
     S.draw = final; S.spinning = false; query = ""; $("find").value = "";
+    if (goldenRoll) sfx("gold");
     render();
     for (const id of ["eraReel", "teamReel"]) { const el = $(id); el.classList.remove("land"); void el.offsetWidth; el.classList.add("land"); }
   };
@@ -980,8 +997,13 @@ function allowedDraws() {
   if (S.lockName) opts = opts.filter(x => DATA[x.dec][x.fid].name === S.lockName);
   return opts.length ? opts : ALL_DRAWS.filter(x => hasPickable(x.dec, x.fid));
 }
+let goldenRoll = false;
 function newDraw() {
-  spin(seeded(() => rnd(allowedDraws())));
+  const opts = allowedDraws();
+  // About one roll in 16 is golden: one of the 24 legendary rosters (when your rules allow it)
+  const gold = opts.filter(x => LEGENDS.some(t => t.key === x.dec + "|" + x.fid));
+  goldenRoll = gold.length > 0 && Math.random() < 1 / 16;
+  spin(seeded(() => rnd(goldenRoll ? gold : opts)));
 }
 // Re-draw team: another franchise from the same decade (blocked once Franchise lock has locked in)
 const teamOpts = () => !S.draw || S.lockName ? [] : allowedDraws().filter(x => x.dec === S.draw.dec && x.fid !== S.draw.fid);
@@ -989,7 +1011,7 @@ function redrawTeam() {
   if (!S.teamRedraw || S.spinning || !S.draw) return;
   const opts = teamOpts();
   if (!opts.length) return;
-  S.teamRedraw--; S.redrawsUsed++;
+  S.teamRedraw--; S.redrawsUsed++; goldenRoll = false;
   spin(seeded(() => rnd(opts)));
 }
 // Re-draw era: the same franchise name from another decade (blocked once Era lock has locked in)
@@ -1002,7 +1024,7 @@ function redrawEra() {
   if (!S.eraRedraw || S.spinning) return;
   const opts = eraOpts();
   if (!opts.length) return;
-  S.eraRedraw--; S.redrawsUsed++;
+  S.eraRedraw--; S.redrawsUsed++; goldenRoll = false;
   spin(seeded(() => rnd(opts)));
 }
 function flash(slot) {
@@ -1184,7 +1206,8 @@ function renderInner() {
   const team = DATA[S.draw.dec][S.draw.fid];
   $("eraVal").textContent = short(S.draw.dec);
   $("teamVal").textContent = team.name;
-  $("note").textContent = `${S.draw.dec} ${team.name}. Draft one player. His natural positions are buttons; anywhere else costs rating.` + (!eraOpts().length && S.eraRedraw ? " This franchise has no other era to re-draw." : "");
+  $("note").textContent = (goldenRoll ? "✨ Golden roll! One of the greatest rosters ever. " : "") + `${S.draw.dec} ${team.name}. Draft one player. His natural positions are buttons; anywhere else costs rating.` + (!eraOpts().length && S.eraRedraw ? " This franchise has no other era to re-draw." : "");
+  $("teamReel").classList.toggle("golden", goldenRoll);
   renderRoster(hard);
 }
 
@@ -1318,6 +1341,7 @@ function seasonSim(L) {
       feats.maxPts = Math.max(feats.maxPts, pl.pts); feats.maxReb = Math.max(feats.maxReb, pl.reb);
       feats.maxAst = Math.max(feats.maxAst, pl.ast); feats.maxBlk = Math.max(feats.maxBlk, pl.blk); feats.maxStl = Math.max(feats.maxStl, pl.stl);
       perfs.push({ k, g: g + 1, ...pl, score: score + (td ? 15 : 0) + (pl.pts >= 50 ? 20 : 0), td, won: x.won, us: x.us, them: x.them, opp: x.opp });
+      if (!x.star || score > x.star.score) x.star = { k, pts: pl.pts, reb: pl.reb, ast: pl.ast, td, score };
     }
     games.push(x);
   }
@@ -1379,6 +1403,7 @@ function animateSeason(res) {
   const big = $("rec"); big.classList.remove("perfect");
   const cells = [...document.querySelectorAll("#games .g")];
   const byForm = [...res.box].sort((a, b) => b.fm - a.fm), hot = byForm[0], cold = byForm[byForm.length - 1];
+  const nameAt = k => (res.box.find(b => b.slot === k) || {}).name || "";
   let w = 0, l = 0, i = 0, streak = 0;
   const paint = () => {
     const x = games[i];
@@ -1387,7 +1412,8 @@ function animateSeason(res) {
     x.won ? (w++, streak = streak > 0 ? streak + 1 : 1) : (l++, streak = streak < 0 ? streak - 1 : -1);
     big.textContent = `${w}–${l}`;
     big.classList.toggle("perfect", l === 0);
-    $("ticker").textContent = `Game ${i + 1}: ${x.won ? "W" : "L"} ${x.us}–${x.them} ${x.home ? "vs" : "at"} ${x.opp}${x.ot ? " (OT)" : ""}`;
+    const sx = x.star, sn = sx ? nameAt(sx.k) : "";
+    $("ticker").textContent = `Game ${i + 1}: ${x.won ? "W" : "L"} ${x.us}–${x.them} ${x.home ? "vs" : "at"} ${x.opp}${x.ot ? " (OT)" : ""}${sx ? ` · ${sn.split(" ").slice(-1)[0]} ${sx.pts}-${sx.reb}-${sx.ast}` : ""}`;
     $("watch").textContent = l === 0 ? `Perfect watch · ${w}–0` : streak >= 5 ? `${streak}-game win streak` : streak <= -3 ? `${-streak}-game skid` : "";
     // Little news flashes as the season goes
     const g = i + 1, buzz = $("buzz");
@@ -1396,11 +1422,22 @@ function animateSeason(res) {
     else if (g === 41) buzz.textContent = `Halfway: ${w}–${l}`;
     else if (x.won && w === 42) buzz.textContent = `Clinched a playoff spot in game ${g}`;
     else if (!x.won && l === 41) buzz.textContent = `Eliminated from the playoff race in game ${g}`;
+    // Big moments get a beat of their own
+    let moment = "";
+    if (sx && sx.pts >= 45) moment = `🔥 ${sn} drops ${sx.pts}!`;
+    else if (x.won && x.us - x.them <= 3 && !x.ot) moment = `🚨 Buzzer beater! ${sn} wins it, ${x.us}–${x.them}`;
+    else if (x.won && x.ot) moment = `⏱️ ${x.ot > 1 ? x.ot + "OT" : "Overtime"} thriller! Won ${x.us}–${x.them}`;
+    else if (x.won && x.us - x.them >= 40) moment = `💥 Blowout! Won by ${x.us - x.them}`;
+    else if (sx && sx.td) moment = `${sn}: ${sx.pts}-${sx.reb}-${sx.ast} triple-double`;
+    else if (x.won && streak >= 10 && streak % 5 === 0) moment = `${streak} straight wins!`;
+    else if (!x.won && streak === -3) moment = `Three-game skid…`;
+    if (moment) { buzz.textContent = moment; if (speed !== "instant") sfx(moment.startsWith("🚨") ? "swish" : "win"); }
     i++;
+    return moment ? (speed === "fast" ? 220 : 650) : 0;
   };
   const delay = speed === "fast" ? 6 : 30;
   if (reduce || speed === "instant") { while (i < 82) paint(); finishSeason(w, l, res); }
-  else { const step = () => { paint(); if (i < 82) setTimeout(step, delay + (w + l > 70 && l <= 1 ? 60 : 0)); else finishSeason(w, l, res); }; step(); }
+  else { const step = () => { const pause = paint(); if (i < 82) setTimeout(step, delay + pause + (w + l > 70 && l <= 1 ? 60 : 0)); else { sfx("buzzer"); finishSeason(w, l, res); } }; step(); }
 }
 
 // One season's saved record (shared by the game and the achievement tests)
@@ -1534,28 +1571,33 @@ const LEGENDS = (() => {
 })();
 
 // Four best-of-seven rounds as data: { rounds, pw, pl, reached, champ }
+// One round's opponent and home court, then its games one at a time (the sim and the live playoffs share these)
+function roundSetup(i, seed, w) {
+  let q = [78, 82, 84, 86][i] + gauss() * 1.5, opp = rnd(TEAM_LABELS), boss = null;
+  if (i === 3) { boss = rnd(LEGENDS); q = boss.q + gauss() * 1; opp = boss.label; }
+  return { q, opp, boss, oOff: q + gauss() * 2, oDef: q + gauss() * 2, oppSeed: i === 0 ? 9 - seed : null, hc: i === 0 ? seed <= 4 : w >= [0, 55, 58, 62][i] };
+}
+const PO_PATTERN = [1, 1, 0, 0, 1, 0, 1];
+function seriesGame(r, st, n) {
+  const home = st.hc ? !!PO_PATTERN[n] : !PO_PATTERN[n];
+  const g = playGame(r, st.oOff, st.oDef, home, 106);
+  return [g.us, g.them, home ? 1 : 0, g.ot ? 1 : 0];
+}
 function playoffSim(r, seed, w) {
   let pw = 0, pl = 0, reached = 0, champ = false;
   const rounds = [];
   for (let i = 0; i < 4; i++) {
     reached = i;
-    let q = [78, 82, 84, 86][i] + gauss() * 1.5, opp = rnd(TEAM_LABELS), boss = null;
-    if (i === 3) { boss = rnd(LEGENDS); q = boss.q + gauss() * 1; opp = boss.label; }
-    const oOff = q + gauss() * 2, oDef = q + gauss() * 2;
-    const oppSeed = i === 0 ? 9 - seed : null;
-    const hc = i === 0 ? seed <= 4 : w >= [0, 55, 58, 62][i];
-    const pattern = [1, 1, 0, 0, 1, 0, 1], gl = [];
-    let a = 0, b = 0, n = 0;
+    const st = roundSetup(i, seed, w), gl = [];
+    let a = 0, b = 0;
     while (a < 4 && b < 4) {
-      const home = hc ? !!pattern[n] : !pattern[n];
-      const g = playGame(r, oOff, oDef, home, 106);
-      g.won ? a++ : b++;
-      n++;
-      gl.push([g.us, g.them, home ? 1 : 0, g.ot ? 1 : 0]);
+      const g = seriesGame(r, st, gl.length);
+      g[0] > g[1] ? a++ : b++;
+      gl.push(g);
     }
     pw += a; pl += b;
-    const rd = { n: ROUNDS[i], opp, seed: oppSeed, hc, res: [a, b], g: gl };
-    if (boss) { rd.boss = boss.key; rd.stars = boss.stars; }
+    const rd = { n: ROUNDS[i], opp: st.opp, seed: st.oppSeed, hc: st.hc, res: [a, b], g: gl };
+    if (st.boss) { rd.boss = st.boss.key; rd.stars = st.boss.stars; }
     rounds.push(rd);
     if (b === 4) break;
     if (i === 3) champ = true;
@@ -1574,8 +1616,13 @@ async function playoffsInner() {
   $("poBtn").hidden = $("poBtn2").hidden = true; $("poWrap").hidden = false;
   try { $("poWrap").scrollIntoView({ block: "start", behavior: reduce ? "auto" : "smooth" }); } catch (e) {}
   $("poSeed").textContent = `#${curRun.seed} seed`;
-  const po = playoffSim(curRes ? curRes.r : teamRatings(S.lineup), curRun.seed, curRun.w);
-  for (const rd of po.rounds) {
+  const r = curRes ? curRes.r : teamRatings(S.lineup), rounds = [];
+  let pw = 0, pl = 0, reached = 0, champ = false;
+  for (let i = 0; i < 4; i++) {
+    reached = i;
+    const st = roundSetup(i, curRun.seed, curRun.w);
+    const rd = { n: ROUNDS[i], opp: st.opp, seed: st.oppSeed, hc: st.hc, res: [0, 0], g: [] };
+    if (st.boss) { rd.boss = st.boss.key; rd.stars = st.boss.stars; }
     const card = document.createElement("div");
     card.className = "round" + (rd.boss ? " boss" : "");
     const legend = rd.boss ? `<div class="legend">Legendary team${career.bosses[rd.boss] ? " · beaten before" : ""}: ${rd.stars.map(esc).join(", ")}</div>` : "";
@@ -1584,26 +1631,34 @@ async function playoffsInner() {
     $("rounds").appendChild(card);
     const res = card.querySelector(".res"), ser = card.querySelector(".series");
     let a = 0, b = 0;
-    for (const [us, them, home, ot] of rd.g) {
-      const won = us > them;
+    while (a < 4 && b < 4) {
+      let g = seriesGame(r, st, rd.g.length);
+      if (a === 3 && b === 3) { $("ticker").textContent = `${rd.n} · Game 7`; g = await clutchGame(g, r, st, i); }
+      rd.g.push(g);
+      const [us, them, home, ot] = g, won = us > them;
       won ? a++ : b++;
       const chip = document.createElement("div");
-      chip.className = "g " + (won ? "w" : "l");
+      chip.className = "g " + (won ? "w" : "l") + (g[4] === 1 ? " clutch" : "");
       chip.textContent = won ? "W" : "L";
-      chip.title = `Game ${a + b} · ${home ? "Home" : "Road"} · ${won ? "W" : "L"} ${us}–${them}${ot ? " (OT)" : ""}`;
+      chip.title = `Game ${a + b} · ${home ? "Home" : "Road"} · ${won ? "W" : "L"} ${us}–${them}${ot ? " (OT)" : ""}${g[4] === 1 ? " · your game-winner" : ""}`;
       ser.appendChild(chip);
       res.textContent = `${a}–${b}`;
-      $("ticker").textContent = `${rd.n} · Game ${a + b}: ${won ? "W" : "L"} ${us}–${them}`;
+      $("ticker").textContent = `${rd.n} · Game ${a + b}: ${won ? "W" : "L"} ${us}–${them}${ot ? " (OT)" : ""}`;
       $("boardLabel").textContent = "Playoffs";
       await sleep(170);
     }
+    rd.res = [a, b];
+    pw += a; pl += b;
+    rounds.push(rd);
     res.textContent = `${a > b ? "Won" : "Lost"} ${a}–${b}`;
     res.classList.add(a > b ? "w" : "l");
+    sfx(a > b ? "win" : "brick");
     await sleep(380);
+    if (b === 4) break;
+    if (i === 3) champ = true;
   }
-  const { pw, pl, reached, champ, rounds } = po;
   const c = $("champ");
-  if (champ) { c.textContent = pl === 0 ? "Champions. 16–0, a perfect postseason." : `NBA Champions · ${pw}–${pl} in the playoffs`; c.className = "champ yes"; confetti(); }
+  if (champ) { c.textContent = pl === 0 ? "Champions. 16–0, a perfect postseason." : `NBA Champions · ${pw}–${pl} in the playoffs`; c.className = "champ yes"; confetti(); sfx("cheer"); }
   else c.textContent = `Eliminated in the ${ROUNDS[reached]} · ${pw}–${pl}`;
   $("watch").textContent = champ ? "CHAMPIONS" : `Out in the ${ROUNDS[reached]}`;
   Object.assign(curRun, { po: "played", pw, pl, reached, champ, rounds });
@@ -1628,9 +1683,9 @@ const ACH_CATS = [
   { name: "Rings with legends" }, { name: "Franchises" }, { name: "Roster tour" }, { name: "Decades and positions" },
   { name: "Legend hunt", career: true }, { name: "Epic hunt", career: true }, { name: "Sets", career: true },
   { name: "Legendary Finals", career: true }, { name: "Head-to-head", career: true }, { name: "Milestones", career: true },
-  { name: "Star hunt", career: true }, { name: "Epic rings" }, { name: "Packs", career: true },
+  { name: "Star hunt", career: true }, { name: "Epic rings" }, { name: "Packs", career: true }, { name: "Clutch", career: true },
 ];
-const CAT_ORDER = [0, 1, 6, 2, 3, 4, 7, 8, 19, 9, 10, 11, 15, 16, 20, 12, 13, 18, 14, 5, 17];
+const CAT_ORDER = [0, 1, 21, 6, 2, 3, 4, 7, 8, 19, 9, 10, 11, 15, 16, 20, 12, 13, 18, 14, 5, 17];
 const isCareer = a => !!ACH_CATS[a.cat].career;
 const achXp = a => a.xp ?? TIER_XP[a.tier];
 const avgOvr = r => r.players.reduce((a, p) => a + p.ovr, 0) / 5;
@@ -2063,6 +2118,7 @@ function levelUp(from, to) {
   career.skips = Math.min(5, (career.skips || 0) + (to - from));
   givePack("normal", to - from);
   const opened = RULES.filter(r => r.lvl > from && r.lvl <= to);
+  sfx("gold");
   toast(`Level up! <b>Level ${to} · ${levelTitle(to)}</b>${opened.length ? ` · New rule: ${opened.map(r => esc(r.name)).join(", ")}` : ""} · 🎁 +${to - from} pack · +1 challenge swap`);
   confetti();
   renderRules(); renderChallenges();
@@ -2318,6 +2374,14 @@ function buildFamilies() {
   out.push(A(20, 1, "pk_gold", "Gold pack", "Open a gold pack (win a title or a hard challenge)", () => PK().gold >= 1));
   out.push(A(20, 3, "pk_legendpack", "Legend pack", "Open a legend pack (go 82–0)", () => PK().legendPacks >= 1));
   ladder(20, "pk_daily", [[3, 1, 30], [7, 2, 70], [30, 4, 300]], v => `${v}-day streak`, v => `Open your free daily pack ${v} days in a row`, () => PK().bestStreak);
+  // Clutch: the last shot of every Game 7 is yours
+  const CL = () => career.clutch;
+  out.push(A(21, 2, "cl_first", "Ice in your veins", "Hit a Game 7 game-winner", () => CL().made >= 1, null, 50));
+  out.push(A(21, 1, "cl_miss", "Rimmed out", "Miss a Game 7 last shot", () => CL().missed >= 1, null, 15));
+  out.push(A(21, 2, "cl_ot", "Saved by overtime", "Miss the last shot, then win in overtime", () => CL().otSaves >= 1, null, 40));
+  out.push(A(21, 3, "cl_finals", "Mr. June", "Hit the game-winner in Game 7 of the NBA Finals", () => CL().finals >= 1, null, 120));
+  out.push(A(21, 3, "cl_streak3", "The closer", "Hit 3 Game 7 game-winners in a row", () => CL().best >= 3, () => [CL().best, 3], 100));
+  ladder(21, "cl_made", [[5, 2, 80], [10, 3, 150], [25, 4, 300], [50, 4, 500]], v => `${v} game-winners`, v => `Hit ${v} Game 7 game-winners`, () => CL().made);
   return out;
 }
 ACH.push(...buildFamilies());
@@ -2374,7 +2438,7 @@ const KEY_CAREER = "hoops82.career.v1";
 const blankPack = () => ({ have: { normal: 0, gold: 0, legend: 0 }, opened: 0, legends: 0, allNew: 0, gold: 0, legendPacks: 0, daily: "", streak: 0, bestStreak: 0 });
 const blankH2h = () => ({ won: 0, lost: 0, sweeps: 0, g7: 0, upsets: 0, streak: 0, best: 0, beat: {} });
 const blankCareer = () => ({ v: 1, xp: 0, coll: {}, ch: [], chDone: 0, skips: 2, rules: [], bosses: {}, life: { seasons: 0, wins: 0, titles: 0, playoffWins: 0, perfect: 0, w60: 0, w70: 0, hard: 0, hardTitles: 0 },
-  h2h: blankH2h(), posted: {}, pack: blankPack(), finalsLost: {}, seeded: false, retro: 0 });
+  h2h: blankH2h(), posted: {}, pack: blankPack(), finalsLost: {}, clutch: { made: 0, missed: 0, finals: 0, streak: 0, best: 0, otSaves: 0 }, seeded: false, retro: 0 });
 let career = blankCareer();
 function saveCareer() { store.set(KEY_CAREER, career); }
 function loadCareer() {
@@ -2397,6 +2461,7 @@ function fixCareerShape() {
   career.pack = Object.assign(blankPack(), career.pack && typeof career.pack === "object" ? career.pack : {});
   career.pack.have = Object.assign(blankPack().have, career.pack.have || {});
   career.finalsLost = career.finalsLost && typeof career.finalsLost === "object" ? career.finalsLost : {};
+  career.clutch = Object.assign({ made: 0, missed: 0, finals: 0, streak: 0, best: 0, otSaves: 0 }, career.clutch && typeof career.clutch === "object" ? career.clutch : {});
 }
 // Lifetime counters added later (60- and 70-win seasons, hard mode), counted from one season
 function countLife(r) {
@@ -2717,7 +2782,7 @@ async function openLbEntry(entry, row) {
 let lbReadOnly = false;
 function showLbReadOnly() {
   lbReadOnly = true;
-  $("lbSignIn").textContent = "View only: Claude lets only the game's owner and the people they invite as Editors post here. Ask the owner to add you as an Editor (then your best seasons post by themselves), or copy your score code below and send it to them.";
+  $("lbSignIn").textContent = "View only: Claude only lets the game's owner and people invited by email with \"Can edit\" save scores here, and only while \"Anyone with the link\" is off. Ask the owner to do that for your email, and your best seasons will post by themselves. Until then, you can copy your score code below and send it to them.";
   $("lbSignIn").hidden = false;
   updateLbSubmit();
 }
@@ -3128,6 +3193,7 @@ function openPack(anchor) {
     flipped.add(el.dataset.i);
     el.classList.add("flip");
     const c = cards[+el.dataset.i];
+    sfx(c.rar === "legendary" ? "cheer" : c.rar === "epic" ? "gold" : "flip");
     if (c.rar === "legendary" && !reduce) confetti();
     if (flipped.size === 3) done();
   };
@@ -3141,6 +3207,113 @@ function openPack(anchor) {
   renderCollection(); renderPackBar();
   packBusy = false;
 }
+
+/* ---------- Sound (off until you turn it on) ---------- */
+const KEY_SOUND = "hoops82.sound";
+let soundOn = false, actx = null;
+function sfx(kind) {
+  if (!soundOn) return;
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    if (actx.state === "suspended") actx.resume();
+    const t0 = actx.currentTime;
+    const tone = (freq, start, dur, type = "sine", vol = .12) => {
+      const o = actx.createOscillator(), g = actx.createGain();
+      o.type = type; o.frequency.setValueAtTime(freq, t0 + start);
+      g.gain.setValueAtTime(0, t0 + start); g.gain.linearRampToValueAtTime(vol, t0 + start + .01);
+      g.gain.exponentialRampToValueAtTime(.0001, t0 + start + dur);
+      o.connect(g).connect(actx.destination); o.start(t0 + start); o.stop(t0 + start + dur + .02);
+    };
+    const noise = (start, dur, freq, vol = .25) => {
+      const len = Math.floor(actx.sampleRate * dur), buf = actx.createBuffer(1, len, actx.sampleRate), d = buf.getChannelData(0);
+      for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len);
+      const src = actx.createBufferSource(), f = actx.createBiquadFilter(), g = actx.createGain();
+      src.buffer = buf; f.type = "bandpass"; f.frequency.value = freq; f.Q.value = .8; g.gain.value = vol;
+      src.connect(f).connect(g).connect(actx.destination); src.start(t0 + start);
+    };
+    if (kind === "swish") { noise(0, .28, 3200, .35); tone(1200, .02, .12, "sine", .05); }
+    else if (kind === "buzzer") tone(196, 0, .75, "square", .07);
+    else if (kind === "brick") { tone(110, 0, .22, "triangle", .2); tone(82, .05, .3, "sine", .15); }
+    else if (kind === "win") { tone(660, 0, .09); tone(880, .08, .14); }
+    else if (kind === "cheer") { [523, 659, 784, 1047].forEach((f, i) => tone(f, i * .09, .35, "triangle", .1)); noise(.1, .9, 1500, .12); }
+    else if (kind === "flip") noise(0, .07, 2500, .2);
+    else if (kind === "gold") { [784, 988, 1175, 1568].forEach((f, i) => tone(f, i * .07, .4, "sine", .09)); }
+  } catch (e) {}
+}
+function renderSoundBtn() {
+  const b = $("soundBtn");
+  if (!b) return;
+  b.textContent = soundOn ? "🔊 Sound on" : "🔈 Sound off";
+  b.setAttribute("aria-pressed", soundOn);
+}
+
+/* ---------- Game 7: take the last shot ----------
+   When a playoff series goes to Game 7, the score is tied with seconds left and you take the shot: stop the
+   marker in the green. A better team gets a bigger green zone. Make it and you win; miss and it goes to
+   overtime, where the sim decides. On Instant speed the sim decides everything. */
+const blankClutch = () => ({ made: 0, missed: 0, finals: 0, streak: 0, best: 0, otSaves: 0 });
+function clutchGame(g, r, st, i) {
+  if (speed === "instant" || reduceClutch()) return Promise.resolve([...g, 0]);
+  return new Promise(resolve => {
+    const box = $("clutch");
+    const edge = r.team - (st.oOff + st.oDef) / 2;
+    const green = Math.max(9, Math.min(30, 17 + edge * 1.6));
+    const lo = (100 - green) / 2, hi = lo + green;
+    const pace = 1.05 + i * .22; // bar lengths per second; faster deeper in the playoffs
+    box.hidden = false;
+    box.innerHTML = `<b class="ctitle">Game 7${i === 3 ? " of the NBA Finals" : `, ${ROUNDS[i]}`}. Tied, 4 seconds left.</b>
+      <span class="note">You have the ball. Stop the marker in the green to hit the game-winner.</span>
+      <div class="meter" aria-hidden="true"><i class="zone" style="left:${lo}%;width:${green}%"></i><i class="mark"></i></div>
+      <div class="row-gap"><button class="btn primary cta" id="shootBtn">🏀 Shoot!</button><button class="btn sm" id="simShot">Let the sim decide</button></div>
+      <p class="note" id="shotNote" role="status"></p>`;
+    try { box.scrollIntoView({ block: "center", behavior: reduce ? "auto" : "smooth" }); } catch (e) {}
+    const mark = box.querySelector(".mark");
+    let x = 0, dir = 1, last = performance.now(), live = true;
+    const step = t => {
+      if (!live) return;
+      x += dir * pace * 100 * Math.min(.05, (t - last) / 1000); last = t;
+      if (x >= 100) { x = 100; dir = -1; } else if (x <= 0) { x = 0; dir = 1; }
+      mark.style.left = x + "%";
+      requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+    const T = Math.max(84, Math.min(g[0], g[1]));
+    const finish = made => {
+      if (!live) return;
+      live = false;
+      const c = career.clutch;
+      let out, msg;
+      if (made === null) { out = [...g, 0]; msg = g[0] > g[1] ? "The sim says: you win it." : "The sim says: they win it."; }
+      else if (made) {
+        out = [T + (Math.random() < .35 ? 3 : 2), T, g[2], 0, 1];
+        c.made++; c.streak++; c.best = Math.max(c.best, c.streak); if (i === 3) c.finals++;
+        msg = `SWISH! ${out[0] - T === 3 ? "A three" : "Game-winner"} at the buzzer. You win Game 7!`;
+        sfx("swish"); setTimeout(() => sfx("cheer"), 250); confetti();
+      } else {
+        // Overtime: the better team has a small edge
+        const otWin = Math.random() < .5 + Math.max(-.2, Math.min(.2, edge * .03));
+        const a = 8 + Math.floor(Math.random() * 7), b = 8 + Math.floor(Math.random() * 7);
+        const [u, v] = otWin ? [Math.max(a, b) + 1, Math.min(a, b)] : [Math.min(a, b), Math.max(a, b) + 1];
+        out = [T + u, T + v, g[2], 1, 2];
+        c.missed++; c.streak = 0; if (otWin) c.otSaves++;
+        msg = otWin ? `Rimmed out! But you won it in overtime, ${out[0]}–${out[1]}.` : `Rimmed out. They won it in overtime, ${out[1]}–${out[0]}.`;
+        sfx("brick"); setTimeout(() => sfx("buzzer"), 300);
+      }
+      saveCareer();
+      $("shotNote").textContent = msg;
+      box.querySelector("#shootBtn").disabled = box.querySelector("#simShot").disabled = true;
+      setTimeout(() => { box.hidden = true; resolve(out); }, made === null ? 700 : 1900);
+    };
+    $("shootBtn").onclick = () => {
+      const inGreen = x >= lo && x <= hi, near = !inGreen && x >= lo - 6 && x <= hi + 6;
+      finish(inGreen || (near && Math.random() < .5));
+    };
+    $("simShot").onclick = () => finish(null);
+    $("shootBtn").focus({ preventScroll: true });
+  });
+}
+// Automated test pages can skip the shot
+const reduceClutch = () => !!window.__autoClutch;
 
 /* ---------- Head-to-head ----------
    Send one of your saved teams against a legendary roster or a team from the global leaderboard, best of seven.
@@ -3298,7 +3471,7 @@ function showAutoName(msg) {
   $("lbAutoName").onkeydown = e => { if (e.key === "Enter") go(); };
 }
 function showViewOnlyNote() {
-  $("lbAuto").innerHTML = `<span class="note">Your seasons can't post from here: Claude only lets the game's owner and the people they invite as Editors post to this leaderboard. Ask the owner to add you as an Editor and your best seasons will post by themselves.</span>`;
+  $("lbAuto").innerHTML = `<span class="note">Your seasons can't post from here yet. Claude only lets the game's owner and people invited by email with "Can edit" save scores, and only while "Anyone with the link" is off. Ask the owner to invite your email that way, and your best seasons will post by themselves.</span>`;
   $("lbAuto").hidden = false;
 }
 async function autoPost(prompt) {
@@ -3555,6 +3728,7 @@ $("clearYes").onclick = () => {
 $("poBtn").onclick = playoffs;
 $("poBtn2").onclick = playoffs;
 $("packBtn2").onclick = () => openPack($("packBtn2"));
+$("soundBtn").onclick = () => { soundOn = !soundOn; store.set(KEY_SOUND, soundOn); renderSoundBtn(); sfx("swish"); };
 $("rules").onclick = e => { const b = e.target.closest("[data-rule]"); if (b && !b.disabled) toggleRule(b.dataset.rule); };
 $("chList").onclick = e => { const b = e.target.closest("[data-swap]"); if (b && !b.disabled) swapChallenge(+b.dataset.swap); };
 $("trophyFilter").onclick = e => { const v = e.target.closest("button")?.dataset.v; if (v) { trophyFilter = v; renderTrophies(); } };
@@ -3607,6 +3781,7 @@ $("copy").onclick = () => {
 
 function boot() {
   $("appVer").textContent = `Version ${APP_VERSION}.`;
+  soundOn = store.get(KEY_SOUND, false) === true; renderSoundBtn();
   const seeded = loadCareer();
   fresh();
   const sv = store.get(KEY_CUR, null);
