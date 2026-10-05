@@ -2,7 +2,7 @@
 <title>82-0 Hoops Draft</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800;900&family=Barlow:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Barlow:wght@400;500;600;700;800&display=swap">
 <style>
 /* Layout: a hardwood floor. Mode tabs and your bests up top, the starting five on a court strip, the draw reels and full roster, then a scoreboard-style season, playoffs, record book and trophy case. Everything stacks to fit the width. */
 :root {
@@ -404,6 +404,171 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
   .h2hlist { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (prefers-reduced-motion: reduce) { .slot.flash, .reel.land .val { animation: none; } }
+/* ===== Arena theme =====
+   Night: a royal-blue arena, jumbotron scoreboard, players as trading cards with foil frames by rarity.
+   Day: the same royal, white and orange, like a home jersey. Bungee (arena signage) for headings and big
+   numbers, Barlow for reading. The scoreboard and the cards are the loud parts; everything else stays calm. */
+:root {
+  --bg: #eaf0ff; --plank: #dde5ff; --panel: #ffffff; --panel-2: #f3f6ff;
+  --ink: #0f1a5c; --ink-2: #0a1033; --muted: #4a5788; --line: #c8d2f3;
+  --court: #e8510f; --accent: #ff6a2b; --accent-deep: #c2410c; --accent-ink: #1a0800; --accent-text: #c2410c;
+  --navy: #2440c9; --gold: #b98200; --win: #13894a; --loss: #d62d4f; --warn: #b45f06; --empty: #dbe3fb;
+  --board-fg: #fff4e0; --board-dim: #8e9ad0; --led-w: #57e38a; --led-l: #ff5c7a;
+  --bronze: #a8581c; --silver: #5f6b85; --plat: #0e8fa6;
+  --foil: linear-gradient(135deg, #ff6a2b, #ffc93c 22%, #57e3c8 45%, #7fa2ff 66%, #c77dff 84%, #ff6a2b);
+  --display: "Bungee", "Impact", "Arial Black", sans-serif;
+  --body: "Barlow", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d1640; --plank: #111c4d; --panel: #16235c; --panel-2: #1c2b6e;
+    --ink: #f2f5ff; --ink-2: #070c26; --muted: #a9b4e0; --line: #2b3c86;
+    --court: #ff6a2b; --accent: #ff6a2b; --accent-deep: #b8400f; --accent-ink: #1a0800; --accent-text: #ff8a50;
+    --navy: #8fb0ff; --gold: #ffc93c; --win: #57e38a; --loss: #ff6f88; --warn: #ffb547; --empty: #22306e;
+    --bronze: #e59a5c; --silver: #c6d0e6; --plat: #5fe3f0; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0d1640; --plank: #111c4d; --panel: #16235c; --panel-2: #1c2b6e;
+  --ink: #f2f5ff; --ink-2: #070c26; --muted: #a9b4e0; --line: #2b3c86;
+  --court: #ff6a2b; --accent: #ff6a2b; --accent-deep: #b8400f; --accent-ink: #1a0800; --accent-text: #ff8a50;
+  --navy: #8fb0ff; --gold: #ffc93c; --win: #57e38a; --loss: #ff6f88; --warn: #ffb547; --empty: #22306e;
+  --bronze: #e59a5c; --silver: #c6d0e6; --plat: #5fe3f0; color-scheme: dark;
+}
+body {
+  background-color: var(--bg);
+  /* arena lights over the floor */
+  background-image: radial-gradient(ellipse 80% 340px at 50% -60px, color-mix(in srgb, var(--accent) 16%, transparent), transparent 70%),
+    repeating-linear-gradient(90deg, transparent 0 95px, var(--plank) 95px 96px);
+  background-attachment: scroll;
+}
+h1 { font-family: var(--display); font-weight: 400; font-size: clamp(34px, 8vw, 64px); line-height: .95; letter-spacing: 0; color: var(--ink);
+  text-shadow: 3px 3px 0 color-mix(in srgb, var(--accent) 55%, transparent); }
+h1 .dash { color: var(--accent); text-shadow: none; }
+h2 { font-family: var(--display); font-weight: 400; font-size: 22px; line-height: 1.05; }
+h3 { font-family: var(--display); font-weight: 400; font-size: 16px; line-height: 1.1; }
+.label { text-transform: none; letter-spacing: 0; font-size: 13px; font-weight: 700; }
+.panel { border-radius: 18px; border: 1px solid var(--line); background: var(--panel); }
+.pill { border-radius: 999px; background: var(--panel); }
+.pill b { font-family: var(--display); font-weight: 400; font-size: 16px; color: var(--accent-text); }
+.tabs button { font-family: var(--display); font-weight: 400; font-size: 15px; }
+
+/* Buttons: chunky, with a pressed state */
+.btn { border-radius: 10px; border: 2px solid var(--ink); font-weight: 800; transition: transform .06s; }
+.btn:hover:not(:disabled) { background: var(--ink); color: var(--bg); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-family: var(--display); font-weight: 400; font-size: 20px; letter-spacing: 0;
+  box-shadow: 0 4px 0 var(--accent-deep); }
+.btn.primary:hover:not(:disabled) { background: var(--accent); color: var(--accent-ink); filter: brightness(1.06); }
+.btn.primary:active:not(:disabled), .btn:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 1px 0 var(--accent-deep); }
+.btn.primary.mid { font-family: var(--body); font-weight: 800; font-size: 15px; }
+.btn.cta { font-size: 22px; padding: 12px 22px; justify-self: start; }
+@media (prefers-reduced-motion: no-preference) {
+  .btn.cta:not([hidden]) { animation: ctaGlow 1.6s ease-in-out infinite; }
+  @keyframes ctaGlow { 50% { box-shadow: 0 4px 0 var(--accent-deep), 0 0 0 7px color-mix(in srgb, var(--accent) 28%, transparent); } }
+}
+
+/* Header strip: level */
+.career { border-radius: 18px; }
+.lvlnum { font-family: var(--display); font-weight: 400; font-size: 24px; background: var(--accent); color: var(--accent-ink); border-radius: 12px; box-shadow: 0 3px 0 var(--accent-deep); }
+.career .lvl b { font-family: var(--display); font-weight: 400; font-size: 18px; }
+.xpbar { height: 12px; }
+
+/* Packs waiting: the one thing that shimmers */
+.packbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 10px 14px; border-radius: 16px; border: 2px solid transparent;
+  background: linear-gradient(var(--panel), var(--panel)) padding-box, var(--foil) border-box; }
+.packbar .packicon { font-size: 26px; line-height: 1; }
+.packbar .packtext { flex: 1 1 200px; min-width: 0; }
+@media (prefers-reduced-motion: no-preference) {
+  .packbar:not([hidden]) { background-size: 100% 100%, 300% 300%; animation: foil 4s linear infinite; }
+  @keyframes foil { to { background-position: 0 0, 300% 0; } }
+}
+
+/* Starting five as trading cards: the frame shows rarity (hidden in hard mode) */
+.slot { border-radius: 14px; border: 2px dashed var(--line); background: var(--panel-2); min-height: 150px; }
+.slot.filled { border: 3px solid transparent; background: linear-gradient(var(--panel), var(--panel)) padding-box, linear-gradient(var(--line), var(--line)) border-box; }
+.slot.filled.rare { background: linear-gradient(var(--panel), var(--panel)) padding-box, linear-gradient(135deg, var(--navy), color-mix(in srgb, var(--navy) 40%, var(--panel))) border-box; }
+.slot.filled.epic { background: linear-gradient(var(--panel), var(--panel)) padding-box, linear-gradient(135deg, #c77dff, #7fa2ff) border-box; }
+.slot.filled.legendary { background: linear-gradient(color-mix(in srgb, var(--gold) 10%, var(--panel)), var(--panel)) padding-box, var(--foil) border-box; }
+.slot .pos { font-family: var(--display); font-weight: 400; font-size: 22px; }
+.ovrbadge { font-family: var(--display); font-weight: 400; font-size: 17px; border-radius: 8px; padding: 1px 7px; }
+.slot .who { font-size: 16px; }
+
+/* Draw reels: slot machine */
+.reel { border-radius: 14px; background: var(--ink-2); box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--accent) 45%, transparent); }
+.reel .label { color: var(--board-dim); }
+.reel .val { font-family: var(--display); font-weight: 400; font-size: clamp(24px, 6vw, 40px); color: var(--board-fg); text-shadow: 0 0 14px color-mix(in srgb, var(--accent) 55%, transparent); }
+.reel.spin .val { color: var(--accent); }
+.pickno { font-family: var(--display); font-weight: 400; font-size: 18px; }
+
+/* Jumbotron */
+.board { border-radius: 20px; background-color: var(--ink-2);
+  background-image: radial-gradient(color-mix(in srgb, var(--board-fg) 9%, transparent) 1px, transparent 1.5px); background-size: 7px 7px;
+  border: 2px solid color-mix(in srgb, var(--accent) 35%, #000); }
+.big { font-family: var(--display); font-weight: 400; font-size: clamp(56px, 15vw, 118px); color: var(--board-fg);
+  text-shadow: 0 0 22px color-mix(in srgb, var(--accent) 65%, transparent), 0 0 2px #fff; }
+.big.perfect { color: #ffc93c; }
+.watch { font-family: var(--display); font-weight: 400; font-size: 15px; color: #ff8a50; }
+.bstats b { font-family: var(--display); font-weight: 400; font-size: 20px; color: var(--board-fg); }
+.board .g { border-radius: 3px; background: color-mix(in srgb, var(--board-fg) 10%, transparent); }
+.board .g.w { background: var(--led-w); color: #062a14; box-shadow: 0 0 8px color-mix(in srgb, var(--led-w) 60%, transparent); }
+.board .g.l { background: var(--led-l); color: #2a0610; box-shadow: 0 0 8px color-mix(in srgb, var(--led-l) 55%, transparent); }
+.buzz { color: #ffc93c; }
+.res { font-family: var(--display); font-weight: 400; font-size: 18px; }
+.champ { font-family: var(--display); font-weight: 400; font-size: clamp(22px, 5.5vw, 40px); }
+.champ.yes { color: var(--accent-text); }
+.award .big2 { font-family: var(--display); font-weight: 400; font-size: 20px; color: var(--accent-text); }
+.news li b { font-family: var(--body); font-weight: 800; font-size: 18px; }
+.grade b { font-family: var(--display); font-weight: 400; font-size: 24px; }
+.brow .rec { font-family: var(--display); font-weight: 400; font-size: 18px; }
+.st.ovr .v { font-family: var(--display); font-weight: 400; font-size: 16px; }
+.teamovr { font-family: var(--display); font-weight: 400; font-size: 17px; }
+.res.w, .series .g.w { color: inherit; }
+
+/* Trophies */
+.badge { border-radius: 12px; }
+.badge b { font-family: var(--body); font-weight: 800; font-size: 16px; }
+.badge.got { border-color: var(--gold); }
+.badge.got.tier4 { border: 2px solid transparent; background: linear-gradient(color-mix(in srgb, var(--plat) 10%, var(--bg)), var(--bg)) padding-box, var(--foil) border-box; }
+.tgroup { border-radius: 14px; }
+.tgroup > summary .tname { font-family: var(--display); font-weight: 400; font-size: 16px; }
+.h2hopp b { font-family: var(--body); font-weight: 800; font-size: 16px; }
+.h2hvs .vs { font-family: var(--display); font-weight: 400; font-size: 22px; }
+
+/* Rule help */
+.rulehelp { font-size: 14px; }
+.rulehelp summary { cursor: pointer; font-weight: 700; color: var(--accent-text); }
+.rulehelp ul { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 4px; }
+
+/* Pack cards: tap to flip */
+.pcards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; perspective: 900px; }
+.pcard { position: relative; aspect-ratio: 5 / 7; border: 0; padding: 0; background: none; color: var(--ink); border-radius: 14px; cursor: pointer; transform-style: preserve-3d; transition: transform .55s cubic-bezier(.2, .8, .2, 1); }
+.pcard.flip { transform: rotateY(180deg); cursor: default; }
+.pcard .pback, .pcard .pface { position: absolute; inset: 0; border-radius: 14px; backface-visibility: hidden; -webkit-backface-visibility: hidden; display: grid; }
+.pcard .pback { place-items: center; background: var(--ink-2) radial-gradient(color-mix(in srgb, var(--board-fg) 12%, transparent) 1px, transparent 1.5px) 0 0 / 7px 7px; border: 3px solid var(--accent); }
+.pcard .pback span { font-family: var(--display); color: var(--accent); font-size: clamp(18px, 5vw, 30px); text-shadow: 0 0 14px color-mix(in srgb, var(--accent) 60%, transparent); }
+.pcard .pface { transform: rotateY(180deg); align-content: start; gap: 4px; padding: 10px; text-align: left; border: 3px solid transparent;
+  background: linear-gradient(var(--panel), var(--panel)) padding-box, linear-gradient(var(--line), var(--line)) border-box; }
+.pcard.rare .pface { background: linear-gradient(var(--panel), var(--panel)) padding-box, linear-gradient(135deg, var(--navy), color-mix(in srgb, var(--navy) 40%, var(--panel))) border-box; }
+.pcard.epic .pface { background: linear-gradient(var(--panel), var(--panel)) padding-box, linear-gradient(135deg, #c77dff, #7fa2ff) border-box; }
+.pcard.legendary .pface { background: linear-gradient(color-mix(in srgb, var(--gold) 16%, var(--panel)), var(--panel)) padding-box, var(--foil) border-box; }
+.pcard .pr { font-family: var(--display); font-size: clamp(22px, 6vw, 36px); line-height: 1; color: var(--accent-text); }
+.pcard.legendary .pr { color: var(--gold); }
+.pcard b { font-size: clamp(13px, 3.4vw, 17px); line-height: 1.15; overflow-wrap: anywhere; }
+.pcard .pt, .pcard .prar { font-size: 12px; color: var(--muted); }
+.pcard .prar { font-weight: 700; }
+.pcard.legendary .prar { color: var(--gold); }
+.pcard.epic .prar { color: #a35cf0; }
+.pcard .pnew { margin-top: auto; font-size: 11.5px; font-weight: 800; color: var(--win); }
+@media (prefers-reduced-motion: reduce) { .pcard { transition: none; } }
+
+/* Toast */
+.toast { border-radius: 999px; border: 2px solid var(--accent); background: var(--ink-2); padding: 10px 18px; }
+.toast b { color: #ffc93c; }
+@media (max-width: 520px) {
+  .toast { border-radius: 16px; }
+  .pcards { gap: 6px; }
+  .pcard .pface { padding: 7px; }
+}
 </style>
 
 <canvas id="confetti" hidden></canvas>
@@ -417,7 +582,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
       <label class="hard" for="hardmode"><input type="checkbox" id="hardmode"> Hard mode (blind picks) <span class="xpb">+50% XP</span></label>
     </div>
     <div class="modebar">
-      <div class="tabs" role="group" aria-label="Game mode">
+      <div class="tabs" role="group" aria-label="Game mode" hidden>
         <button id="mFree" aria-pressed="true">Free play</button>
       </div>
       <span class="confirm" id="modeAsk" hidden>Start over? Your current picks will be lost. <button class="btn sm" id="modeYes">Start over</button><button class="btn sm" id="modeNo">Keep drafting</button></span>
@@ -428,6 +593,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
       <span class="xpbar" aria-hidden="true"><i id="xpFill"></i></span>
       <span class="note" id="xpNext"></span>
     </div>
+    <div class="packbar" id="packBar" hidden></div>
   </header>
 
   <section class="panel stack" id="chPanel" aria-label="Challenges">
@@ -454,6 +620,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
     <div class="rulesbar">
       <div class="head"><span class="label">Rules</span><span class="note" id="rulesNote"></span></div>
       <div class="rules" id="rules" role="group" aria-label="Rules for this draft"></div>
+      <details class="rulehelp"><summary>What do the rules do?</summary><ul id="ruleHelp"></ul></details>
     </div>
     <div class="reels">
       <div class="reel" id="eraReel"><div class="label">Era</div><div class="val" id="eraVal">—</div></div>
@@ -502,6 +669,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
         </div>
       </div>
       <p class="verdict" id="verdict"></p>
+      <button class="btn primary cta" id="poBtn2" hidden>🏆 Play the playoffs</button>
       <div class="bstats" id="bstats"></div>
       <div class="games" id="games" aria-label="Game results"></div>
     </div>
@@ -530,6 +698,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
       <div class="row-gap">
         <button class="btn primary" id="poBtn" hidden>Play the playoffs</button>
         <button class="btn primary" id="again">Draft again</button>
+        <button class="btn" id="packBtn2" hidden>🎁 Open pack</button>
         <button class="btn" id="copy">Copy result</button>
         <span class="note" id="copyNote"></span>
       </div>
@@ -848,7 +1017,7 @@ function renderSlots(hard) {
       el.className = "slot";
       el.innerHTML = `<div class="top"><span class="pos">${k}</span></div><span class="open">Open</span>`;
     } else {
-      el.className = "slot filled";
+      el.className = "slot filled" + (hard ? "" : " " + rarityOf(p.ovr)[1]);
       const stats = hard ? "" : `<span class="line">${fmt(p.ppg)} pts · ${fmt(p.rpg)} reb · ${fmt(p.apg)} ast</span>`;
       el.innerHTML = `<div class="top"><span class="pos">${k}</span><span class="ovrbadge ${hard ? "" : tierCls(p.ovr)}">${hard ? "??" : p.ovr}</span></div>
         <span class="who">${esc(p.name)}</span><span class="from">${short(p.dec)} ${esc(p.team)} · ${p.pos.join("/")}</span>${stats}${fitLabel(p, k)}`;
@@ -1094,7 +1263,7 @@ function seasonSim(L) {
   const perfs = [];
   // Single-game feats for trophies and challenges
   const feats = { td: 0, fiveX5: false, maxPts: 0, maxReb: 0, maxAst: 0, maxBlk: 0, maxStl: 0, otWins: 0, bigWin: 0, maxScore: 0, minAllowed: 999, close: 0, firstLoss: 0,
-    qd: false, p40r20: false, p301515: false, bigLoss: 0 };
+    qd: false, p40r20: false, p301515: false, bigLoss: 0, maxOtWin: 0 };
   let pf = 0, pa = 0;
   for (let g = 0; g < 82; g++) {
     const q = Math.min(95, Math.max(64, 75 + gauss() * 5));
@@ -1105,7 +1274,7 @@ function seasonSim(L) {
     if (x.won) {
       feats.bigWin = Math.max(feats.bigWin, x.us - x.them);
       if (x.us - x.them <= 3) feats.close++;
-      if (x.ot) feats.otWins++;
+      if (x.ot) { feats.otWins++; feats.maxOtWin = Math.max(feats.maxOtWin, x.ot); }
     } else {
       if (!feats.firstLoss) feats.firstLoss = g + 1;
       feats.bigLoss = Math.max(feats.bigLoss, x.them - x.us);
@@ -1263,11 +1432,11 @@ function finishSeason(w, l, res) {
   curRun = run;
   runs.push(curRun);
   if (runs.length > 150) runs = runs.slice(-150);
-  afterSeason(curRun, "season");
+  // The playoffs button comes first, so nothing below can ever hide it
+  $("poBtn").hidden = $("poBtn2").hidden = !(w >= 42);
+  try { afterSeason(curRun, "season"); } catch (e) { console.error(e); }
   saveRuns();
-  renderBook(); renderHeader();
-  updateLbSubmit();
-  $("poBtn").hidden = !(w >= 42);
+  try { renderBook(); renderHeader(); updateLbSubmit(); } catch (e) { console.error(e); }
   lastResult = `82-0 Hoops Draft: ${w}-${l}\n` + SLOTS.map(k => { const p = S.lineup[k]; return `${k} ${p.name} (${short(p.dec)} ${p.team})`; }).join("\n");
 }
 
@@ -1308,7 +1477,7 @@ const ROUNDS = ["First Round", "Conference Semifinals", "Conference Finals", "NB
 const sleep = ms => new Promise(r => setTimeout(r, reduce || speed === "instant" ? 0 : speed === "fast" ? ms / 3 : ms));
 const seedFor = w => w >= 62 ? 1 : w >= 56 ? 2 : w >= 52 ? 3 : w >= 49 ? 4 : w >= 46 ? 5 : w >= 44 ? 6 : w >= 43 ? 7 : 8;
 function resetPlayoffs() {
-  $("poWrap").hidden = true; $("poBtn").hidden = true;
+  $("poWrap").hidden = true; $("poBtn").hidden = $("poBtn2").hidden = true;
   $("rounds").innerHTML = ""; $("champ").textContent = ""; $("champ").className = "champ"; $("poSeed").textContent = "";
 }
 function roundCard(rd) {
@@ -1372,9 +1541,15 @@ function playoffSim(r, seed, w) {
 }
 
 async function playoffs() {
-  if (!curRun || poRunning) return;
+  if (!curRun || poRunning || curRun.po === "played") return;
   poRunning = true;
-  $("poBtn").hidden = true; $("poWrap").hidden = false;
+  try { await playoffsInner(); }
+  catch (e) { console.error(e); }
+  finally { poRunning = false; }
+}
+async function playoffsInner() {
+  $("poBtn").hidden = $("poBtn2").hidden = true; $("poWrap").hidden = false;
+  try { $("poWrap").scrollIntoView({ block: "start", behavior: reduce ? "auto" : "smooth" }); } catch (e) {}
   $("poSeed").textContent = `#${curRun.seed} seed`;
   const po = playoffSim(curRes ? curRes.r : teamRatings(S.lineup), curRun.seed, curRun.w);
   for (const rd of po.rounds) {
@@ -1409,12 +1584,10 @@ async function playoffs() {
   else c.textContent = `Eliminated in the ${ROUNDS[reached]} · ${pw}–${pl}`;
   $("watch").textContent = champ ? "CHAMPIONS" : `Out in the ${ROUNDS[reached]}`;
   Object.assign(curRun, { po: "played", pw, pl, reached, champ, rounds });
-  afterSeason(curRun, "playoffs");
+  try { afterSeason(curRun, "playoffs"); } catch (e) { console.error(e); }
   saveRuns();
-  renderBook(); renderHeader();
-  updateLbSubmit();
+  try { renderBook(); renderHeader(); updateLbSubmit(); } catch (e) { console.error(e); }
   lastResult += `\nPlayoffs: ${poText(curRun)}`;
-  poRunning = false;
 }
 
 /* ---------- Trophies ---------- */
@@ -1429,11 +1602,12 @@ const TIER_XP = [0, 25, 50, 100, 200];
 const ACH_CATS = [
   { name: "Regular season" }, { name: "Playoffs" }, { name: "Stars and stats" }, { name: "Team building" }, { name: "Rules" },
   { name: "Career", career: true }, { name: "Form and headlines" }, { name: "Record collection", grid: true },
-  { name: "Rings with legends" }, { name: "Franchise rings" }, { name: "Roster tour" }, { name: "Decades and positions" },
+  { name: "Rings with legends" }, { name: "Franchises" }, { name: "Roster tour" }, { name: "Decades and positions" },
   { name: "Legend hunt", career: true }, { name: "Epic hunt", career: true }, { name: "Sets", career: true },
   { name: "Legendary Finals", career: true }, { name: "Head-to-head", career: true }, { name: "Milestones", career: true },
+  { name: "Star hunt", career: true }, { name: "Epic rings" }, { name: "Packs", career: true },
 ];
-const CAT_ORDER = [0, 1, 6, 2, 3, 4, 7, 8, 9, 10, 11, 15, 16, 12, 13, 14, 5, 17];
+const CAT_ORDER = [0, 1, 6, 2, 3, 4, 7, 8, 19, 9, 10, 11, 15, 16, 20, 12, 13, 18, 14, 5, 17];
 const isCareer = a => !!ACH_CATS[a.cat].career;
 const achXp = a => a.xp ?? TIER_XP[a.tier];
 const avgOvr = r => r.players.reduce((a, p) => a + p.ovr, 0) / 5;
@@ -1864,8 +2038,9 @@ function gainXp(n) {
 }
 function levelUp(from, to) {
   career.skips = Math.min(5, (career.skips || 0) + (to - from));
+  givePack("normal", to - from);
   const opened = RULES.filter(r => r.lvl > from && r.lvl <= to);
-  toast(`Level up! <b>Level ${to} · ${levelTitle(to)}</b>${opened.length ? ` · New rule: ${opened.map(r => esc(r.name)).join(", ")}` : ""} · +1 challenge swap`);
+  toast(`Level up! <b>Level ${to} · ${levelTitle(to)}</b>${opened.length ? ` · New rule: ${opened.map(r => esc(r.name)).join(", ")}` : ""} · 🎁 +${to - from} pack · +1 challenge swap`);
   confetti();
   renderRules(); renderChallenges();
 }
@@ -1886,7 +2061,7 @@ function renderXpSummary(run) {
   box.hidden = !log.length;
   box.innerHTML = `<div class="head"><h3>+${fmtPts(total)} XP</h3><span class="label">Level ${level} · ${esc(levelTitle(level))} · ${fmtPts(into)} / ${fmtPts(need)}</span></div>
     <span class="pbar"><i style="width:${(into / need * 100).toFixed(1)}%"></i></span>
-    <ul class="xplog">${log.map(([l, x]) => `<li><span>${esc(l)}</span><b>+${fmtPts(x)}</b></li>`).join("")}</ul>`;
+    <ul class="xplog">${log.map(([l, x]) => `<li><span>${esc(l)}</span><b>${x ? "+" + fmtPts(x) : "🎁"}</b></li>`).join("")}</ul>`;
 }
 
 /* ---------- Rules ---------- */
@@ -1894,8 +2069,8 @@ function renderXpSummary(run) {
 const RULES = [
   { id: "noredraw", name: "No re-draws", desc: "No re-draw buttons this draft", bonus: .15, lvl: 2 },
   { id: "throwback", name: "Throwback", desc: "Every roll comes from the 1960s, '70s or '80s", bonus: .15, lvl: 3 },
-  { id: "eralock", name: "Era lock", desc: "After your first pick, every roll comes from that decade", bonus: .2, lvl: 4 },
-  { id: "franlock", name: "Franchise lock", desc: "After your first pick, every roll comes from that franchise", bonus: .25, lvl: 6 },
+  { id: "eralock", name: "Era lock", desc: "After your first pick, every roll comes from that decade", more: "Any franchise, so it's an all-'90s (or all-'60s) team.", bonus: .2, lvl: 4 },
+  { id: "franlock", name: "Franchise lock", desc: "After your first pick, every roll comes from that franchise", more: "Any decade, so a first-pick Laker means a team of Lakers from the '60s to now. Needed for the \"forever\" trophies.", bonus: .25, lvl: 6 },
   { id: "budget", name: "Budget squad", desc: "Nobody rated over 85 can be drafted", bonus: .35, lvl: 8 },
   { id: "onestar", name: "One superstar", desc: "Only one player rated 90+ on your team", bonus: .2, lvl: 10 },
 ];
@@ -1913,6 +2088,8 @@ function renderRules() {
   $("rulesNote").textContent = (locked ? (S.rules.length ? "Locked in for this draft" : "No rules this draft") : "Pick before your first pick") + (bonus ? ` · +${bonus}% XP` : "");
   const on = S.rules.map(ruleName);
   $("simRules").textContent = on.length ? `Rules: ${on.join(", ")}` : "";
+  $("ruleHelp").innerHTML = `<li>Rules are optional. Turn them on before your first pick to make the draft harder or stranger, for bonus XP.</li>` +
+    RULES.map(r => `<li><b>${esc(r.name)}</b> (+${Math.round(r.bonus * 100)}% XP${L >= r.lvl ? "" : `, unlocks at level ${r.lvl}`}): ${esc(r.desc)}.${r.more ? " " + esc(r.more) : ""}</li>`).join("");
 }
 function toggleRule(id) {
   if (picks() > 0 || S.done || S.redrawsUsed > 0 || !ruleUnlocked(id)) return;
@@ -1977,8 +2154,9 @@ function checkChallenges(run, log) {
     career.chDone = (career.chDone || 0) + 1;
     const xp = CH_XP[c.tier];
     log.push([`Challenge: ${chText(c)}`, xp]);
-    toast(`Challenge complete: <b>${esc(chText(c))}</b> +${xp} XP`);
+    toast(`Challenge complete: <b>${esc(chText(c))}</b> +${xp} XP${c.tier === 3 ? " · 🎁 gold pack" : ""}`);
     gainXp(xp);
+    if (c.tier === 3) { givePack("gold"); log.push(["Hard challenge reward: a gold pack", 0]); }
     return newChallenge(c.tier, career.ch.map(x => x.t));
   });
   if (changed) saveCareer();
@@ -2093,6 +2271,30 @@ function buildFamilies() {
   const legBeat = () => Object.keys(H().beat).filter(k => k.startsWith("L:")).length;
   ladder(16, "h2h_leg", [[5, 2, 80], [10, 3, 150], [LEGENDS.length, 4, 300]], v => v === LEGENDS.length ? "Every legend, head-to-head" : `${v} legends down`, v => v === LEGENDS.length ? `Beat all ${v} legendary teams head-to-head` : `Beat ${v} different legendary teams head-to-head`, legBeat);
   ladder(16, "h2h_wins", [[10, 1, 40], [25, 2, 80], [50, 3, 150], [100, 3, 250], [250, 4, 500]], v => `${v} series wins`, v => `Win ${v} head-to-head series`, () => H().won);
+
+  // Even more: every star to collect, a ring with every epic, 60 wins with every franchise, every legend head-to-head
+  for (const k of STAR_KEYS) {
+    const p = PLAYER_INDEX[k];
+    out.push(A(18, 1, "cl:" + k, `${p.name} · ${tag(p.dec, p.team)}`, `Collect ${p.name} from the ${tag(p.dec, p.team)} (rated ${p.ovr})`, () => !!career.coll[k], null, 5));
+  }
+  for (const k of EPIC_KEYS) {
+    const p = PLAYER_INDEX[k];
+    out.push(A(19, 1, "re:" + k, `${p.name} ring · ${tag(p.dec, p.team)}`, `Win the title with ${p.name} (${tag(p.dec, p.team)}) in your starting five`, r => r.champ && r.players.some(x => x.name === p.name && x.dec === p.dec && x.team === p.team), null, 20));
+  }
+  for (const t of FRANCHISE_NAMES) out.push(A(9, 1, "f60:" + t, `${t} 60-win club`, `Win 60 games with a ${t} player in your starting five`, r => r.w >= 60 && r.players.some(x => x.team === t), null, 10));
+  for (const t of LEGENDS) out.push(A(16, 2, "hl:" + t.key, `Head-to-head: ${t.label}`, `Beat the ${t.label} in a head-to-head series`, () => !!H().beat["L:" + t.key], null, 25));
+  out.push(A(0, 2, "ot2", "Double overtime", "Win a double-overtime game", r => feat(r, "maxOtWin") >= 2));
+  out.push(A(0, 3, "ot3", "Triple overtime", "Win a triple-overtime game", r => feat(r, "maxOtWin") >= 3));
+  out.push(A(1, 3, "revenge", "Revenge tour", "Beat a legendary team in the Finals after losing a Finals to them", r => !!r.revenge));
+  // Packs
+  const PK = () => career.pack;
+  ladder(20, "pk_open", [[1, 1, 15], [10, 1, 40], [50, 2, 100], [100, 3, 200], [500, 4, 500]], v => v === 1 ? "First pack" : `${v} packs`, v => v === 1 ? "Open a pack" : `Open ${v} packs`, () => PK().opened);
+  out.push(A(20, 2, "pk_legend", "Pulled a legend", "Pull a legend (95+) from a pack", () => PK().legends >= 1, null, 50));
+  out.push(A(20, 3, "pk_legend5", "Lucky charm", "Pull 5 legends from packs", () => PK().legends >= 5, () => [PK().legends, 5], 150));
+  out.push(A(20, 2, "pk_allnew", "Fresh pull", "Open a pack where all three players are new to you", () => PK().allNew >= 1));
+  out.push(A(20, 1, "pk_gold", "Gold pack", "Open a gold pack (win a title or a hard challenge)", () => PK().gold >= 1));
+  out.push(A(20, 3, "pk_legendpack", "Legend pack", "Open a legend pack (go 82–0)", () => PK().legendPacks >= 1));
+  ladder(20, "pk_daily", [[3, 1, 30], [7, 2, 70], [30, 4, 300]], v => `${v}-day streak`, v => `Open your free daily pack ${v} days in a row`, () => PK().bestStreak);
   return out;
 }
 ACH.push(...buildFamilies());
@@ -2117,11 +2319,19 @@ function afterSeason(run, phase) {
     const xp = Math.round((20 + run.w + (run.w === 82 ? 150 : run.w >= 70 ? 25 : 0)) * m);
     log.push([`Season: ${run.w} wins${m > 1 ? ` (×${m.toFixed(2)} for rules)` : ""}`, xp]);
     gainXp(xp);
+    givePack("normal"); log.push(["Season reward: a pack of player cards", 0]);
+    if (run.w === 82) { givePack("legend"); log.push(["82–0 reward: a legend pack", 0]); }
   } else {
     life.playoffWins += run.pw; if (run.champ) { life.titles++; if (run.hard) life.hardTitles++; }
     const xp = Math.round((run.pw * 3 + (run.champ ? 60 : 0)) * m);
     if (xp) { log.push([`Playoffs: ${run.pw} wins${run.champ ? " and the title" : ""}`, xp]); gainXp(xp); }
+    if (run.champ) { givePack("gold"); log.push(["Title reward: a gold pack", 0]); }
     const fin = series(run)[3];
+    // Lose a Finals to a legendary team and you can come back for revenge
+    if (fin && fin.boss) {
+      if (run.champ && career.finalsLost[fin.boss]) run.revenge = true;
+      if (!run.champ) career.finalsLost[fin.boss] = run.date;
+    }
     if (run.champ && fin && fin.boss && !career.bosses[fin.boss]) {
       career.bosses[fin.boss] = run.date;
       log.push([`First Finals win over the ${fin.opp}`, 75]);
@@ -2131,16 +2341,17 @@ function afterSeason(run, phase) {
   checkChallenges(run, log);
   checkTrophies(run, log);
   saveCareer();
-  renderXpSummary(run);
+  if (run === curRun) renderXpSummary(run);
   renderCareer(); renderChallenges(); renderCollection(); renderH2H();
   setTimeout(() => autoPost(true), 0); // after the season is saved
 }
 
 /* ---------- Career save ---------- */
 const KEY_CAREER = "hoops82.career.v1";
+const blankPack = () => ({ have: { normal: 0, gold: 0, legend: 0 }, opened: 0, legends: 0, allNew: 0, gold: 0, legendPacks: 0, daily: "", streak: 0, bestStreak: 0 });
 const blankH2h = () => ({ won: 0, lost: 0, sweeps: 0, g7: 0, upsets: 0, streak: 0, best: 0, beat: {} });
 const blankCareer = () => ({ v: 1, xp: 0, coll: {}, ch: [], chDone: 0, skips: 2, rules: [], bosses: {}, life: { seasons: 0, wins: 0, titles: 0, playoffWins: 0, perfect: 0, w60: 0, w70: 0, hard: 0, hardTitles: 0 },
-  h2h: blankH2h(), posted: {}, seeded: false, retro: 0 });
+  h2h: blankH2h(), posted: {}, pack: blankPack(), finalsLost: {}, seeded: false, retro: 0 });
 let career = blankCareer();
 function saveCareer() { store.set(KEY_CAREER, career); }
 function loadCareer() {
@@ -2150,12 +2361,19 @@ function loadCareer() {
   career.h2h = Object.assign(blankH2h(), career.h2h || {});
   career.h2h.beat = career.h2h.beat && typeof career.h2h.beat === "object" ? career.h2h.beat : {};
   career.posted = career.posted && typeof career.posted === "object" ? career.posted : {};
+  fixCareerShape();
   collCache = null;
   let seeded = null;
   if (!career.seeded) seeded = seedCareer();
   ensureChallenges();
   saveCareer();
   return seeded;
+}
+// Fields added in later versions, filled in for older saves
+function fixCareerShape() {
+  career.pack = Object.assign(blankPack(), career.pack && typeof career.pack === "object" ? career.pack : {});
+  career.pack.have = Object.assign(blankPack().have, career.pack.have || {});
+  career.finalsLost = career.finalsLost && typeof career.finalsLost === "object" ? career.finalsLost : {};
 }
 // Lifetime counters added later (60- and 70-win seasons, hard mode), counted from one season
 function countLife(r) {
@@ -2319,7 +2537,9 @@ async function cloudSave() {
   try {
     // One document holds everything, and documents are capped at 256 KB, so trophies are stored as id -> day
     // and the oldest seasons are dropped until it fits
-    const slim = runs.slice(-50).map(r => ({ id: r.id, date: r.date, mode: r.mode, hard: !!r.hard, w: r.w, l: r.l, champ: !!r.champ, reached: r.reached, pw: r.pw, pl: r.pl, players: r.players, box: r.box, ach: r.ach, pf: r.pf, pa: r.pa, streak: r.streak, highs: r.highs, mvp: r.mvp, dpoy: r.dpoy, seasonHigh: r.seasonHigh, rules: r.rules }));
+    const slim = runs.slice(-50).map(r => ({ id: r.id, date: r.date, mode: r.mode, hard: !!r.hard, w: r.w, l: r.l, po: r.po, seed: r.seed, champ: !!r.champ, reached: r.reached, pw: r.pw, pl: r.pl,
+      rounds: r.rounds, players: r.players, box: r.box, ach: r.ach, pf: r.pf, pa: r.pa, home: r.home, away: r.away, streak: r.streak, off: r.off, def: r.def, feats: r.feats,
+      highs: r.highs, mvp: r.mvp, dpoy: r.dpoy, seasonHigh: r.seasonHigh, news: r.news, rules: r.rules, redraws: r.redraws, allNew: r.allNew }));
     const tro = Object.fromEntries(Object.entries(trophies).map(([k, v]) => [k, (v && v.day) || ""]));
     let doc = { runs: slim, trophies: tro, career, ts: Date.now() };
     while (JSON.stringify(doc).length > 240000 && doc.runs.length) doc = { ...doc, runs: doc.runs.slice(Math.ceil(doc.runs.length / 2)) };
@@ -2337,7 +2557,9 @@ async function cloudRestore() {
     const localTs = store.get(CLOUD_KEY, 0);
     if ((d.ts || 0) <= localTs) return;
     if (d.runs && Array.isArray(d.runs) && d.runs.length > runs.length) {
-      runs = d.runs; saveRuns();
+      runs = d.runs.filter(r => r && Array.isArray(r.players) && r.players.length === 5);
+      runs.forEach(repairRun);
+      saveRuns();
     }
     if (d.trophies) {
       const t = Object.fromEntries(Object.entries(d.trophies).map(([k, v]) => [k, typeof v === "string" ? { day: v } : v]));
@@ -2349,7 +2571,8 @@ async function cloudRestore() {
       career.life = Object.assign(blankCareer().life, career.life || {});
       career.h2h = Object.assign(blankH2h(), career.h2h || {});
       career.posted = career.posted || {};
-      collCache = null; ensureChallenges(); saveCareer();
+      fixCareerShape();
+      collCache = null; ensureChallenges(); saveCareer(); renderPackBar();
       renderCareer(); renderChallenges(); renderCollection(); renderRules(); renderH2H();
     }
     store.set(CLOUD_KEY, d.ts);
@@ -2777,6 +3000,120 @@ $("lbAddBtn").addEventListener("click", addFriendScore);
 $("lbAddInput").addEventListener("keydown", e => { if (e.key === "Enter") addFriendScore(); });
 initLeaderboard();
 
+/* ---------- Packs ----------
+   Every season earns a pack of three player cards (a title adds a gold pack, 82–0 a legend pack), every level-up
+   and every hard challenge adds one, and there's a free pack each day. Cards flip to reveal; new players join
+   your collection. */
+const COMMON_KEYS = Object.keys(PLAYER_INDEX).filter(k => PLAYER_INDEX[k].ovr >= 60 && PLAYER_INDEX[k].ovr < 80);
+const PACK_POOL = { legendary: LEGEND_KEYS, epic: EPIC_KEYS, rare: STAR_KEYS, common: COMMON_KEYS };
+const PACKS = {
+  normal: { name: "Pack", odds: [["legendary", .02], ["epic", .06], ["rare", .2], ["common", .72]] },
+  gold: { name: "Gold pack", first: [["legendary", .06], ["epic", .24], ["rare", .7]], odds: [["legendary", .03], ["epic", .08], ["rare", .29], ["common", .6]] },
+  legend: { name: "Legend pack", first: [["legendary", .35], ["epic", .65]], odds: [["legendary", .06], ["epic", .14], ["rare", .4], ["common", .4]] },
+};
+function givePack(kind, n = 1) {
+  career.pack.have[kind] = (career.pack.have[kind] || 0) + n;
+  saveCareer();
+  renderPackBar();
+}
+const packsHave = () => Object.values(career.pack.have).reduce((a, b) => a + b, 0);
+const dailyReady = () => career.pack.daily !== todayKey();
+function rollRarity(odds) {
+  let x = Math.random();
+  for (const [r, p] of odds) { if ((x -= p) < 0) return r; }
+  return odds[odds.length - 1][0];
+}
+function rollPack(kind) {
+  const P = PACKS[kind], out = [], seen = new Set();
+  for (let i = 0; i < 3; i++) {
+    const rar = rollRarity(i === 0 && P.first ? P.first : P.odds);
+    let k, tries = 0;
+    do { k = PACK_POOL[rar][Math.floor(Math.random() * PACK_POOL[rar].length)]; } while (seen.has(k) && ++tries < 20);
+    seen.add(k);
+    out.push(k);
+  }
+  return out;
+}
+function renderPackBar() {
+  const bar = $("packBar");
+  if (!bar) return;
+  const n = packsHave(), daily = dailyReady();
+  bar.hidden = !n && !daily;
+  if ($("packBtn2")) $("packBtn2").hidden = !n && !daily;
+  const h = career.pack.have;
+  const kinds = [["legend", "legend pack"], ["gold", "gold pack"], ["normal", "pack"]].filter(([k]) => h[k]).map(([k, l]) => `${h[k]} ${l}${h[k] === 1 ? "" : "s"}`);
+  bar.innerHTML = `<span class="packicon" aria-hidden="true">🎁</span><span class="packtext">${daily ? `<b>Free daily pack ready!</b>${kinds.length ? " · " : ""}` : ""}${kinds.length ? `<b>${kinds.join(", ")}</b> to open` : ""}</span><button class="btn primary mid" id="packOpen">${daily ? "Open free pack" : "Open a pack"}</button>`;
+  $("packOpen").onclick = () => openPack($("packOpen"));
+}
+// Which pack opens next: the free daily one first, then the best one you have
+function nextPack() {
+  if (dailyReady()) return "daily";
+  return ["legend", "gold", "normal"].find(k => career.pack.have[k] > 0) || null;
+}
+let packBusy = false;
+function openPack(anchor) {
+  if (packBusy) return;
+  const which = nextPack();
+  if (!which) return;
+  packBusy = true;
+  const kind = which === "daily" ? "normal" : which, pk = career.pack;
+  if (which === "daily") {
+    const y = new Date(); y.setDate(y.getDate() - 1);
+    const yKey = `${y.getFullYear()}-${String(y.getMonth() + 1).padStart(2, "0")}-${String(y.getDate()).padStart(2, "0")}`;
+    pk.streak = pk.daily === yKey ? pk.streak + 1 : 1;
+    pk.bestStreak = Math.max(pk.bestStreak, pk.streak);
+    pk.daily = todayKey();
+  } else pk.have[kind]--;
+  pk.opened++;
+  if (kind === "gold") pk.gold++;
+  if (kind === "legend") pk.legendPacks++;
+  const keys = rollPack(kind);
+  // Credit the cards now (so closing early loses nothing); the reveal is just for fun
+  let xp = 0, fresh = 0;
+  const cards = keys.map(k => {
+    const p = PLAYER_INDEX[k], rar = rarityOf(p.ovr)[1], isNew = !career.coll[k];
+    if (isNew) { career.coll[k] = Math.floor(Date.now() / 1000); fresh++; xp += COLL_XP[rar]; } else xp += 2;
+    if (rar === "legendary") pk.legends++;
+    return { k, p, rar, isNew };
+  });
+  if (fresh === 3) pk.allNew++;
+  collCache = null;
+  saveCareer();
+  lastFocus = anchor || document.activeElement;
+  const title = which === "daily" ? `Free daily pack${pk.streak > 1 ? ` · ${pk.streak}-day streak` : ""}` : PACKS[kind].name;
+  $("mBox").innerHTML = `<div class="mtop"><div><span class="label">Tap each card to flip it</span><h2 id="mTitle">${esc(title)}</h2></div><button class="btn sm" id="mClose">Close</button></div>
+    <div class="pcards ${kind}">${cards.map((c, i) => `<button class="pcard ${c.rar}" data-i="${i}" aria-label="Card ${i + 1}, tap to flip"><span class="pback"><span>82–0</span></span><span class="pface">
+      <span class="pr">${c.p.ovr}</span><b>${esc(c.p.name)}</b><span class="pt">${esc(short(c.p.dec))} ${esc(c.p.team)}</span><span class="prar">${RARITY.find(r => r[1] === c.rar)[2]}</span>
+      <span class="pnew">${c.isNew ? `New · +${COLL_XP[c.rar]} XP` : "Already had · +2 XP"}</span></span></button>`).join("")}</div>
+    <div class="row-gap"><button class="btn" id="pkReveal">Flip all</button><span class="note" id="pkNote"></span></div>`;
+  $("modal").hidden = false;
+  document.body.style.overflow = "hidden";
+  placeModal(anchor);
+  const flipped = new Set();
+  const done = () => {
+    $("pkNote").textContent = `${fresh} new player${fresh === 1 ? "" : "s"} · +${xp} XP${packsHave() || dailyReady() ? " · more packs to open" : ""}`;
+    $("pkReveal").textContent = packsHave() || dailyReady() ? "Open next pack" : "Done";
+    $("pkReveal").onclick = () => { if (packsHave() || dailyReady()) { closeRun(); openPack(anchor); } else closeRun(); };
+  };
+  const flip = el => {
+    if (flipped.has(el.dataset.i)) return;
+    flipped.add(el.dataset.i);
+    el.classList.add("flip");
+    const c = cards[+el.dataset.i];
+    if (c.rar === "legendary" && !reduce) confetti();
+    if (flipped.size === 3) done();
+  };
+  $("mBox").querySelectorAll(".pcard").forEach(el => el.onclick = () => flip(el));
+  $("pkReveal").onclick = () => $("mBox").querySelectorAll(".pcard").forEach(flip);
+  $("mClose").onclick = closeRun;
+  $("mClose").focus({ preventScroll: true });
+  // XP, trophies and the rest happen right away
+  gainXp(xp);
+  checkCareerTrophies();
+  renderCollection(); renderPackBar();
+  packBusy = false;
+}
+
 /* ---------- Head-to-head ----------
    Send one of your saved teams against a legendary roster or a team from the global leaderboard, best of seven.
    Ratings only (no season form), so it's your five against their five. */
@@ -3001,6 +3338,20 @@ const store = {
 };
 let runs = store.get(KEY_RUNS, []);
 if (!Array.isArray(runs)) runs = [];
+// Older cloud backups didn't keep whether the playoffs were played. Work it out from the playoff record.
+function repairRun(r) {
+  if (!r || typeof r !== "object") return false;
+  let changed = false;
+  if (r.po !== "played" && r.po !== "missed" && r.po !== "pending") {
+    r.po = r.w < 42 ? "missed" : (r.pw || 0) + (r.pl || 0) > 0 ? "played" : "pending";
+    changed = true;
+  }
+  if (r.w >= 42 && r.seed == null) { r.seed = seedFor(r.w); changed = true; }
+  if (!Array.isArray(r.ach)) { r.ach = []; changed = true; }
+  return changed;
+}
+runs = runs.filter(r => r && Array.isArray(r.players) && r.players.length === 5);
+if (runs.map(repairRun).some(Boolean)) store.set(KEY_RUNS, runs);
 trophies = store.get(KEY_TROPHY, {}) || {};
 speed = store.get(KEY_SPEED, "normal");
 mode = "free";
@@ -3072,6 +3423,7 @@ function openRun(r, anchor) {
         <h2 id="mTitle" style="font-size:44px">${r.w}–${r.l}</h2><b>${esc(poText(r))}</b></div>
       <button class="btn sm" id="mClose">Close</button>
     </div>
+    ${r.po === "pending" && r.w >= 42 && r !== curRun && runLineup(r) ? `<div class="row-gap"><button class="btn primary cta" id="mPlayoffs">🏆 Play this season's playoffs</button><span class="note">You never played them. Same team, same form.</span></div>` : ""}
     ${grades.length || extra.length ? `<div class="grades">${grades.map(([k, g, v]) => `<div class="grade"><span class="label">${k}</span><b>${g}</b><span class="foot">${(+v).toFixed(1)}</span></div>`).join("")}${extra.map(([k, v]) => `<div class="grade"><span class="label">${k}</span><b>${v}</b></div>`).join("")}</div>` : ""}
     ${r.mvp ? `<div class="awards">${awardCards({ box, mvp: { name: r.mvp }, dpoy: { name: r.dpoy }, seasonHigh: r.seasonHigh })}</div>` : ""}
     <div class="stack"><span class="label">Lineup and season stats</span><div class="plist">${boxRows(box.map(b => ({ ...b, ovr: b.ovr ?? (r.players.find(p => p.name === b.name) || {}).ovr })))}</div></div>
@@ -3086,11 +3438,40 @@ function openRun(r, anchor) {
   placeModal(anchor);
   $("mClose").onclick = closeRun;
   $("mClose").focus({ preventScroll: true });
+  if ($("mPlayoffs")) $("mPlayoffs").onclick = () => playPendingPlayoffs(r, anchor);
   $("mCopy").onclick = () => {
     const txt = `82-0 Hoops Draft: ${r.w}-${r.l} · ${poText(r)}\n` + r.players.map(p => `${p.slot} ${p.name} (${short(p.dec)} ${p.team})`).join("\n");
     const fb = () => { $("mCopyNote").textContent = txt.replace(/\n/g, " · "); };
     try { navigator.clipboard.writeText(txt).then(() => { $("mCopyNote").textContent = "Copied"; }, fb); } catch (e) { fb(); }
   };
+}
+// A season from the record book whose playoffs were never played: play them now, with that season's form
+async function playPendingPlayoffs(r, anchor) {
+  if (poRunning || r.po !== "pending") return;
+  const L = runLineup(r);
+  if (!L) return;
+  poRunning = true;
+  try {
+    let rt = teamRatings(L);
+    if (Array.isArray(r.box) && r.box.length === 5 && r.box.every(b => b.fm)) {
+      const forms = {};
+      for (const k of SLOTS) forms[k] = { m: (r.box.find(b => b.slot === k) || {}).fm || 1 };
+      rt = withForm(rt, forms);
+    }
+    const seed = r.seed || seedFor(r.w), po = playoffSim(rt, seed, r.w);
+    const btn = $("mPlayoffs");
+    if (btn) { btn.disabled = true; btn.textContent = "Playing…"; }
+    const box = document.createElement("div");
+    box.className = "rounds";
+    btn.closest(".row-gap").after(box);
+    for (const rd of po.rounds) { box.insertAdjacentHTML("beforeend", roundCard(rd)); await sleep(420); }
+    Object.assign(r, { po: "played", seed, pw: po.pw, pl: po.pl, reached: po.reached, champ: po.champ, rounds: po.rounds });
+    if (po.champ) confetti();
+    try { afterSeason(r, "playoffs"); } catch (e) { console.error(e); }
+    saveRuns();
+    try { renderBook(); renderHeader(); updateLbSubmit(); } catch (e) { console.error(e); }
+  } finally { poRunning = false; }
+  openRun(r, anchor);
 }
 function closeRun() {
   $("modal").hidden = true;
@@ -3113,6 +3494,8 @@ $("clearYes").onclick = () => {
   renderBook(); renderTrophies(); renderHeader();
 };
 $("poBtn").onclick = playoffs;
+$("poBtn2").onclick = playoffs;
+$("packBtn2").onclick = () => openPack($("packBtn2"));
 $("rules").onclick = e => { const b = e.target.closest("[data-rule]"); if (b && !b.disabled) toggleRule(b.dataset.rule); };
 $("chList").onclick = e => { const b = e.target.closest("[data-swap]"); if (b && !b.disabled) swapChallenge(+b.dataset.swap); };
 $("trophyFilter").onclick = e => { const v = e.target.closest("button")?.dataset.v; if (v) { trophyFilter = v; renderTrophies(); } };
@@ -3189,7 +3572,7 @@ function boot() {
     saveCareer();
     store.set(KEY_RUNS, runs);
   }
-  renderBook(); renderTrophies(); renderCareer(); renderChallenges(); renderCollection(); renderRules(); renderHeader(); renderH2H();
+  renderBook(); renderTrophies(); renderCareer(); renderChallenges(); renderCollection(); renderRules(); renderHeader(); renderH2H(); renderPackBar();
   const added = fmtPts(ACH.length - 102);
   if (seeded && seeded.seasons) {
     const L = levelOf(career.xp).level;
