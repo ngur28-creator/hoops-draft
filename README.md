@@ -3,7 +3,10 @@
 Roll a random era and franchise, draft five players, and chase an 82–0 season and a 16–0 title run.
 
 - `site/index.html` is the whole game (player data included).
-- `netlify/functions/lb/lb.mjs` is the leaderboard API at `/api/lb`. Anyone can submit; each browser keeps a
+- `netlify/functions/lb/lb.mjs` is the leaderboard API at `/api/lb`: the Normal and Hard Mode boards, plus the
+  Daily Draft (one board per day, California time), Legends Gauntlet and Dynasty boards.
+- `netlify/functions/duel/duel.mjs` is Draft vs Friend over the internet at `/api/duel`: one player creates a duel,
+  the other joins with their username, and the server checks every pick (whose turn, which roster, open spot). Anyone can submit; each browser keeps a
   secret token so only its owner can replace their entry. The server looks every player up in
   `valid.mjs` and recalculates the score itself, so ratings can't be faked.
 - Scores live in Netlify Blobs (store `hoops-lb`). Deploy previews use a separate throwaway store.

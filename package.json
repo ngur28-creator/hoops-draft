@@ -6,7 +6,7 @@
     "@netlify/blobs": "^11.1.3"
   },
   "scripts": {
-    "test": "node test/server.test.mjs",
+    "test": "node test/server.test.mjs && node test/duel.test.mjs",
     "dev": "node test/dev-server.mjs"
   }
 }

@@ -396,6 +396,31 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
 .round.boss { border-color: var(--gold); }
 .round .legend { font-size: 12px; color: var(--muted); }
 .chip.new { border-color: var(--win); color: var(--win); }
+/* Card levels: tier colors (text, border, fill) for light and dark */
+.lvchip, .lvcard { --tc: var(--muted); --tb: var(--line); --tf: none; }
+.bronze { --tc: #a35a1f; --tb: #c98a4f; --tf: linear-gradient(color-mix(in srgb, #c98a4f 14%, transparent), color-mix(in srgb, #c98a4f 14%, transparent)); }
+.silver { --tc: #5b6a80; --tb: #9fb0c4; --tf: linear-gradient(color-mix(in srgb, #9fb0c4 18%, transparent), color-mix(in srgb, #9fb0c4 18%, transparent)); }
+.gold { --tc: #8a5f00; --tb: #e0b13a; --tf: linear-gradient(color-mix(in srgb, #ffc93c 22%, transparent), color-mix(in srgb, #ffc93c 22%, transparent)); }
+.diamond { --tc: #12657f; --tb: #4fc7e8; --tf: linear-gradient(120deg, color-mix(in srgb, #9fe8ff 40%, transparent), color-mix(in srgb, #e6ccff 40%, transparent)); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .bronze { --tc: #f0b27a; }
+  :root:not([data-theme="light"]) .silver { --tc: #d3dcec; }
+  :root:not([data-theme="light"]) .gold { --tc: #ffd166; }
+  :root:not([data-theme="light"]) .diamond { --tc: #8cecff; }
+}
+:root[data-theme="dark"] .bronze { --tc: #f0b27a; }
+:root[data-theme="dark"] .silver { --tc: #d3dcec; }
+:root[data-theme="dark"] .gold { --tc: #ffd166; }
+:root[data-theme="dark"] .diamond { --tc: #8cecff; }
+.lvchip { display: inline-block; font-size: 10px; font-weight: 800; letter-spacing: .4px; padding: 1px 5px; border-radius: 4px; border: 1px solid var(--tb); color: var(--tc); background-image: var(--tf); line-height: 1.4; white-space: nowrap; }
+.slot .top .lvchip { margin-left: auto; margin-right: 6px; }
+.cardgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.lvcard { display: grid; gap: 3px; padding: 9px 10px; border-radius: 10px; border: 2px solid var(--tb); background-color: var(--bg); background-image: var(--tf); min-width: 0; }
+.lvcard .lvtop { display: flex; justify-content: space-between; align-items: baseline; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .5px; color: var(--tc); }
+.lvcard .lvtop b { font-family: var(--display); font-weight: 400; font-size: 18px; letter-spacing: 0; text-transform: none; }
+.lvcard .lvname { font-size: 14px; line-height: 1.15; overflow-wrap: anywhere; }
+.lvcard .lvteam, .lvcard .lvxp { font-size: 11.5px; color: var(--muted); }
+.lvcard .pbar i { background: var(--tb); }
 .chip.new.legend { border-color: var(--gold); color: var(--gold); background: color-mix(in srgb, var(--gold) 12%, transparent); }
 
 @media (max-width: 860px) {
@@ -576,6 +601,7 @@ h3 { font-family: var(--display); font-weight: 400; font-size: 16px; line-height
 #shotNote { color: var(--board-fg); font-weight: 800; font-size: 16px; min-height: 1.3em; }
 .clutch .btn:not(.primary) { color: var(--board-fg); border-color: var(--board-dim); background: transparent; }
 .series .g.clutch { outline: 2px solid #ffc93c; outline-offset: 1px; }
+.g.p2 { background: var(--accent); color: #fff; }
 .reel.golden { box-shadow: inset 0 0 0 3px #ffc93c, 0 0 22px color-mix(in srgb, #ffc93c 45%, transparent); }
 .reel.golden .val { color: #ffc93c; }
 .soundbtn { border: 1px solid var(--line); color: var(--ink); cursor: pointer; font-weight: 700; }
@@ -607,6 +633,49 @@ h3 { font-family: var(--display); font-weight: 400; font-size: 16px; line-height
 .pcard .pnew { margin-top: auto; font-size: 11.5px; font-weight: 800; color: var(--win); }
 @media (prefers-reduced-motion: reduce) { .pcard { transition: none; } }
 
+/* Game modes */
+.tabs { flex-wrap: wrap; max-width: 100%; }
+@media (max-width: 560px) { .tabs button { font-size: 12.5px; padding: 6px 8px; } }
+.modepanel { border: 2px solid color-mix(in srgb, var(--accent) 50%, var(--line)); }
+.mboard { display: grid; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--bg); }
+.mrow { display: grid; grid-template-columns: 2.2em minmax(0, 1fr) auto; gap: 8px; align-items: baseline; padding: 7px 10px; border-bottom: 1px solid var(--line); font-size: 14px; }
+.mrow:last-child { border-bottom: 0; }
+.mrow.me { background: color-mix(in srgb, var(--accent) 10%, var(--bg)); }
+.mrow b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mrow .mrank { color: var(--muted); font-family: var(--mono); font-size: 13px; }
+.mrow .mwhat { font-family: var(--mono); font-size: 13px; color: var(--accent); white-space: nowrap; }
+.dailydone { display: grid; gap: 4px; padding: 12px; border-radius: 12px; border: 2px solid var(--gold); background: color-mix(in srgb, var(--gold) 10%, var(--bg)); }
+.dailydone .drec { font-family: var(--display); font-weight: 400; font-size: 28px; line-height: 1.1; }
+.dynyears { display: flex; flex-wrap: wrap; gap: 6px; }
+.dynyear { border: 1px solid var(--line); border-radius: 8px; padding: 3px 9px; font-size: 13px; background: var(--bg); }
+.dynyear.ring { border-color: var(--gold); background: color-mix(in srgb, var(--gold) 14%, var(--bg)); }
+.offseason { display: grid; gap: 8px; }
+.aging, .fapool { display: grid; gap: 4px; }
+.agerow, .farow { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; padding: 6px 9px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); font-size: 14px; }
+.agerow .up { color: var(--win); font-weight: 700; } .agerow .down { color: var(--loss); font-weight: 700; }
+.farow select { margin-left: auto; }
+.gauntlet { display: grid; gap: 8px; padding: 12px; border: 2px solid color-mix(in srgb, var(--gold) 60%, var(--line)); border-radius: 12px; background: color-mix(in srgb, var(--gold) 6%, var(--bg)); }
+.gauntlet .gtitle { font-family: var(--display); font-weight: 400; font-size: 18px; }
+.gladder { display: flex; flex-wrap: wrap; gap: 4px; }
+.gstep { min-width: 26px; text-align: center; padding: 2px 4px; border-radius: 6px; border: 1px solid var(--line); font-family: var(--mono); font-size: 12px; color: var(--muted); background: var(--bg); }
+.gstep.got { border-color: var(--win); color: var(--win); background: color-mix(in srgb, var(--win) 12%, var(--bg)); }
+.gstep.next { border-color: var(--accent); color: var(--ink); background: color-mix(in srgb, var(--accent) 22%, var(--bg)); font-weight: 800; }
+.gstep.best { border-color: var(--gold); color: var(--ink); }
+.gboard summary { cursor: pointer; font-weight: 700; font-size: 14px; }
+.gboard[open] summary { margin-bottom: 6px; }
+.duelsetup { display: grid; gap: 8px; }
+.dstatus { margin: 0; font-size: 16px; }
+.note.warn { color: var(--loss); font-weight: 700; }
+.dteams { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.dteam { display: grid; gap: 4px; padding: 8px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); min-width: 0; }
+.dteam.active { border: 2px solid var(--accent); }
+.dslot { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0 6px; align-items: baseline; font-size: 13px; }
+.dslot b { overflow-wrap: anywhere; }
+.dslot .note { grid-column: 2; font-size: 11.5px; }
+.dslot.filled.legendary b { color: var(--gold); }
+.droster .pdraft { display: flex; flex-wrap: wrap; gap: 4px; justify-content: flex-end; }
+@media (max-width: 520px) { .dteams { grid-template-columns: minmax(0, 1fr); } }
+
 /* Toast */
 .toast { border-radius: 999px; border: 2px solid var(--accent); background: var(--ink-2); padding: 10px 18px; }
 .toast b { color: #ffc93c; }
@@ -628,10 +697,13 @@ h3 { font-family: var(--display); font-weight: 400; font-size: 16px; line-height
       <label class="hard" for="hardmode"><input type="checkbox" id="hardmode"> Hard mode (blind picks) <span class="xpb">+50% XP</span></label>
     </div>
     <div class="modebar">
-      <div class="tabs" role="group" aria-label="Game mode" hidden>
-        <button id="mFree" aria-pressed="true">Free play</button>
+      <div class="tabs" role="group" aria-label="Game mode">
+        <button id="mFree" aria-pressed="true">🏀 Free play</button>
+        <button id="mDaily" aria-pressed="false">📅 Daily Draft</button>
+        <button id="mDynasty" aria-pressed="false">👑 Dynasty</button>
+        <button id="mDuel" aria-pressed="false">🤝 Vs Friend</button>
       </div>
-      <span class="confirm" id="modeAsk" hidden>Start over? Your current picks will be lost. <button class="btn sm" id="modeYes">Start over</button><button class="btn sm" id="modeNo">Keep drafting</button></span>
+      <span class="confirm" id="modeAsk" hidden>Switch modes? Your current picks will be lost. <button class="btn sm" id="modeYes">Start over</button><button class="btn sm" id="modeNo">Keep drafting</button></span>
       <div class="bests" id="bests"></div>
       <button class="pill soundbtn" id="soundBtn" aria-pressed="false">🔈 Sound off</button>
     </div>
@@ -643,12 +715,14 @@ h3 { font-family: var(--display); font-weight: 400; font-size: 16px; line-height
     <div class="packbar" id="packBar" hidden></div>
   </header>
 
+  <section class="panel stack modepanel" id="modePanel" hidden aria-label="Game mode"></section>
+
   <section class="panel stack" id="chPanel" aria-label="Challenges">
     <div class="head"><h2>Challenges</h2><span class="label" id="chSum"></span></div>
     <div class="chs" id="chList"></div>
   </section>
 
-  <section class="panel lineup" aria-label="Your starting five">
+  <section class="panel lineup" id="lineupPanel" aria-label="Your starting five">
     <svg class="courtlines" viewBox="0 0 1000 240" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
       <g fill="none" stroke="currentColor" stroke-width="4">
         <rect x="380" y="-2" width="240" height="190"/>
@@ -746,6 +820,7 @@ h3 { font-family: var(--display); font-weight: 400; font-size: 16px; line-height
       </div>
       <div class="row-gap">
         <button class="btn primary" id="poBtn" hidden>Play the playoffs</button>
+        <button class="btn primary" id="modeNext" hidden></button>
         <button class="btn primary" id="again">Draft again</button>
         <button class="btn" id="packBtn2" hidden>🎁 Open pack</button>
         <button class="btn" id="copy">Copy result</button>
@@ -796,6 +871,7 @@ h3 { font-family: var(--display); font-weight: 400; font-size: 16px; line-height
     <div class="head"><h2>Collection</h2><span class="label" id="collSum"></span></div>
     <p class="note">Every player you draft joins your collection for good. Players you've never drafted are marked New on the roster.</p>
     <div class="collbars" id="collBars"></div>
+    <div class="cgroup" id="collCards"></div>
     <div class="cgroup" id="collChase"></div>
     <div class="cgroup" id="collRecent"></div>
     <div class="cgroup" id="collBosses"></div>
@@ -815,6 +891,7 @@ h3 { font-family: var(--display); font-weight: 400; font-size: 16px; line-height
       <div class="h2hfound" id="h2hFound"></div>
       <div class="h2harena" id="h2hFriendArena" hidden></div>
     </div>
+    <div class="gauntlet" id="gauntlet"></div>
     <div class="h2harena" id="h2hArena" hidden></div>
     <div class="h2hlist" id="h2hList"></div>
   </section>
@@ -873,7 +950,7 @@ h3 { font-family: var(--display); font-weight: 400; font-size: 16px; line-height
 <div class="toast" id="toast" hidden role="status"></div>
 
 <script>
-const APP_VERSION = 31;
+const APP_VERSION = 32;
 // How leaderboard points are counted. Version 1 also counted team rating; entries saved under it are re-scored when shown.
 const SCORE_V = 2;
 // Anything that goes wrong is noted (last 20, in this browser and in your private cloud save) so it can be fixed
@@ -946,10 +1023,12 @@ let view = "team";
 let query = "";
 let speed = "normal";
 function fresh() {
-  const rules = (career.rules || []).filter(id => ruleUnlocked(id));
-  S = { lineup: { PG: null, SG: null, SF: null, PF: null, C: null }, draw: null, teamRedraw: 1, eraRedraw: 1, spinning: false, done: false, mode, day: todayKey(), drawCount: 0,
+  // Rules and hard mode are for free play; the Daily Draft has no re-draws, so everyone sees the same five rolls
+  const rules = mode === "free" ? (career.rules || []).filter(id => ruleUnlocked(id)) : [];
+  S = { lineup: { PG: null, SG: null, SF: null, PF: null, C: null }, draw: null, teamRedraw: 1, eraRedraw: 1, spinning: false, done: false, mode, day: mode === "daily" ? dayPT() : todayKey(), drawCount: 0,
     rules, lockDec: null, lockName: null, redrawsUsed: 0, draftXp: 0 };
-  if (rules.includes("noredraw")) S.teamRedraw = S.eraRedraw = 0;
+  if (rules.includes("noredraw") || mode === "daily") S.teamRedraw = S.eraRedraw = 0;
+  if (mode !== "free") $("hardmode").checked = false;
 }
 const hasRule = id => !!(S && S.rules && S.rules.includes(id));
 const picks = () => SLOTS.filter(k => S.lineup[k]).length;
@@ -1058,8 +1137,8 @@ function newDraw() {
   const opts = allowedDraws();
   // About one roll in 16 is golden: one of the 24 legendary rosters (when your rules allow it)
   const gold = opts.filter(x => LEGENDS.some(t => t.key === x.dec + "|" + x.fid));
-  goldenRoll = gold.length > 0 && Math.random() < 1 / 16;
-  spin(seeded(() => rnd(goldenRoll ? gold : opts)));
+  // R is seeded in the Daily Draft, so golden rolls land the same for everyone
+  spin(seeded(() => { goldenRoll = gold.length > 0 && R() < 1 / 16; return rnd(goldenRoll ? gold : opts); }));
 }
 // Re-draw team: another franchise from the same decade (blocked once Franchise lock has locked in)
 const teamOpts = () => !S.draw || S.lockName ? [] : allowedDraws().filter(x => x.dec === S.draw.dec && x.fid !== S.draw.fid);
@@ -1120,7 +1199,7 @@ function renderSlots(hard) {
     } else {
       el.className = "slot filled" + (hard ? "" : " " + rarityOf(p.ovr)[1]);
       const stats = hard ? "" : `<span class="line">${fmt(p.ppg)} pts · ${fmt(p.rpg)} reb · ${fmt(p.apg)} ast</span>`;
-      el.innerHTML = `<div class="top"><span class="pos">${k}</span><span class="ovrbadge ${hard ? "" : tierCls(p.ovr)}">${hard ? "??" : p.ovr}</span></div>
+      el.innerHTML = `<div class="top"><span class="pos">${k}</span>${cardBadge(cardKeyOf(p))}<span class="ovrbadge ${hard ? "" : tierCls(p.ovr)}">${hard ? "??" : p.ovr}</span></div>
         <span class="who">${esc(p.name)}</span><span class="from">${short(p.dec)} ${esc(p.team)} · ${p.pos.join("/")}</span>${stats}${fitLabel(p, k)}`;
       if (!S.done) {
         const sel = document.createElement("select");
@@ -1195,7 +1274,8 @@ function renderRoster(hard) {
     const vals = COLS.map(([k, l]) => [k, l, statVal(p, k)]);
     const isNew = !career.coll[collKey(S.draw.dec, team.name, p.name)];
     const newChip = isNew ? `<span class="chip new${!hard && p.ovr >= 95 ? " legend" : ""}">${!hard && p.ovr >= 95 ? "New legend" : "New"}</span>` : "";
-    row.innerHTML = `<div class="pname"><b>${esc(p.name)}</b><span class="chips">${chips}${newChip}</span></div><div class="pstats">${statCells(vals, hard, sort.key)}</div><div class="pdraft"></div>`;
+    const lvChip = isNew ? "" : cardBadge(collKey(S.draw.dec, team.name, p.name));
+    row.innerHTML = `<div class="pname"><b>${esc(p.name)}</b><span class="chips">${chips}${newChip}${lvChip}</span></div><div class="pstats">${statCells(vals, hard, sort.key)}</div><div class="pdraft"></div>`;
     const cell = row.querySelector(".pdraft");
     if (drafted(p.id)) cell.innerHTML = `<span class="note">Drafted</span>`;
     else if (ruleBlock(p) && open.length) cell.innerHTML = `<span class="note">${ruleBlock(p)}</span>`;
@@ -1231,7 +1311,7 @@ function renderProjection(hard) {
   $("speedSeg").querySelectorAll("button").forEach(b => b.onclick = () => { speed = b.dataset.s; store.set(KEY_SPEED, speed); renderProjection(hard); });
 }
 function renderHeader() {
-  $("mFree").setAttribute("aria-pressed", mode === "free");
+  setModeButtons();
   const top = lbBestForMode("normal") || lbBest();
   const titles = runs.filter(r => r.champ).length;
   const got = gotCount();
@@ -1242,7 +1322,8 @@ function renderHeader() {
 function render() { renderInner(); saveCur(); }
 function renderInner() {
   const hard = $("hardmode").checked;
-  $("hardmode").disabled = picks() > 0 || S.done;
+  $("hardmode").disabled = picks() > 0 || S.done || S.mode !== "free";
+  $("hardmode").closest("label").hidden = S.mode !== "free";
   renderHeader();
   renderRules();
   renderSlots(hard);
@@ -1251,6 +1332,10 @@ function renderInner() {
   $("drawPanel").hidden = full;
   $("simPanel").hidden = !full || S.done;
   $("seasonPanel").hidden = !S.done;
+  renderModePanel();
+  // Draft vs Friend has its own board; a finished Daily Draft and a Dynasty offseason pause the draft
+  $("lineupPanel").hidden = S.mode === "duel";
+  if (S.mode === "duel" || S.locked || S.offseason) { $("drawPanel").hidden = $("simPanel").hidden = true; $("seasonPanel").hidden = !S.done || S.mode === "duel"; return; }
   if (full) { if (!S.done) renderProjection(hard); return; }
   $("pickNo").textContent = `Pick ${picks() + 1} / 5`;
   $("rTeam").disabled = S.spinning || !S.teamRedraw || !S.draw || !teamOpts().length;
@@ -1550,6 +1635,7 @@ function finishSeason(w, l, res) {
   if (runs.length > 150) runs = runs.slice(-150);
   // The playoffs button comes first, so nothing below can ever hide it
   $("poBtn").hidden = $("poBtn2").hidden = !(w >= 42);
+  try { modeAfterSeason(curRun); } catch (e) { console.error(e); logError(e && e.message, e && e.stack); }
   try { afterSeason(curRun, "season"); } catch (e) { console.error(e); logError(e && e.message, e && e.stack); }
   saveRuns();
   try { renderBook(); renderHeader(); updateLbSubmit(); } catch (e) { console.error(e); logError(e && e.message, e && e.stack); }
@@ -1673,10 +1759,13 @@ async function playoffsInner() {
   try { $("poWrap").scrollIntoView({ block: "start", behavior: reduce ? "auto" : "smooth" }); } catch (e) {}
   $("poSeed").textContent = `#${curRun.seed} seed`;
   const r = curRes ? curRes.r : teamRatings(S.lineup), rounds = [];
+  // In the Daily Draft the playoffs are seeded too (the same team gets the same bracket); only your Game 7 shots differ
+  const poR = curRun.mode === "daily" ? mulberry32(hashStr(`${curRun.day}:po:${SLOTS.map(k => S.lineup[k].id + S.lineup[k].dec).join("|")}`)) : null;
+  const withR = f => { if (!poR) return f(); const prev = R; R = poR; try { return f(); } finally { R = prev; } };
   let pw = 0, pl = 0, reached = 0, champ = false;
   for (let i = 0; i < 4; i++) {
     reached = i;
-    const st = roundSetup(i, curRun.seed, curRun.w);
+    const st = withR(() => roundSetup(i, curRun.seed, curRun.w));
     const rd = { n: ROUNDS[i], opp: st.opp, seed: st.oppSeed, hc: st.hc, res: [0, 0], g: [] };
     if (st.boss) { rd.boss = st.boss.key; rd.stars = st.boss.stars; }
     const card = document.createElement("div");
@@ -1688,7 +1777,7 @@ async function playoffsInner() {
     const res = card.querySelector(".res"), ser = card.querySelector(".series");
     let a = 0, b = 0;
     while (a < 4 && b < 4) {
-      let g = seriesGame(r, st, rd.g.length);
+      let g = withR(() => seriesGame(r, st, rd.g.length));
       if (a === 3 && b === 3) { $("ticker").textContent = `${rd.n} · Game 7`; g = await clutchGame(g, r, st, i); }
       rd.g.push(g);
       const [us, them, home, ot] = g, won = us > them;
@@ -1719,6 +1808,7 @@ async function playoffsInner() {
   $("watch").textContent = champ ? "CHAMPIONS" : `Out in the ${ROUNDS[reached]}`;
   Object.assign(curRun, { po: "played", pw, pl, reached, champ, rounds });
   try { afterSeason(curRun, "playoffs"); } catch (e) { console.error(e); logError(e && e.message, e && e.stack); }
+  try { modeAfterPlayoffs(curRun); } catch (e) { console.error(e); logError(e && e.message, e && e.stack); }
   saveRuns();
   try { renderBook(); renderHeader(); updateLbSubmit(); } catch (e) { console.error(e); logError(e && e.message, e && e.stack); }
   lastResult += `\nPlayoffs: ${poText(curRun)}`;
@@ -1740,8 +1830,9 @@ const ACH_CATS = [
   { name: "Legend hunt", career: true }, { name: "Epic hunt", career: true }, { name: "Sets", career: true },
   { name: "Legendary Finals", career: true }, { name: "Head-to-head", career: true }, { name: "Milestones", career: true },
   { name: "Star hunt", career: true }, { name: "Epic rings" }, { name: "Packs", career: true }, { name: "Clutch", career: true },
+  { name: "Card levels", career: true }, { name: "Daily Draft", career: true }, { name: "Dynasty", career: true }, { name: "Legends Gauntlet", career: true }, { name: "Draft vs Friend", career: true },
 ];
-const CAT_ORDER = [0, 1, 21, 6, 2, 3, 4, 7, 8, 19, 9, 10, 11, 15, 16, 20, 12, 13, 18, 14, 5, 17];
+const CAT_ORDER = [0, 1, 21, 23, 24, 25, 26, 22, 6, 2, 3, 4, 7, 8, 19, 9, 10, 11, 15, 16, 20, 12, 13, 18, 14, 5, 17];
 const isCareer = a => !!ACH_CATS[a.cat].career;
 const achXp = a => a.xp ?? TIER_XP[a.tier];
 const avgOvr = r => r.players.reduce((a, p) => a + p.ovr, 0) / 5;
@@ -2154,6 +2245,81 @@ function renderCollection() {
   $("collRecent").innerHTML = recent.length ? `<span class="label">Latest pulls</span><div class="cchips">${recent.map(([k]) => { const p = PLAYER_INDEX[k]; return `<span class="cchip ${rarityOf(p.ovr)[1]}">${esc(p.name)} <small>${short(p.dec)} ${esc(p.team)}</small></span>`; }).join("")}</div>` : "";
   const beaten = LEGENDS.filter(t => career.bosses[t.key]).length;
   $("collBosses").innerHTML = `<span class="label">Legendary teams beaten in the Finals · ${beaten} of ${LEGENDS.length}</span><div class="cchips">${LEGENDS.map(t => `<span class="boss${career.bosses[t.key] ? " got" : ""}" title="${esc(t.stars.join(", "))}">${esc(t.label)}</span>`).join("")}</div>`;
+  renderCards();
+}
+
+/* ---------- Card levels ----------
+   Every player card earns XP from the seasons you play with him: some for each season and its wins, more for
+   playoff wins, a title or being the team MVP. Ten levels: Bronze (1–3), Silver (4–6), Gold (7–9) and Diamond (10).
+   Leveled cards add bonus XP to every season you play with them. Ratings never change, so the leaderboard stays fair. */
+const CARD_LV = [0, 30, 70, 120, 180, 260, 360, 480, 630, 800]; // XP to reach level 1, 2, … 10
+const CARD_TIERS = [[10, "diamond", "Diamond"], [7, "gold", "Gold"], [4, "silver", "Silver"], [1, "bronze", "Bronze"]];
+function cardLevel(xp) { let L = 1; while (L < 10 && xp >= CARD_LV[L]) L++; return L; }
+const cardTier = L => CARD_TIERS.find(([n]) => L >= n);
+const cardKeyOf = p => collKey(p.dec, p.team, p.name);
+function cardInfo(k) {
+  const xp = (career.cards && career.cards[k]) || 0, L = cardLevel(xp);
+  return { xp, L, tier: cardTier(L), next: L < 10 ? CARD_LV[L] : null, prev: CARD_LV[L - 1] };
+}
+// XP a player's card earns from one season ("season") or its playoff run ("playoffs")
+function cardXpFor(run, phase, p) {
+  if (phase === "season") return 10 + Math.round(run.w / 4) + (run.mvp === p.name ? 10 : 0);
+  return (run.pw || 0) * 2 + (run.champ ? 15 : 0);
+}
+// Adds card XP for the five players of a season; returns the level-ups as [name, level]
+function giveCardXp(run, phase) {
+  career.cards = career.cards && typeof career.cards === "object" ? career.cards : {};
+  const ups = [];
+  for (const p of run.players || []) {
+    const k = cardKeyOf(p);
+    if (!PLAYER_INDEX[k]) continue;
+    const before = cardLevel(career.cards[k] || 0);
+    career.cards[k] = (career.cards[k] || 0) + cardXpFor(run, phase, p);
+    const after = cardLevel(career.cards[k]);
+    if (after > before) ups.push([p.name, after]);
+  }
+  return ups;
+}
+// After a season or playoff run: card XP, any level-ups, and the bonus your leveled cards give
+function cardsAfter(run, phase, log) {
+  const ups = giveCardXp(run, phase);
+  if (phase === "season") {
+    const bonus = (run.players || []).reduce((t, p) => t + (cardInfo(cardKeyOf(p)).L - 1) * 3, 0);
+    if (bonus) { log.push(["Card bonus: your players' card levels", bonus]); gainXp(bonus); }
+  }
+  if (ups.length) {
+    const xp = ups.reduce((t, [, L]) => t + 5 * L, 0);
+    log.push([`Card level-up: ${ups.map(([n, L]) => `${n} Lv ${L}`).join(", ")}`, xp]);
+    gainXp(xp);
+    const top = ups.reduce((a, b) => b[1] > a[1] ? b : a);
+    const [, , tname] = cardTier(top[1]);
+    const newTier = CARD_TIERS.some(([n]) => n === top[1]) && top[1] > 1;
+    toast(`${newTier ? `🃏 ${tname} card! ` : "🃏 "}<b>${esc(top[0])}</b> reached card level ${top[1]}${ups.length > 1 ? ` (+${ups.length - 1} more)` : ""}`);
+  }
+}
+// The first time cards exist: give every card the XP its seasons in your record book earned, quietly
+function retroCards() {
+  career.cards = {};
+  for (const r of runs) { giveCardXp(r, "season"); if (r.po === "played") giveCardXp(r, "playoffs"); }
+  career.cardsV = 1;
+}
+const cardBadge = (k, cls = "") => {
+  const c = cardInfo(k);
+  return c.xp ? `<span class="lvchip ${c.tier[1]}${cls ? " " + cls : ""}" title="Card level ${c.L} · ${c.tier[2]}${c.next ? ` · ${fmtPts(c.next - c.xp)} XP to level ${c.L + 1}` : " · max level"}">Lv ${c.L}</span>` : "";
+};
+function renderCards() {
+  const el = $("collCards");
+  if (!el) return;
+  const all = Object.entries(career.cards || {}).filter(([k, xp]) => xp > 0 && PLAYER_INDEX[k]);
+  if (!all.length) { el.innerHTML = `<span class="label">Card levels</span><span class="note">Play seasons and your players' cards level up: Bronze, Silver, Gold, then Diamond at level 10.</span>`; return; }
+  const counts = { diamond: 0, gold: 0, silver: 0, bronze: 0 };
+  for (const [, xp] of all) counts[cardTier(cardLevel(xp))[1]]++;
+  const top = all.sort((a, b) => b[1] - a[1]).slice(0, 8);
+  el.innerHTML = `<span class="label">Your best cards · ${counts.diamond} Diamond · ${counts.gold} Gold · ${counts.silver} Silver · ${fmtPts(counts.bronze)} Bronze</span>
+    <div class="cardgrid">${top.map(([k]) => {
+      const p = PLAYER_INDEX[k], c = cardInfo(k), pct = c.next ? (c.xp - c.prev) / (c.next - c.prev) * 100 : 100;
+      return `<div class="lvcard ${c.tier[1]}"><span class="lvtop"><b>Lv ${c.L}</b><span>${c.tier[2]}</span></span><b class="lvname">${esc(p.name)}</b><span class="lvteam">${short(p.dec)} ${esc(p.team)} · ${p.ovr}</span><span class="pbar"><i style="width:${pct.toFixed(1)}%"></i></span><span class="lvxp">${c.next ? `${fmtPts(c.xp - c.prev)} / ${fmtPts(c.next - c.prev)} XP` : "Max level"}</span></div>`;
+    }).join("")}</div>`;
 }
 
 /* ---------- Levels and XP ---------- */
@@ -2245,20 +2411,20 @@ const ruleName = id => (RULES.find(x => x.id === id) || {}).name || id;
 const xpMult = run => 1 + (run.hard ? .5 : 0) + (run.rules || []).reduce((a, id) => a + ((RULES.find(x => x.id === id) || {}).bonus || 0), 0);
 function renderRules() {
   if (!S) return;
-  const locked = picks() > 0 || S.done || S.redrawsUsed > 0, L = lvl();
+  const locked = picks() > 0 || S.done || S.redrawsUsed > 0 || S.mode !== "free", L = lvl();
   $("rules").innerHTML = RULES.map(r => {
     const open = L >= r.lvl, on = S.rules.includes(r.id);
     return `<button class="rule${on ? " on" : ""}" data-rule="${r.id}" aria-pressed="${on}"${!open || locked ? " disabled" : ""} title="${esc(r.desc)}">${open ? "" : "🔒 "}${esc(r.name)} <span>${open ? `+${Math.round(r.bonus * 100)}%` : `Lv ${r.lvl}`}</span></button>`;
   }).join("");
   const bonus = Math.round((xpMult({ hard: $("hardmode").checked, rules: S.rules }) - 1) * 100);
-  $("rulesNote").textContent = (locked ? (S.rules.length ? "Locked in for this draft" : "No rules this draft") : "Pick before your first pick") + (bonus ? ` · +${bonus}% XP` : "");
+  $("rulesNote").textContent = S.mode !== "free" ? `Rules are for free play only` : (locked ? (S.rules.length ? "Locked in for this draft" : "No rules this draft") : "Pick before your first pick") + (bonus ? ` · +${bonus}% XP` : "");
   const on = S.rules.map(ruleName);
   $("simRules").textContent = on.length ? `Rules: ${on.join(", ")}` : "";
   $("ruleHelp").innerHTML = `<li>Rules are optional. Turn them on before your first pick to make the draft harder or stranger, for bonus XP.</li>` +
     RULES.map(r => `<li><b>${esc(r.name)}</b> (+${Math.round(r.bonus * 100)}% XP${L >= r.lvl ? "" : `, unlocks at level ${r.lvl}`}): ${esc(r.desc)}.${r.more ? " " + esc(r.more) : ""}</li>`).join("");
 }
 function toggleRule(id) {
-  if (picks() > 0 || S.done || S.redrawsUsed > 0 || !ruleUnlocked(id)) return;
+  if (picks() > 0 || S.done || S.redrawsUsed > 0 || S.mode !== "free" || !ruleUnlocked(id)) return;
   S.rules = S.rules.includes(id) ? S.rules.filter(x => x !== id) : [...S.rules, id];
   career.rules = [...S.rules];
   saveCareer();
@@ -2469,6 +2635,49 @@ function buildFamilies() {
   out.push(A(21, 3, "cl_finals", "Mr. June", "Hit the game-winner in Game 7 of the NBA Finals", () => CL().finals >= 1, null, 120));
   out.push(A(21, 3, "cl_streak3", "The closer", "Hit 3 Game 7 game-winners in a row", () => CL().best >= 3, () => [CL().best, 3], 100));
   ladder(21, "cl_made", [[5, 2, 80], [10, 3, 150], [25, 4, 300], [50, 4, 500]], v => `${v} game-winners`, v => `Hit ${v} Game 7 game-winners`, () => CL().made);
+  // Card levels
+  const cardLvls = () => Object.values(career.cards || {}).map(cardLevel), cardsAt = n => cardLvls().filter(x => x >= n).length;
+  out.push(A(22, 1, "cd_silver", "Silver card", "Get a player card to level 4 (Silver)", () => cardsAt(4) >= 1, null, 30));
+  out.push(A(22, 2, "cd_gold", "Gold card", "Get a player card to level 7 (Gold)", () => cardsAt(7) >= 1, null, 80));
+  out.push(A(22, 4, "cd_diamond", "Diamond card", "Get a player card to level 10 (Diamond)", () => cardsAt(10) >= 1, null, 300));
+  ladder(22, "cd_silver", [[5, 2, 60], [10, 2, 100], [25, 3, 200], [50, 4, 400]], v => `${v} Silver cards`, v => `Have ${v} player cards at level 4 or higher`, () => cardsAt(4));
+  ladder(22, "cd_gold", [[3, 3, 150], [10, 4, 400]], v => `${v} Gold cards`, v => `Have ${v} player cards at level 7 or higher`, () => cardsAt(7));
+  ladder(22, "cd_lv", [[250, 2, 60], [500, 3, 150], [1000, 4, 400]], v => `${fmtPts(v)} card levels`, v => `Reach ${fmtPts(v)} card levels across your collection`, () => cardLvls().reduce((a, b) => a + b, 0));
+  // Daily Draft
+  const DL = () => career.daily || {};
+  out.push(A(23, 1, "dl_first", "Daily driver", "Play a Daily Draft", () => (DL().played || 0) >= 1, null, 20));
+  out.push(A(23, 2, "dl_title", "Daily champion", "Win the title in a Daily Draft", () => (DL().titles || 0) >= 1, null, 60));
+  out.push(A(23, 2, "dl_top3", "Podium", "Finish in the top 3 of a Daily Draft board", () => (DL().top3 || 0) >= 1, null, 60));
+  out.push(A(23, 3, "dl_1400", "Daily masterpiece", "Score 1,400 points in a Daily Draft", () => (DL().best || 0) >= 1400, null, 150));
+  ladder(23, "dl_streak", [[3, 1, 30], [7, 2, 80], [14, 3, 150], [30, 4, 400]], v => `${v}-day Daily streak`, v => `Play the Daily Draft ${v} days in a row`, () => DL().bestStreak || 0);
+  ladder(23, "dl_played", [[10, 2, 60], [50, 3, 200], [100, 4, 400]], v => `${v} Daily Drafts`, v => `Play ${v} Daily Drafts`, () => DL().played || 0);
+  ladder(23, "dl_titles", [[5, 3, 150], [25, 4, 400]], v => `${v} Daily titles`, v => `Win the title in ${v} Daily Drafts`, () => DL().titles || 0);
+  // Dynasty
+  const DS = () => career.dynStats || {};
+  out.push(A(24, 1, "dy_ring", "Dynasty ring", "Win a title in a Dynasty", () => (DS().rings || 0) >= 1, null, 40));
+  out.push(A(24, 2, "dy_b2b", "Back-to-back", "Win two titles in a row in a Dynasty", () => (DS().bestRun || 0) >= 2, null, 100));
+  out.push(A(24, 3, "dy_3peat", "Three-peat", "Win three titles in a row in a Dynasty", () => (DS().bestRun || 0) >= 3, null, 250));
+  out.push(A(24, 4, "dy_5peat", "Five-peat", "Win all five titles of a Dynasty", () => (DS().bestRun || 0) >= 5, null, 600));
+  out.push(A(24, 1, "dy_done", "Built to last", "Finish a five-year Dynasty", () => (DS().done || 0) >= 1, null, 40));
+  out.push(A(24, 3, "dy_3titles", "A real dynasty", "Win 3 titles in one Dynasty", () => (DS().bestTitles || 0) >= 3, null, 200));
+  out.push(A(24, 2, "dy_375", "Winning machine", "Win 375 games in one Dynasty", () => (DS().bestWins || 0) >= 375, null, 100));
+  out.push(A(24, 3, "dy_390", "Never lose", "Win 390 games in one Dynasty", () => (DS().bestWins || 0) >= 390, null, 250));
+  out.push(A(24, 2, "dy_fa", "Big signing", "Sign a free agent rated 95 or higher in a Dynasty", () => (DS().bigSign || 0) >= 1, null, 60));
+  ladder(24, "dy_dones", [[5, 2, 80], [20, 3, 200]], v => `${v} dynasties`, v => `Finish ${v} Dynasties`, () => DS().done || 0);
+  ladder(24, "dy_rings", [[10, 2, 100], [25, 3, 250]], v => `${v} Dynasty rings`, v => `Win ${v} titles in Dynasty mode`, () => DS().rings || 0);
+  // Legends Gauntlet
+  const GT = () => career.gauntlet || {};
+  ladder(25, "gt_beat", [[1, 1, 20], [6, 2, 60], [12, 3, 150], [18, 3, 250], [24, 4, 800]], v => v === 24 ? "Legend slayer" : `Gauntlet ${v}`, v => v === 24 ? "Beat all 24 legend teams in one Gauntlet run" : `Beat ${v} legend team${v === 1 ? "" : "s"} in a row in the Gauntlet`, () => GT().best || 0);
+  out.push(A(25, 2, "gt_g7", "Survivor", "Win a Game 7 in the Gauntlet", () => (GT().g7w || 0) >= 1, null, 60));
+  out.push(A(25, 3, "gt_clean", "Untouchable", "Beat 3 legends in a Gauntlet run without losing a game", () => (GT().cleanBest || 0) >= 3, null, 200));
+  ladder(25, "gt_runs", [[10, 2, 60], [50, 3, 200]], v => `${v} Gauntlet runs`, v => `Start ${v} Gauntlet runs`, () => GT().runs || 0);
+  // Draft vs Friend
+  const DU = () => career.duels || {};
+  out.push(A(26, 1, "du_first", "Friendly fire", "Play a Draft vs Friend", () => (DU().played || 0) >= 1, null, 20));
+  out.push(A(26, 1, "du_win", "Bragging rights", "Win a Draft vs Friend", () => (DU().won || 0) >= 1, null, 30));
+  out.push(A(26, 2, "du_sweep", "Swept", "Sweep a friend 4–0", () => (DU().sweeps || 0) >= 1, null, 60));
+  out.push(A(26, 2, "du_online", "Long distance", "Play a Draft vs Friend on two phones (on the website)", () => (DU().online || 0) >= 1, null, 60));
+  ladder(26, "du_wins", [[5, 2, 60], [20, 3, 150], [50, 4, 300]], v => `${v} friend wins`, v => `Win ${v} Draft vs Friend series`, () => DU().won || 0);
   return out;
 }
 ACH.push(...buildFamilies());
@@ -2512,6 +2721,7 @@ function afterSeason(run, phase) {
       gainXp(75);
     }
   }
+  try { cardsAfter(run, phase, log); } catch (e) { logError(e && e.message, e && e.stack); }
   checkChallenges(run, log);
   checkTrophies(run, log);
   saveCareer();
@@ -2550,6 +2760,8 @@ function fixCareerShape() {
   career.finalsLost = career.finalsLost && typeof career.finalsLost === "object" ? career.finalsLost : {};
   career.clutch = Object.assign({ made: 0, missed: 0, finals: 0, streak: 0, best: 0, otSaves: 0 }, career.clutch && typeof career.clutch === "object" ? career.clutch : {});
   career.h2h.vs = career.h2h.vs && typeof career.h2h.vs === "object" ? career.h2h.vs : {};
+  // Card levels arrived in version 32: credit every card with the seasons already in the record book
+  if (career.cardsV !== 1 || !career.cards || typeof career.cards !== "object") retroCards();
   // Points are counted differently from version 29 on, so your best seasons get posted again under the new count
   if (career.postedV !== SCORE_V) {
     if (career.postedV || Object.keys(career.posted || {}).length) pointsNews = true;
@@ -2744,7 +2956,8 @@ async function cloudSave() {
     // and the oldest seasons are dropped until it fits
     const slim = runs.slice(-50).map(r => ({ id: r.id, date: r.date, mode: r.mode, hard: !!r.hard, w: r.w, l: r.l, po: r.po, seed: r.seed, champ: !!r.champ, reached: r.reached, pw: r.pw, pl: r.pl,
       rounds: r.rounds, players: r.players, box: r.box, ach: r.ach, pf: r.pf, pa: r.pa, home: r.home, away: r.away, streak: r.streak, off: r.off, def: r.def, feats: r.feats,
-      highs: r.highs, mvp: r.mvp, dpoy: r.dpoy, seasonHigh: r.seasonHigh, news: r.news, rules: r.rules, redraws: r.redraws, allNew: r.allNew }));
+      highs: r.highs, mvp: r.mvp, dpoy: r.dpoy, seasonHigh: r.seasonHigh, news: r.news, rules: r.rules, redraws: r.redraws, allNew: r.allNew,
+      day: r.day, dyn: r.dyn, dailyTitle: r.dailyTitle, dailyTop3: r.dailyTop3 }));
     const tro = Object.fromEntries(Object.entries(trophies).map(([k, v]) => [k, (v && v.day) || ""]));
     let doc = { runs: slim, trophies: tro, career, ts: Date.now() };
     while (JSON.stringify(doc).length > 240000 && doc.runs.length) doc = { ...doc, runs: doc.runs.slice(Math.ceil(doc.runs.length / 2)) };
@@ -3518,19 +3731,20 @@ function shooterRating(p) {
 }
 const shotFeel = s => s >= 90 ? "slow" : s >= 75 ? "steady" : s >= 55 ? "quick" : "fast";
 const shortName = n => { const w = String(n).split(" "), l = w[w.length - 1]; return w.length > 1 && /^(Jr\.?|Sr\.?|II|III|IV)$/.test(l) ? w[w.length - 2] : l; };
-function clutchGame(g, r, st, i) {
+function clutchGame(g, r, st, i, opts = {}) {
   if (speed === "instant" || reduceClutch()) return Promise.resolve([...g, 0]);
   return new Promise(resolve => {
-    const box = $("clutch");
+    const box = opts.box || $("clutch"), L0 = opts.L || S.lineup;
+    const q = id => box.querySelector("#" + id);
     const edge = r.team - (st.oOff + st.oDef) / 2;
-    const five = SLOTS.filter(k => S.lineup[k]).map(k => ({ k, p: S.lineup[k], s: shooterRating(S.lineup[k]) }));
+    const five = SLOTS.filter(k => L0[k]).map(k => ({ k, p: L0[k], s: shooterRating(L0[k]) }));
     if (!five.length) return resolve([...g, 0]);
     let who = five.reduce((a, b) => b.s > a.s ? b : a);
     // Better shooter: more green and a slower marker. Better team: a bit more green. Later rounds: a bit faster.
     const feel = s => ({ green: Math.max(10, Math.min(30, 14 + (s - 70) * .2 + edge * .8)), pace: 1.55 - (s - 30) * .0125 + i * .05 });
     let { green, pace } = feel(who.s), lo = 0, hi = 0;
     box.hidden = false;
-    box.innerHTML = `<b class="ctitle">Game 7${i === 3 ? " of the NBA Finals" : `, ${ROUNDS[i]}`}. Tied, 4 seconds left.</b>
+    box.innerHTML = `<b class="ctitle">${opts.title ? esc(opts.title) : `Game 7${i === 3 ? " of the NBA Finals" : `, ${ROUNDS[i]}`}`}. Tied, 4 seconds left.</b>
       <span class="note" id="shotWho"></span>
       <div class="meter" id="shotMeter" aria-hidden="true"><i class="zone"></i><i class="mark"></i></div>
       <div class="row-gap"><button class="btn primary cta" id="shootBtn">🏀 Shoot!</button><button class="btn sm" id="simShot">Let the sim decide</button></div>
@@ -3548,7 +3762,7 @@ function clutchGame(g, r, st, i) {
       u0 = phaseAt(now); t0 = now; // the marker stays where it is and moves on at the new speed
       who = w; ({ green, pace } = feel(w.s)); lo = (100 - green) / 2; hi = lo + green;
       zone.style.left = lo + "%"; zone.style.width = green + "%";
-      $("shotWho").innerHTML = `<b>${esc(w.p.name)}</b> has the ball · shooter ${w.s} · ${shotFeel(w.s)} marker. Stop it in the green to win.`;
+      q("shotWho").innerHTML = `<b>${esc(w.p.name)}</b> has the ball · shooter ${w.s} · ${shotFeel(w.s)} marker. Stop it in the green to win.`;
       box.querySelectorAll("[data-shooter]").forEach(b => b.setAttribute("aria-pressed", b.dataset.shooter === w.k));
     };
     setShooter(who);
@@ -3579,7 +3793,7 @@ function clutchGame(g, r, st, i) {
         sfx("brick"); setTimeout(() => sfx("buzzer"), 300);
       }
       saveCareer();
-      $("shotNote").textContent = msg;
+      q("shotNote").textContent = msg;
       box.querySelectorAll("button").forEach(b => { b.disabled = true; });
       setTimeout(() => { box.hidden = true; resolve(out); }, made === null ? 700 : 2100);
     };
@@ -3593,17 +3807,17 @@ function clutchGame(g, r, st, i) {
       // Just outside the green, a better shooter gets the friendly bounce more often
       finish(inGreen || (near && Math.random() < .3 + (who.s - 30) / 69 * .4), x);
     };
-    const btn = $("shootBtn");
+    const btn = q("shootBtn");
     btn.addEventListener("pointerdown", shoot);
     btn.addEventListener("click", shoot); // keyboard presses arrive as clicks
     btn.addEventListener("keydown", e => { if (e.key === " " || e.key === "Enter") shoot(e); });
-    $("shotMeter").addEventListener("pointerdown", shoot);
+    q("shotMeter").addEventListener("pointerdown", shoot);
     box.querySelectorAll("[data-shooter]").forEach(b => b.onclick = () => {
       if (!live) return;
       setShooter(five.find(w => w.k === b.dataset.shooter));
       btn.focus({ preventScroll: true });
     });
-    $("simShot").onclick = () => finish(null);
+    q("simShot").onclick = () => finish(null);
     btn.focus({ preventScroll: true });
   });
 }
@@ -3663,6 +3877,7 @@ function renderH2H() {
     const beat = h.beat["L:" + t.key];
     return `<button class="h2hopp${beat ? " got" : ""}" data-leg="${i}"${mine.length ? "" : " disabled"} aria-label="Play the ${esc(t.label)}, rated ${t.q.toFixed(1)}${beat ? ", beaten before" : ""}"><b>${esc(t.label)}</b><span>${esc(t.stars.slice(0, 3).join(", "))}</span><span class="h2hr">${t.q.toFixed(1)}${beat ? " · ✓ beaten" : ""}</span></button>`;
   }).join("");
+  if (!gBusy) renderGauntlet();
 }
 // opp: { key, label, L, shift }. Plays the series into box, with the games appearing one by one.
 async function playH2H(opp, box) {
@@ -3903,6 +4118,669 @@ async function autoPost(prompt) {
   }
 }
 
+/* =====================================================================================================
+   Game modes. Free play is the original game. The Daily Draft, Dynasty and Draft vs Friend are picked at
+   the top; the Legends Gauntlet lives in Head-to-head. Each mode keeps its state in `career` (so it rides
+   along in the cloud save) and shows its status, boards and extra steps in #modePanel.
+   ===================================================================================================== */
+const MODE_NAMES = { free: "Free play", daily: "Daily Draft", dynasty: "Dynasty", duel: "Draft vs Friend" };
+// The date in California, so everyone shares one Daily Draft whatever their time zone
+function dayPT(offsetDays = 0) {
+  const d = new Date(Date.now() + offsetDays * 864e5);
+  const p = Object.fromEntries(new Intl.DateTimeFormat("en-US", { timeZone: "America/Los_Angeles", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(d).map(x => [x.type, x.value]));
+  return `${p.year}-${p.month}-${p.day}`;
+}
+function prevDay(day) {
+  const [y, m, d] = day.split("-").map(Number), t = new Date(Date.UTC(y, m - 1, d) - 864e5);
+  return `${t.getUTCFullYear()}-${String(t.getUTCMonth() + 1).padStart(2, "0")}-${String(t.getUTCDate()).padStart(2, "0")}`;
+}
+const dayLabel = day => { const [y, m, d] = day.split("-").map(Number); return new Date(Date.UTC(y, m - 1, d, 12)).toLocaleDateString(undefined, { month: "short", day: "numeric", timeZone: "UTC" }); };
+// Hours and minutes until the next Daily Draft (midnight in California)
+function untilNextDaily() {
+  const p = Object.fromEntries(new Intl.DateTimeFormat("en-US", { timeZone: "America/Los_Angeles", hour: "numeric", minute: "numeric", hourCycle: "h23" }).formatToParts(new Date()).map(x => [x.type, x.value]));
+  const left = 24 * 60 - (+p.hour * 60 + +p.minute);
+  return `${Math.floor(left / 60)}h ${left % 60}m`;
+}
+const slimPlayers = L => SLOTS.map(k => ({ slot: k, name: L[k].name, dec: L[k].dec, team: L[k].team, ovr: L[k].ovr }));
+const lineupFromRun = r => rebuildLineup(r.players);
+const cloneLineup = L => Object.fromEntries(SLOTS.map(k => [k, L[k] ? { ...L[k], pos: [...(L[k].pos || [])] } : null]));
+
+/* ---------- Mode boards: Daily Draft (one per day), Legends Gauntlet and Dynasty ----------
+   Inside Claude each is its own collection that anyone who can save scores can post to; on the website the
+   server keeps them. One entry per player (per day for the Daily); a better entry replaces yours. */
+const modeBoardCache = {};
+function modeDocId(kind, day) { const id = myDocId(); return id ? (kind === "daily" ? `${day}_${id}` : id) : null; }
+function boardName() { return LB_REST || lbWay === "guest" ? String(store.get(KEY_LBNAME, "") || "").trim() : (lbMeName || "Anonymous"); }
+async function postModeBoard(kind, entry, day) {
+  if (LB_REST) {
+    const name = boardName();
+    if (!name) throw { code: "need_name" };
+    const r = await fetch(LB_API, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ board: kind, day, token: lbToken, name, entry }) });
+    const out = await r.json().catch(() => ({}));
+    if (!r.ok) throw { message: out.error || "Couldn't post it. Try again in a moment." };
+    if (out.id) lbMyId = out.id;
+    return out;
+  }
+  if (!lbDb || !lbWay) throw { code: "readonly" };
+  const ref = lbDb.doc(`${kind}/${modeDocId(kind, day)}`);
+  const cur = await ref.get();
+  if (cur.exists && (cur.data().score || 0) >= entry.score) return { kept: true, score: cur.data().score || 0 };
+  const doc = { ...entry, name: boardName() || "Anonymous", ts: Date.now() };
+  if (day) doc.day = day;
+  if (lbWay === "guest") doc.guest = true;
+  await ref.set(doc);
+  return { ok: true, score: entry.score };
+}
+async function loadModeBoard(kind, day) {
+  let list;
+  if (LB_REST) {
+    const r = await fetch(`${LB_API}?board=${kind}${day ? `&day=${day}` : ""}`, { cache: "no-store" });
+    if (!r.ok) throw 0;
+    list = ((await r.json()).entries || []).map(e => ({ ...e, me: !!lbMyId && e.id === lbMyId }));
+  } else {
+    if (!lbDb) return null;
+    let q = lbDb.collection(kind);
+    if (kind === "daily") q = q.where("day", "==", day);
+    const snap = await q.orderBy("score", "desc").limit(100).get();
+    const mine = modeDocId(kind, day);
+    list = (snap.docs || []).map(d => ({ id: d.id, ...d.data(), me: d.id === mine }));
+    const ids = list.filter(e => !e.guest).map(e => kind === "daily" ? e.id.slice(11) : e.id);
+    if (lbUser && ids.length) {
+      try { const ps = (await lbUser.profiles([...new Set(ids)])) || {}; list.forEach(e => { const p = ps[kind === "daily" ? e.id.slice(11) : e.id]; if (!e.guest && p && p.name) e.name = p.name; }); } catch (e) {}
+    }
+  }
+  modeBoardCache[kind + (day || "")] = list;
+  return list;
+}
+function modeBoardHtml(kind, list, row) {
+  // A view that can't save scores still plays every mode; its results just stay off the board
+  const cant = !LB_REST && lbDb && !lbWay && lbWhy !== "checking" ? `<p class="note">Your results can't go on this board from this view (the leaderboard section says why).</p>` : "";
+  if (!list) return `<p class="note">${LB_REST ? "Loading…" : lbDb ? "Loading…" : "Sign in to claude.ai to see the board."}</p>`;
+  if (!list.length) return `<p class="note">Nobody's on this board yet.${cant ? "" : " Be the first."}</p>${cant}`;
+  return `<div class="mboard">${list.slice(0, 15).map((e, i) => `<div class="mrow${e.me ? " me" : ""}"><span class="mrank">${i < 3 ? ["🥇", "🥈", "🥉"][i] : i + 1 + "."}</span><b>${esc(e.name || "Anonymous")}${e.me ? ' <span class="lb-tag">you</span>' : ""}</b><span class="mwhat">${row(e)}</span></div>`).join("")}</div>${cant}`;
+}
+// Posts quietly; a view that can't post just says so on the board
+async function modePost(kind, entry, day) {
+  try { return await postModeBoard(kind, entry, day); }
+  catch (e) {
+    if (e && e.code === "need_name" && (LB_REST || lbWay === "guest")) showAutoName("Pick a name to put your Daily Draft, Gauntlet and Dynasty results on their boards.");
+    return null;
+  }
+  finally { refreshModeBoard(kind, day); }
+}
+function refreshModeBoard(kind, day) {
+  loadModeBoard(kind, day).then(() => { renderModePanel(); renderGauntlet(); }, () => {});
+}
+
+/* ---------- Switching modes ---------- */
+function setModeButtons() {
+  const ids = { free: "mFree", daily: "mDaily", dynasty: "mDynasty", duel: "mDuel" };
+  for (const [m, id] of Object.entries(ids)) $(id).setAttribute("aria-pressed", mode === m);
+}
+// What "Draft again" means in each mode, and the button for a mode's next step after a season
+function renderAfterButtons() {
+  const next = $("modeNext"), again = $("again");
+  next.hidden = true; again.hidden = false; again.textContent = "Draft again";
+  if (!S) return;
+  if (S.mode === "daily") again.textContent = "Back to free play";
+  if (S.mode === "dynasty" && career.dynasty) {
+    const d = career.dynasty;
+    again.hidden = d.stage !== "done";
+    again.textContent = "Start a new dynasty";
+    if (d.stage === "offseason") { next.hidden = false; next.textContent = `👑 On to the offseason (year ${d.year + 1} of 5)`; }
+    if (d.stage === "done") { next.hidden = false; next.textContent = "👑 See how your dynasty did"; }
+  }
+}
+
+/* ---------- Daily Draft ----------
+   The same five rolls for everyone each day (midnight in California), seeded from the date. One try: your
+   first Daily season of the day is the one that counts, and it goes on the day's board. No re-draws, rules
+   or hard mode, and the season itself is seeded from the date and your lineup, so it's skill, not luck. */
+function dailyState() {
+  career.daily = Object.assign({ day: "", runId: null, streak: 0, bestStreak: 0, last: "", played: 0, best: 0, titles: 0, top3: 0, wins: 0 }, career.daily || {});
+  return career.daily;
+}
+const dailyRunToday = () => { const d = dailyState(); return d.day === dayPT() && d.runId ? runs.find(r => r.id === d.runId) || null : null; };
+const DAILY_STREAK_PACKS = { 3: "normal", 7: "gold", 14: "gold", 30: "legend", 60: "legend", 100: "legend" };
+function dailyFinished(run) {
+  const d = dailyState();
+  run.mode = "daily"; run.day = S.day;
+  if (d.day === S.day && d.runId && d.runId !== run.id) return; // already played today
+  d.streak = d.last === prevDay(S.day) ? d.streak + 1 : d.last === S.day ? d.streak : 1;
+  d.bestStreak = Math.max(d.bestStreak, d.streak);
+  if (d.last !== S.day) d.played++;
+  d.last = S.day; d.day = S.day; d.runId = run.id;
+  const pack = DAILY_STREAK_PACKS[d.streak];
+  if (pack) { givePack(pack); toast(`🔥 ${d.streak}-day Daily Draft streak! A free ${PACKS[pack].name.toLowerCase()} is yours`); }
+  saveCareer();
+  postDaily(run);
+}
+function postDaily(run) {
+  if (!run || run.mode !== "daily") return;
+  const d = dailyState(), score = lbScore(run);
+  if (run.id === d.runId) { d.best = Math.max(d.best, score); if (run.champ && run.po === "played" && !run.dailyTitle) { run.dailyTitle = true; d.titles++; } }
+  saveCareer();
+  modePost("daily", { score, sv: SCORE_V, w: run.w, l: run.l, champ: !!run.champ, pw: run.pw || 0, pl: run.pl || 0, reached: run.reached || 0, pf: run.pf || 0, pa: run.pa || 0,
+    players: run.players.map(p => ({ slot: p.slot, name: p.name, dec: p.dec, team: p.team, ovr: p.ovr })) }, run.day)
+    .then(() => { const list = modeBoardCache["daily" + run.day]; const i = list ? list.findIndex(e => e.me) : -1; if (i >= 0 && i < 3 && !run.dailyTop3) { run.dailyTop3 = true; d.top3++; saveCareer(); checkCareerTrophies(); } });
+}
+function dailyShareText(run) {
+  return `🏀 82–0 Hoops Draft · Daily Draft ${dayLabel(run.day)}\n${recText(run)} · ${fmtPts(lbScore(run))} pts\n${run.players.map(p => `${p.slot} ${p.name}`).join(" · ")}\nSame five rolls for everyone today. Can you beat it?`;
+}
+function shareDaily(run, btn) {
+  const text = dailyShareText(run);
+  if (navigator.share) { navigator.share({ text }).catch(() => {}); return; }
+  const ok = legacyCopy(text);
+  if (!ok) try { navigator.clipboard.writeText(text); } catch (e) {}
+  btn.textContent = "Copied ✓"; setTimeout(() => { btn.textContent = "📤 Share"; }, 1800);
+}
+function renderDailyPanel() {
+  const d = dailyState(), today = dayPT(), run = dailyRunToday(), list = modeBoardCache["daily" + today];
+  if (!list && !modeBoardCache["loading:daily" + today]) { modeBoardCache["loading:daily" + today] = 1; refreshModeBoard("daily", today); }
+  const streak = d.streak && (d.last === today || d.last === prevDay(today)) ? d.streak : 0;
+  const nextPack = Object.keys(DAILY_STREAK_PACKS).map(Number).find(n => n > streak);
+  const rank = list ? list.findIndex(e => e.me) : -1;
+  let html = `<div class="head"><h2>📅 Daily Draft · ${esc(dayLabel(today))}</h2><span class="label">${streak ? `🔥 ${streak}-day streak` : "Start a streak today"}${nextPack ? ` · free pack at ${nextPack} days` : ""}</span></div>`;
+  if (run) {
+    html += `<div class="dailydone"><span class="label">Your Daily Draft today</span><b class="drec">${esc(recText(run))}</b><span>${fmtPts(lbScore(run))} pts${rank >= 0 ? ` · <b>#${rank + 1}</b> of ${list.length} today` : ""}${run.po === "pending" ? " · play the playoffs for more points" : ""}</span>
+      <span class="note">${run.players.map(p => `${p.slot} ${esc(p.name)}`).join(" · ")}</span>
+      <div class="row-gap"><button class="btn primary mid" id="dailyShare">📤 Share</button><span class="note">Next Daily Draft in ${untilNextDaily()}.</span></div></div>`;
+  } else {
+    html += `<p class="note">Everyone gets the same five rolls today. One try, no re-draws, no rules, and the season is the same for anyone who drafts the same team, so it's all about your picks. Your season goes on today's board.</p>`;
+  }
+  html += `<span class="label">Today's board</span>` + modeBoardHtml("daily", list, e => `${esc(recText(e))} · ${fmtPts(e.score || 0)} pts`);
+  $("modePanel").innerHTML = html;
+  if ($("dailyShare")) $("dailyShare").onclick = () => shareDaily(run, $("dailyShare"));
+}
+
+/* ---------- Dynasty ----------
+   Keep one team together for five seasons. Every offseason players age (most stars slip a little, younger
+   and lesser players can jump) and you get one free-agent roll to sign someone. Count the rings. */
+const DYN_YEARS = 5;
+function dynState() { return career.dynasty && typeof career.dynasty === "object" ? career.dynasty : null; }
+function startDynasty() {
+  career.dynasty = { id: Date.now(), year: 1, stage: "draft", titles: 0, wins: 0, years: [], lineup: null, aging: null, fa: null, sign: null };
+  saveCareer();
+}
+// How much a player's rating moves this offseason: stars tend to slip, lower-rated players tend to grow,
+// and everyone slows down a little more each year of the dynasty
+function ageDelta(p, year = 1) {
+  const drift = (84 - p.ovr) * 0.07 - 0.3 - 0.35 * (year - 1);
+  return Math.max(-6, Math.min(5, Math.round(drift + gauss() * 2)));
+}
+function agedPlayer(p, delta) {
+  const f = 1 + delta * 0.025, r1 = v => v == null ? v : Math.round(v * f * 10) / 10;
+  return { ...p, ovr: Math.max(55, Math.min(99, p.ovr + delta)), ppg: r1(p.ppg), rpg: r1(p.rpg), apg: r1(p.apg), spg: r1(p.spg), bpg: r1(p.bpg), age: (p.age || 0) + 1 };
+}
+function dynastySeasonDone(run) {
+  const d = dynState();
+  if (!d || d.stage === "done" || d.years.some(y => y.runId === run.id)) return;
+  d.years.push({ w: run.w, l: run.l, champ: !!run.champ, pw: run.pw || 0, pl: run.pl || 0, runId: run.id });
+  d.wins += run.w; if (run.champ) d.titles++;
+  const ds = career.dynStats = Object.assign({ rings: 0, bestRun: 0, done: 0, bestTitles: 0, bestWins: 0, bigSign: 0 }, career.dynStats || {});
+  if (run.champ) ds.rings++;
+  let streakNow = 0; for (const y of d.years) streakNow = y.champ ? streakNow + 1 : 0;
+  ds.bestRun = Math.max(ds.bestRun, streakNow);
+  if (d.year >= DYN_YEARS) { ds.done++; ds.bestTitles = Math.max(ds.bestTitles, d.titles); ds.bestWins = Math.max(ds.bestWins, d.wins); }
+  if (!d.lineup) d.lineup = lineupFromRun(run);
+  if (d.year >= DYN_YEARS) {
+    d.stage = "done";
+    const reward = d.titles >= 5 ? "legend" : d.titles >= 3 ? "gold" : d.titles >= 1 ? "normal" : null;
+    if (reward) givePack(reward);
+    const xp = 50 + d.titles * 60;
+    gainXp(xp);
+    d.best = Math.max(d.best || 0, d.titles);
+    career.dynBest = Math.max(career.dynBest || 0, d.titles * 1000 + d.wins);
+    career.dynDone = (career.dynDone || 0) + 1;
+    toast(`👑 Dynasty complete: ${d.titles} title${d.titles === 1 ? "" : "s"} in ${DYN_YEARS} years · +${xp} XP${reward ? ` · a free ${PACKS[reward].name.toLowerCase()}` : ""}`);
+    modePost("dynasty", { score: d.titles * 1000 + d.wins, titles: d.titles, wins: d.wins, years: d.years.map(({ runId, ...y }) => y), players: slimPlayers(d.lineup) });
+  } else {
+    d.stage = "offseason";
+    d.aging = SLOTS.map(k => ({ k, d: ageDelta(d.lineup[k], d.year) }));
+    d.fa = rnd(ALL_DRAWS);
+    d.sign = null;
+  }
+  saveCareer();
+  checkCareerTrophies();
+  renderAfterButtons();
+  renderModePanel();
+}
+// The offseason: apply aging, sign the free agent (if you picked one) and start the next season
+function startNextYear() {
+  const d = dynState();
+  if (!d || d.stage !== "offseason") return;
+  const L = cloneLineup(d.lineup);
+  for (const { k, d: delta } of d.aging) L[k] = agedPlayer(L[k], delta);
+  if (d.sign) {
+    const { name, slot } = d.sign, t = DATA[d.fa.dec][d.fa.fid], p = t.players.find(x => x.name === name);
+    if (p && SLOTS.includes(slot)) {
+      L[slot] = { ...p, dec: d.fa.dec, fid: d.fa.fid, team: t.name };
+      if (p.ovr >= 95) { career.dynStats = Object.assign({ rings: 0, bestRun: 0, done: 0, bestTitles: 0, bestWins: 0, bigSign: 0 }, career.dynStats || {}); career.dynStats.bigSign++; }
+      if (!career.coll[collKey(d.fa.dec, t.name, p.name)]) collectPlayer(L[slot]);
+    }
+  }
+  d.year++; d.stage = "season"; d.lineup = cloneLineup(L); d.aging = null; d.fa = null; d.sign = null;
+  saveCareer();
+  // The new season starts at the projection, ready to tip off
+  fresh(); S.lineup = cloneLineup(L); curRun = null; curRes = null; resetPlayoffs();
+  $("afterPanel").hidden = true;
+  render();
+  try { $("simPanel").scrollIntoView({ block: "center", behavior: reduce ? "auto" : "smooth" }); } catch (e) {}
+}
+function renderDynastyPanel() {
+  const d = dynState(), list = modeBoardCache.dynasty;
+  if (!list && !modeBoardCache["loading:dynasty"]) { modeBoardCache["loading:dynasty"] = 1; refreshModeBoard("dynasty"); }
+  const years = d ? d.years.map((y, i) => `<span class="dynyear${y.champ ? " ring" : ""}" title="Year ${i + 1}: ${y.w}–${y.l}${y.champ ? ", champions" : ""}"><b>Y${i + 1}</b> ${y.w}–${y.l}${y.champ ? " 🏆" : ""}</span>`).join("") : "";
+  let html = `<div class="head"><h2>👑 Dynasty${d && d.stage !== "done" ? ` · Year ${d.year} of ${DYN_YEARS}` : ""}</h2><span class="label">${d ? `${d.titles} title${d.titles === 1 ? "" : "s"} · ${d.wins} wins` : "Five seasons, one team"}</span></div>`;
+  if (years) html += `<div class="dynyears">${years}</div>`;
+  if (!d || d.stage === "draft") html += `<p class="note">Draft a team, then keep it together for ${DYN_YEARS} seasons. Every offseason your players age and you get one free-agent roll. Win as many rings as you can.</p>`;
+  else if (d.stage === "season" && dynPending(d)) html += `<div class="row-gap"><button class="btn primary cta" id="dynPO">🏆 Play year ${d.year}'s playoffs</button><span class="note">Your ${dynPending(d).w}–${dynPending(d).l} team is waiting.</span></div>`;
+  else if (d.stage === "season") html += `<p class="note">Year ${d.year}: tip off the season below.</p>`;
+  else if (d.stage === "offseason") html += dynOffseasonHtml(d);
+  else if (d.stage === "done") html += `<div class="dailydone"><span class="label">Dynasty complete</span><b class="drec">${d.titles} title${d.titles === 1 ? "" : "s"} in ${DYN_YEARS} years</b><span>${d.wins} wins · ${d.titles >= 5 ? "a perfect dynasty!" : d.titles >= 3 ? "a real dynasty" : d.titles ? "a ring to remember" : "no rings this time"}</span><div class="row-gap"><button class="btn primary mid" id="dynNew">👑 Start a new dynasty</button></div></div>`;
+  if (d && d.stage !== "done") html += `<div class="row-gap"><button class="btn sm" id="dynQuit">End this dynasty</button><span class="confirm" id="dynQuitAsk" hidden>Throw it away? <button class="btn sm" id="dynQuitYes">End it</button><button class="btn sm" id="dynQuitNo">Keep going</button></span></div>`;
+  html += `<span class="label">Best dynasties</span>` + modeBoardHtml("dynasty", list, e => `${e.titles ?? Math.floor((e.score || 0) / 1000)} title${(e.titles ?? 0) === 1 ? "" : "s"} · ${e.wins ?? (e.score || 0) % 1000} wins`);
+  $("modePanel").innerHTML = html;
+  if ($("dynNew")) $("dynNew").onclick = () => { startDynasty(); startOver(); };
+  if ($("dynPO")) $("dynPO").onclick = () => { const r = dynPending(dynState()); if (!r) return; simPending(r); saveRuns(); renderBook(); renderHeader(); updateLbSubmit(); if (r.champ) confetti(); toast(`Year ${r.dyn.year} playoffs: ${esc(poText(r))}`); };
+  if ($("dynQuit")) {
+    $("dynQuit").onclick = () => { $("dynQuitAsk").hidden = false; };
+    $("dynQuitNo").onclick = () => { $("dynQuitAsk").hidden = true; };
+    $("dynQuitYes").onclick = () => { career.dynasty = null; saveCareer(); startDynasty(); startOver(); };
+  }
+  wireOffseason();
+}
+function dynOffseasonHtml(d) {
+  const L = d.lineup, t = DATA[d.fa.dec][d.fa.fid];
+  const aging = d.aging.map(({ k, d: x }) => { const p = L[k]; return `<div class="agerow"><span class="chip open">${k}</span><b>${esc(p.name)}</b><span class="${x > 0 ? "up" : x < 0 ? "down" : ""}">${p.ovr} → ${Math.max(55, Math.min(99, p.ovr + x))} ${x > 0 ? `📈 +${x}` : x < 0 ? `📉 −${-x}` : "· same"}</span></div>`; }).join("");
+  const taken = new Set(SLOTS.map(k => L[k].name + "|" + L[k].dec));
+  const pool = [...t.players].filter(p => !taken.has(p.name + "|" + d.fa.dec)).sort((a, b) => b.ovr - a.ovr).slice(0, 8);
+  const signed = d.sign ? `<p class="note"><b>Signed: ${esc(d.sign.name)}</b> replaces ${esc(L[d.sign.slot].name)} at ${d.sign.slot}. <button class="btn sm" id="dynUnsign">Undo</button></p>` : "";
+  return `<div class="offseason"><span class="label">Offseason before year ${d.year + 1}</span>
+    <div class="aging">${aging}</div>
+    <span class="label">Free agency: one roll · ${short(d.fa.dec)} ${esc(t.name)}</span>
+    <span class="note">Sign one of them to replace a starter, or keep your team.</span>
+    <div class="fapool">${pool.map((p, i) => `<div class="farow"><b>${esc(p.name)}</b><span class="note">${p.pos.join("/")} · ${p.ovr} OVR · ${fmt(p.ppg)} pts</span>
+      <select data-fa="${i}" aria-label="Sign ${esc(p.name)} to replace"><option value="">Sign for…</option>${SLOTS.map(k => `<option value="${k}">${k}: ${esc(L[k].name)} (${L[k].ovr})${penalty(p, k) ? ` −${penalty(p, k)}` : ""}</option>`).join("")}</select></div>`).join("")}</div>
+    ${signed}
+    <div class="row-gap"><button class="btn primary cta" id="dynNext">Start year ${d.year + 1} →</button></div></div>`;
+}
+function wireOffseason() {
+  const d = dynState();
+  if (!d || d.stage !== "offseason") return;
+  const t = DATA[d.fa.dec][d.fa.fid], L = d.lineup;
+  const taken = new Set(SLOTS.map(k => L[k].name + "|" + L[k].dec));
+  const pool = [...t.players].filter(p => !taken.has(p.name + "|" + d.fa.dec)).sort((a, b) => b.ovr - a.ovr).slice(0, 8);
+  document.querySelectorAll("#modePanel [data-fa]").forEach(sel => sel.onchange = () => {
+    if (!sel.value) return;
+    d.sign = { name: pool[+sel.dataset.fa].name, slot: sel.value };
+    saveCareer(); renderModePanel();
+  });
+  if ($("dynUnsign")) $("dynUnsign").onclick = () => { d.sign = null; saveCareer(); renderModePanel(); };
+  $("dynNext").onclick = startNextYear;
+}
+
+/* ---------- One place that runs mode steps after a season and after the playoffs ---------- */
+function modeAfterSeason(run) {
+  if (S.mode === "daily") dailyFinished(run);
+  const d = dynState();
+  if (S.mode === "dynasty" && d && d.stage !== "done" && d.stage !== "offseason") {
+    run.mode = "dynasty"; run.dyn = { id: d.id, year: d.year };
+    d.stage = "season";
+    d.lineup = cloneLineup(S.lineup); // the team that played, aged ratings and all
+    saveCareer();
+    if (run.w < 42) dynastySeasonDone(run);
+  }
+  renderAfterButtons();
+}
+function modeAfterPlayoffs(run) {
+  if (run.mode === "daily") postDaily(run);
+  const d = dynState();
+  if (run.mode === "dynasty" && run.dyn && d && run.dyn.id === d.id && run.dyn.year === d.year) dynastySeasonDone(run);
+  renderAfterButtons();
+}
+// A dynasty season whose playoffs are waiting (after a reload, say)
+const dynPending = d => d && d.stage === "season" ? runs.find(r => r.dyn && r.dyn.id === d.id && r.dyn.year === d.year && r.po === "pending") || null : null;
+
+function renderModePanel() {
+  const el = $("modePanel");
+  if (!el || !S) return;
+  setModeButtons();
+  el.hidden = S.mode === "free";
+  if (S.mode === "daily") renderDailyPanel();
+  else if (S.mode === "dynasty") renderDynastyPanel();
+  else if (S.mode === "duel") renderDuel();
+}
+
+/* ---------- Legends Gauntlet ----------
+   Pick one of your saved teams and take on all 24 legendary teams in a row, weakest first, best of seven
+   each. Lose a series and the run is over. Game 7s end with your last shot. */
+const GAUNTLET = [...LEGENDS].sort((a, b) => a.q - b.q);
+const GAUNTLET_PACKS = { 6: "normal", 12: "gold", 18: "gold", 24: "legend" };
+function gState() {
+  career.gauntlet = Object.assign({ cur: null, best: 0, bestLost: 99, runs: 0, full: 0, g7: 0 }, career.gauntlet || {});
+  return career.gauntlet;
+}
+let gBusy = false;
+function startGauntlet() {
+  const g = gState(), mine = h2hMyTeams(), me = mine.find(r => r.id === h2hPick) || mine[0];
+  if (!me || gBusy) return;
+  g.cur = { runId: me.id, players: me.players.map(p => ({ slot: p.slot, name: p.name, dec: p.dec, team: p.team })), label: `${me.w}–${me.l} ${lastNames(me)}`, step: 0, lost: 0, log: [] };
+  g.runs++;
+  saveCareer(); renderGauntlet();
+}
+async function playGauntletSeries() {
+  const g = gState(), c = g.cur;
+  if (!c || gBusy) return;
+  const myL = rebuildLineup(c.players), opp = GAUNTLET[c.step];
+  if (!myL) { $("gArena").innerHTML = `<p class="note">Couldn't rebuild your team. Start a new run.</p>`; return; }
+  gBusy = true;
+  try {
+    const box = $("gArena");
+    box.hidden = false;
+    const oppL = legendLineup(opp);
+    const rA = h2hRating(myL), rB = h2hRating(oppL, opp.q - opp.power), homeA = rA.team >= rB.team;
+    box.innerHTML = `<div class="h2hvs"><div><span class="label">Your team · ${rA.team.toFixed(1)}</span><b>${esc(c.label)}</b></div><span class="vs">vs</span><div><span class="label">Legend ${c.step + 1} of 24 · ${rB.team.toFixed(1)}</span><b>${esc(opp.label)}</b></div></div>
+      <div class="row-gap"><span class="res" id="gScore">0–0</span><div class="series" id="gGames"></div></div><div class="clutch" id="gClutch" hidden></div><p class="note" id="gNote">${homeA ? "You have home court." : "They have home court."}</p>`;
+    try { box.scrollIntoView({ block: "nearest" }); } catch (e) {}
+    let a = 0, b = 0, n = 0;
+    while (a < 4 && b < 4) {
+      const home = homeA ? !!PO_PATTERN[n] : !PO_PATTERN[n];
+      const x = playGame(rA, rB.off, rB.def, home, 106);
+      let gm = [x.us, x.them, home ? 1 : 0, x.ot ? 1 : 0];
+      if (a === 3 && b === 3) gm = await clutchGame(gm, rA, { oOff: rB.off, oDef: rB.def }, 3, { L: myL, box: $("gClutch"), title: `Game 7 vs the ${opp.label}` });
+      gm[0] > gm[1] ? a++ : b++; n++;
+      const chip = document.createElement("div");
+      chip.className = "g " + (gm[0] > gm[1] ? "w" : "l") + (gm[4] === 1 ? " clutch" : "");
+      chip.textContent = gm[0] > gm[1] ? "W" : "L";
+      chip.title = `Game ${n} · ${home ? "Home" : "Road"} · ${gm[0]}–${gm[1]}${gm[3] ? " (OT)" : ""}`;
+      $("gGames").appendChild(chip);
+      $("gScore").textContent = `${a}–${b}`;
+      $("gNote").textContent = `Game ${n}: ${gm[0] > gm[1] ? "W" : "L"} ${gm[0]}–${gm[1]}${gm[3] ? " in overtime" : ""}`;
+      await sleep(300);
+    }
+    if (a + b === 7) { g.g7++; if (a === 4) g.g7w = (g.g7w || 0) + 1; }
+    c.lost += b;
+    c.log.push([opp.key, a, b]);
+    if (a === 4) {
+      c.step++;
+      if (c.lost === 0) g.cleanBest = Math.max(g.cleanBest || 0, c.step);
+      const xp = 15 + c.step * 5;
+      gainXp(xp);
+      const pack = GAUNTLET_PACKS[c.step];
+      if (pack) givePack(pack);
+      $("gNote").innerHTML = `<b>You beat the ${esc(opp.label)} ${a}–${b}!</b> +${xp} XP${pack ? ` · 🎁 ${PACKS[pack].name}` : ""}`;
+      sfx("win");
+      if (c.step >= 24) { g.full++; finishGauntlet(true); confetti(); }
+    } else {
+      $("gNote").innerHTML = `<b>The ${esc(opp.label)} win the series ${b}–${a}.</b> Your run ends at ${c.step} of 24.`;
+      sfx("brick");
+      finishGauntlet(false);
+    }
+    saveCareer();
+    checkCareerTrophies();
+  } finally { gBusy = false; renderGauntlet(true); }
+}
+function finishGauntlet(all) {
+  const g = gState(), c = g.cur;
+  if (!c) return;
+  const better = c.step > g.best || (c.step === g.best && c.lost < g.bestLost);
+  if (better) { g.best = c.step; g.bestLost = c.lost; g.bestLabel = c.label; }
+  g.last = { step: c.step, lost: c.lost, label: c.label };
+  if (c.step > 0) modePost("gauntlet", { score: c.step * 100 + Math.max(0, 99 - c.lost), beat: c.step, lost: c.lost, team: c.label, players: c.players });
+  g.cur = null;
+  toast(all ? "🛡️ You beat all 24 legends in a row! A legend pack is yours." : `🛡️ Gauntlet over: ${c.step} of 24 legends beaten${better && c.step ? " · a new best" : ""}`);
+}
+function renderGauntlet(keepArena) {
+  const el = $("gauntlet");
+  if (!el) return;
+  const g = gState(), c = g.cur, list = modeBoardCache.gauntlet, mine = h2hMyTeams();
+  if (!list && !modeBoardCache["loading:gauntlet"]) { modeBoardCache["loading:gauntlet"] = 1; refreshModeBoard("gauntlet"); }
+  const arena = keepArena && $("gArena") ? $("gArena").outerHTML : `<div class="h2harena" id="gArena" hidden></div>`;
+  const ladder = GAUNTLET.map((t, i) => { const st = c ? (i < c.step ? "got" : i === c.step ? "next" : "") : (i < (g.best || 0) ? "best" : ""); return `<span class="gstep ${st}" title="${i + 1}. ${esc(t.label)} · ${t.q.toFixed(1)}">${i + 1}</span>`; }).join("");
+  let body;
+  if (c) {
+    const opp = GAUNTLET[c.step];
+    body = `<span class="note">Your team: <b>${esc(c.label)}</b> · ${c.step} of 24 beaten · ${c.lost} games lost</span>
+      <div class="row-gap"><button class="btn primary mid" id="gPlay"${gBusy ? " disabled" : ""}>⚔️ Play legend ${c.step + 1}: ${esc(opp.label)} (${opp.q.toFixed(1)})</button><button class="btn sm" id="gQuit">Give up</button></div>`;
+  } else {
+    const me = mine.find(r => r.id === h2hPick) || mine[0];
+    body = `<span class="note">Pick a team under "Your team" above, then beat all 24 legend teams in a row, weakest first, best of seven each. Lose a series and the run is over. Packs at 6, 12, 18 and 24 wins.${g.best ? ` Your best: <b>${g.best} of 24</b>${g.bestLabel ? ` with ${esc(g.bestLabel)}` : ""}.` : ""}</span>
+      <div class="row-gap"><button class="btn primary mid" id="gStart"${me ? "" : " disabled"}>🛡️ Start a run${me ? ` with ${me.w}–${me.l}` : ""}</button>${me ? "" : `<span class="note">Finish a season first.</span>`}</div>`;
+  }
+  el.innerHTML = `<b class="gtitle">🛡️ Legends Gauntlet</b><div class="gladder" aria-label="The 24 legends">${ladder}</div>${body}${arena}
+    <details class="gboard"><summary>Gauntlet board</summary>${modeBoardHtml("gauntlet", list, e => `${e.beat ?? Math.floor((e.score || 0) / 100)} of 24 · ${e.lost ?? 0} games lost`)}</details>`;
+  if ($("gStart")) $("gStart").onclick = startGauntlet;
+  if ($("gPlay")) $("gPlay").onclick = playGauntletSeries;
+  if ($("gQuit")) $("gQuit").onclick = () => { if (gBusy) return; finishGauntlet(false); saveCareer(); renderGauntlet(); };
+}
+
+/* ---------- Draft vs Friend ----------
+   Two players draft from the same five rolls and take turns: each roll, one picks first and the other second,
+   and the first pick swaps every roll, so you can grab the player your friend needs. Then the two teams play
+   a best of seven. On one device you pass it back and forth; on the game's website each of you can use your
+   own phone (create a duel, and your friend joins with your username). */
+const DUEL_KEY = "hoops82.duel", DUEL_API = "/api/duel";
+let duel = null, duelTimer = 0, duelBusy = false;
+const pickerAt = i => { const first = Math.floor(i / 2) % 2; return i % 2 === 0 ? first : 1 - first; };
+const fidOf = (dec, team) => DATA[dec] && Object.keys(DATA[dec]).find(f => DATA[dec][f].name === team);
+function saveDuel() { if (duel) store.set(DUEL_KEY, duel); else store.del(DUEL_KEY); }
+function loadDuel() { const d = store.get(DUEL_KEY, null); duel = d && Array.isArray(d.rolls) && d.rolls.length === 5 ? d : null; }
+function duelLineups(dl) {
+  const L = [{}, {}];
+  dl.picks.forEach((pk, i) => {
+    const roll = dl.rolls[Math.floor(i / 2)], t = roll && DATA[roll.dec] && DATA[roll.dec][roll.fid], p = t && t.players.find(x => x.name === pk.name);
+    if (p) L[pk.by][pk.slot] = { ...p, dec: roll.dec, fid: roll.fid, team: t.name };
+  });
+  return L;
+}
+function newLocalDuel(names) {
+  const seed = Math.floor(Math.random() * 2147483647), r = mulberry32(seed), rolls = [];
+  while (rolls.length < 5) {
+    const x = ALL_DRAWS[Math.floor(r() * ALL_DRAWS.length)];
+    if (DATA[x.dec][x.fid].players.length >= 8 && !rolls.some(y => y.dec === x.dec && y.fid === x.fid)) rolls.push({ dec: x.dec, fid: x.fid });
+  }
+  duel = { kind: "local", names, rolls, picks: [], seed, rematch: 0 };
+  saveDuel();
+}
+// The series, worked out from the duel's seed so both phones in an online duel see the same games
+function duelSeries(dl) {
+  const [LA, LB] = duelLineups(dl), prev = R;
+  R = mulberry32(hashStr(`series:${dl.seed}:${dl.rematch || 0}`));
+  try {
+    const rA = h2hRating(LA), rB = h2hRating(LB), homeA = rA.team >= rB.team, games = [];
+    let a = 0, b = 0;
+    while (a < 4 && b < 4) {
+      const home = homeA ? !!PO_PATTERN[games.length] : !PO_PATTERN[games.length];
+      const x = playGame(rA, rB.off, rB.def, home, 106);
+      games.push([x.us, x.them, home ? 1 : 0, x.ot ? 1 : 0]);
+      x.won ? a++ : b++;
+    }
+    return { rA, rB, games, a, b };
+  } finally { R = prev; }
+}
+function duelMe(dl) { return dl.kind === "online" ? dl.me : pickerAt(dl.picks.length); }
+function duelDone(dl) { return dl.picks.length >= 10; }
+async function duelPick(name, slot) {
+  if (!duel || duelBusy || duelDone(duel)) return;
+  const i = duel.picks.length, by = pickerAt(i);
+  if (duel.kind === "online") {
+    if (by !== duel.me) return;
+    duelBusy = true; renderDuel();
+    try { applyDuelState(await duelApi({ action: "pick", code: duel.code, slot, player: name })); }
+    catch (e) { duelErr(e); }
+    finally { duelBusy = false; renderDuel(); }
+    return;
+  }
+  // Locally: the slot must be open, the player on this roll's roster, and not already taken from it
+  const L = duelLineups(duel)[by], round = Math.floor(i / 2), roll = duel.rolls[round];
+  const onRoster = DATA[roll.dec][roll.fid].players.some(p => p.name === name);
+  if (!SLOTS.includes(slot) || L[slot] || !onRoster || duel.picks.some((p, j) => Math.floor(j / 2) === round && p.name === name)) return;
+  duel.picks.push({ by, slot, name });
+  saveDuel(); sfx("flip"); renderDuel();
+}
+let duelShown = null; // which series the screen already played out
+async function playDuelSeries() {
+  if (!duel || !duelDone(duel) || duelBusy) return;
+  duelBusy = true;
+  const s = duelSeries(duel), names = duel.names, box = $("duelArena");
+  try {
+    box.hidden = false;
+    box.innerHTML = `<div class="h2hvs"><div><span class="label">${esc(names[0])} · ${s.rA.team.toFixed(1)}</span><b>${esc(SLOTS.map(k => duelLineups(duel)[0][k].name.split(" ").slice(-1)[0]).join(", "))}</b></div><span class="vs">vs</span><div><span class="label">${esc(names[1])} · ${s.rB.team.toFixed(1)}</span><b>${esc(SLOTS.map(k => duelLineups(duel)[1][k].name.split(" ").slice(-1)[0]).join(", "))}</b></div></div>
+      <div class="row-gap"><span class="res" id="dScore">0–0</span><div class="series" id="dGames"></div></div><p class="note" id="dNote">Best of seven. Here we go!</p>`;
+    try { box.scrollIntoView({ block: "nearest" }); } catch (e) {}
+    let a = 0, b = 0;
+    for (const [us, them, home, ot] of s.games) {
+      if (a === 3 && b === 3) { $("dNote").textContent = "🚨 Game 7! Winner takes it…"; await sleep(1100); }
+      us > them ? a++ : b++;
+      const chip = document.createElement("div");
+      // Online, green means you won that game; on one device, player 1's wins are green and player 2's orange
+      const p1won = us > them, mine = duel.kind === "online" ? (duel.me === 0) === p1won : p1won;
+      chip.className = "g " + (duel.kind === "online" ? (mine ? "w" : "l") : p1won ? "w" : "p2");
+      const ini = names.map(n => String(n).trim().slice(0, 1).toUpperCase()), tags = ini[0] === ini[1] ? ["1", "2"] : ini;
+      chip.textContent = us > them ? tags[0] : tags[1];
+      chip.title = `Game ${a + b} · ${esc(names[0])} ${us}–${them} ${esc(names[1])}${ot ? " (OT)" : ""}`;
+      $("dGames").appendChild(chip);
+      $("dScore").textContent = `${a}–${b}`;
+      $("dNote").textContent = `Game ${a + b}: ${us > them ? names[0] : names[1]} wins ${Math.max(us, them)}–${Math.min(us, them)}${ot ? " in overtime" : ""}`;
+      sfx(us > them ? "win" : "brick");
+      await sleep(450);
+    }
+    const winner = a === 4 ? 0 : 1, sweep = (a === 4 ? b : a) === 0;
+    $("dNote").innerHTML = `<b>🏆 ${esc(names[winner])} wins the series ${Math.max(a, b)}–${Math.min(a, b)}!</b>${sweep ? " A sweep." : a + b === 7 ? " In seven!" : ""}`;
+    confetti(); sfx("cheer");
+    recordDuel(winner, sweep);
+    duelShown = `${duel.seed}:${duel.rematch || 0}`;
+  } finally { duelBusy = false; renderDuel(true); }
+}
+function recordDuel(winner, sweep) {
+  const c = career.duels = Object.assign({ played: 0, won: 0, lost: 0, sweeps: 0, online: 0, vs: {} }, career.duels || {});
+  const key = `${duel.seed}:${duel.rematch || 0}`;
+  if (c.lastKey === key) return; // already counted (a reload or a second look)
+  c.lastKey = key; c.played++;
+  const meIdx = duel.kind === "online" ? duel.me : 0, iWon = winner === meIdx;
+  if (duel.kind === "online") c.online++;
+  iWon ? c.won++ : c.lost++;
+  if (iWon && sweep) c.sweeps++;
+  const opp = duel.names[1 - meIdx] || "Friend", rec = c.vs[opp] = Array.isArray(c.vs[opp]) ? c.vs[opp] : [0, 0];
+  iWon ? rec[0]++ : rec[1]++;
+  if (Object.keys(c.vs).length > 100) delete c.vs[Object.keys(c.vs)[0]];
+  gainXp(iWon ? 30 : 10);
+  saveCareer(); checkCareerTrophies();
+}
+// Online duels (website): the server keeps the rolls and picks; each phone checks in every couple of seconds
+async function duelApi(body) {
+  const r = await fetch(DUEL_API, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ token: lbToken, name: boardName(), ...body }) });
+  const out = await r.json().catch(() => ({}));
+  if (!r.ok) throw { message: out.error || "Couldn't reach the duel. Try again." };
+  return out;
+}
+function applyDuelState(st) {
+  if (!st || !st.code) return;
+  const rolls = (st.rolls || []).map(x => ({ dec: x.dec, fid: fidOf(x.dec, x.team) }));
+  if (rolls.some(x => !x.fid)) { duelErr({ message: "That duel uses a team this version of the game doesn't have." }); return; }
+  const me = st.a && st.a.id === lbMyId ? 0 : st.b && st.b.id === lbMyId ? 1 : null;
+  duel = { kind: "online", code: st.code, names: [st.a ? st.a.name : "?", st.b ? st.b.name : "Waiting…"], joined: !!st.b, rolls, picks: (st.picks || []).map(p => ({ by: p.by, slot: p.slot, name: p.name })), seed: st.seed, me, rematch: 0, err: "" };
+  saveDuel();
+}
+function duelErr(e) { if (duel) duel.err = (e && e.message) || "Something went wrong."; else toast(esc((e && e.message) || "Something went wrong.")); renderDuel(); }
+function duelPollOn() {
+  clearInterval(duelTimer); duelTimer = 0;
+  if (!duel || duel.kind !== "online" || duelDone(duel) || mode !== "duel") return;
+  duelTimer = setInterval(async () => {
+    if (document.visibilityState !== "visible" || duelBusy || !duel || duel.kind !== "online") return;
+    try {
+      const r = await fetch(`${DUEL_API}?code=${encodeURIComponent(duel.code)}`, { cache: "no-store" });
+      if (!r.ok) return;
+      const before = `${duel.picks.length}:${duel.joined}`;
+      applyDuelState(await r.json());
+      if (`${duel.picks.length}:${duel.joined}` !== before) { sfx("flip"); renderDuel(); }
+      if (duelDone(duel)) { clearInterval(duelTimer); duelTimer = 0; }
+    } catch (e) {}
+  }, 1500);
+}
+async function createOnlineDuel() {
+  if (!boardName()) { duelErr({ message: "Pick your name first." }); return; }
+  duelBusy = true; renderDuel();
+  try { applyDuelState(await duelApi({ action: "create" })); } catch (e) { duelErr(e); }
+  finally { duelBusy = false; renderDuel(); duelPollOn(); }
+}
+async function joinOnlineDuel(host) {
+  if (!host) { toast("Type your friend's username first."); return; }
+  if (!boardName()) { toast("Pick your name first."); return; }
+  duelBusy = true; renderDuel();
+  try { applyDuelState(await duelApi({ action: "join", host })); } catch (e) { duelErr(e); }
+  finally { duelBusy = false; renderDuel(); duelPollOn(); }
+}
+function duelLineupHtml(L, title, active) {
+  return `<div class="dteam${active ? " active" : ""}"><span class="label">${esc(title)}${active ? " · picking" : ""}</span>${SLOTS.map(k => { const p = L[k]; return `<div class="dslot${p ? " filled " + rarityOf(p.ovr)[1] : ""}"><span class="chip open">${k}</span>${p ? `<b>${esc(p.name)}</b><span class="note">${short(p.dec)} ${esc(p.team)} · ${p.ovr}${penalty(p, k) ? ` (−${penalty(p, k)})` : ""}</span>` : `<span class="note">Open</span>`}</div>`; }).join("")}${SLOTS.every(k => L[k]) ? `<span class="label">Team rating ${h2hRating(L).team.toFixed(1)}</span>` : ""}</div>`;
+}
+function renderDuel(keepArena) {
+  const el = $("modePanel");
+  const c = career.duels || {}, rec = c.played ? ` · your record ${c.won || 0}–${c.lost || 0}` : "";
+  let html = `<div class="head"><h2>🤝 Draft vs Friend</h2><span class="label">Same rolls, take turns, then a best of seven${rec}</span></div>`;
+  if (!duel) {
+    html += `<div class="duelsetup"><span class="label">On this device (pass it back and forth)</span>
+      <div class="row-gap"><input class="lb-input" id="dName0" maxlength="16" value="${esc(store.get("hoops82.duelnames", ["You", "Friend"])[0])}" aria-label="Player 1 name"><input class="lb-input" id="dName1" maxlength="16" value="${esc(store.get("hoops82.duelnames", ["You", "Friend"])[1])}" aria-label="Player 2 name"><button class="btn primary mid" id="dStart">Start the draft</button></div>
+      <span class="label">Each on your own phone</span>`;
+    if (LB_REST) {
+      const nm = boardName();
+      html += `${nm ? "" : `<div class="row-gap"><input class="lb-input" id="dMyName" maxlength="24" placeholder="Your username" aria-label="Your username"><button class="btn mid" id="dSaveName">Save name</button></div>`}
+        <div class="row-gap"><button class="btn primary mid" id="dCreate"${duelBusy || !nm ? " disabled" : ""}>Create a duel</button><span class="note">${nm ? `Then your friend taps Join and types <b>${esc(nm)}</b>.` : "Pick your username first."}</span></div>
+        <div class="row-gap"><input class="lb-input" id="dHost" maxlength="24" placeholder="Friend's username" aria-label="Your friend's username"><button class="btn mid" id="dJoin"${duelBusy || !nm ? " disabled" : ""}>Join their duel</button></div>`;
+    } else html += `<p class="note">Playing on two phones works on the game's own website, where everyone has a username. Here, play on one device.</p>`;
+    html += `</div>`;
+  } else {
+    const L = duelLineups(duel), done = duelDone(duel), i = duel.picks.length, by = done ? null : pickerAt(i);
+    const roll = done ? null : duel.rolls[Math.floor(i / 2)], t = roll ? DATA[roll.dec][roll.fid] : null;
+    const online = duel.kind === "online", myTurn = !online || by === duel.me;
+    const waitingJoin = online && !duel.joined;
+    let status;
+    if (waitingJoin) status = `Waiting for your friend to join… Tell them to open Vs Friend, tap Join and type <b>${esc(boardName())}</b>.`;
+    else if (done) status = "Both teams are set.";
+    else status = `Roll ${Math.floor(i / 2) + 1} of 5 · <b>${short(roll.dec)} ${esc(t.name)}</b> · ${myTurn ? `<b>${esc(duel.names[by])}</b>, your pick` : `Waiting for ${esc(duel.names[by])} to pick…`}`;
+    html += `<p class="dstatus">${status}</p>${duel.err ? `<p class="note warn">${esc(duel.err)}</p>` : ""}
+      <div class="dteams">${duelLineupHtml(L[0], duel.names[0] + (online && duel.me === 0 ? " (you)" : ""), by === 0)}${duelLineupHtml(L[1], duel.names[1] + (online && duel.me === 1 ? " (you)" : ""), by === 1)}</div>`;
+    if (!done && !waitingJoin) {
+      const takenHere = new Set(duel.picks.filter((p, j) => Math.floor(j / 2) === Math.floor(i / 2)).map(p => p.name));
+      const open = SLOTS.filter(k => !L[by][k]);
+      const list = [...t.players].filter(p => !takenHere.has(p.name)).sort((a, b) => b.ovr - a.ovr);
+      html += `<div class="plist droster">${list.map((p, j) => {
+        const nat = open.filter(k => p.pos.includes(k)), other = open.filter(k => !p.pos.includes(k));
+        const btns = !myTurn || duelBusy ? "" : nat.map(k => `<button class="btn sm" data-dp="${j}" data-slot="${k}">${k}</button>`).join("") + (other.length ? `<select data-dps="${j}" aria-label="Draft ${esc(p.name)} out of position"><option value="">${nat.length ? "Other…" : "Play at…"}</option>${other.map(k => `<option value="${k}">${k} (−${penalty(p, k)})</option>`).join("")}</select>` : "");
+        return `<div class="prow"><div class="pname"><b>${esc(p.name)}</b><span class="chips">${p.pos.map(x => `<span class="chip">${x}</span>`).join("")}</span></div><div class="pstats">${statCells([["ovr", "OVR", p.ovr], ["ppg", "PPG", p.ppg], ["rpg", "RPG", p.rpg], ["apg", "APG", p.apg]], false, "")}</div><div class="pdraft">${btns}</div></div>`;
+      }).join("")}</div>`;
+      el.innerHTML = html + `<div class="row-gap"><button class="btn sm" id="dQuit">Quit this duel</button></div>`;
+      el.querySelectorAll("[data-dp]").forEach(b => b.onclick = () => duelPick(list[+b.dataset.dp].name, b.dataset.slot));
+      el.querySelectorAll("[data-dps]").forEach(s => s.onchange = () => s.value && duelPick(list[+s.dataset.dps].name, s.value));
+      wireDuelCommon();
+      return;
+    }
+    const shownKey = `${duel.seed}:${duel.rematch || 0}`;
+    const arena = keepArena && $("duelArena") ? $("duelArena").outerHTML : `<div class="h2harena" id="duelArena" hidden></div>`;
+    if (done) html += `<div class="row-gap">${duelShown === shownKey ? "" : `<button class="btn primary cta" id="dPlay"${duelBusy ? " disabled" : ""}>🏀 Play the series</button>`}${duelShown === shownKey && duel.kind === "local" ? `<button class="btn primary mid" id="dRematch">Rematch, same teams</button>` : ""}${duelShown === shownKey ? `<button class="btn mid" id="dNew">New duel</button>` : ""}</div>${arena}`;
+    html += `<div class="row-gap"><button class="btn sm" id="dQuit">${done ? "Close" : "Quit this duel"}</button></div>`;
+  }
+  el.innerHTML = html;
+  wireDuelCommon();
+}
+function wireDuelCommon() {
+  const on = (id, f) => { if ($(id)) $(id).onclick = f; };
+  on("dStart", () => {
+    const names = [$("dName0").value.trim() || "Player 1", $("dName1").value.trim() || "Player 2"];
+    if (names[0].toLowerCase() === names[1].toLowerCase()) names[1] += " 2";
+    store.set("hoops82.duelnames", names);
+    newLocalDuel(names); duelShown = null; renderDuel();
+  });
+  on("dSaveName", () => { const v = ($("dMyName").value || "").replace(/\s+/g, " ").trim().slice(0, 24); if (!v) return; store.set(KEY_LBNAME, v); $("lbName").value = v; renderDuel(); });
+  on("dCreate", createOnlineDuel);
+  on("dJoin", () => joinOnlineDuel(($("dHost").value || "").trim()));
+  on("dPlay", playDuelSeries);
+  on("dRematch", () => { duel.rematch = (duel.rematch || 0) + 1; saveDuel(); duelShown = null; renderDuel(); playDuelSeries(); });
+  on("dNew", () => { duel = null; saveDuel(); duelShown = null; renderDuel(); });
+  on("dQuit", () => { duel = null; saveDuel(); duelShown = null; clearInterval(duelTimer); duelTimer = 0; renderDuel(); });
+}
+
 /* ---------- Confetti ---------- */
 function confetti() {
   if (reduce) return;
@@ -3959,7 +4837,7 @@ function saveRuns() {
 }
 function saveCur() {
   if (!S) return;
-  if (S.done) { store.del(KEY_CUR); return; }
+  if (S.done || S.locked || S.offseason || S.mode === "duel") { store.del(KEY_CUR); return; }
   store.set(KEY_CUR, { lineup: S.lineup, draw: S.spinning ? null : S.draw, teamRedraw: S.teamRedraw, eraRedraw: S.eraRedraw, hard: $("hardmode").checked, mode: S.mode, day: S.day, drawCount: S.drawCount,
     rules: S.rules, lockDec: S.lockDec, lockName: S.lockName, redrawsUsed: S.redrawsUsed, draftXp: S.draftXp });
 }
@@ -4000,7 +4878,7 @@ function renderBook() {
     const tag = bestTag(r);
     b.className = "brow" + (tag ? " top" : "");
     const ppgSuffix = r.pf != null ? `<span class="brow-ppg"> · ${(r.pf/82).toFixed(1)} / ${(r.pa/82).toFixed(1)} a game</span>` : "";
-    b.innerHTML = `<span>${i + 1}</span><span class="rec">${r.w}–${r.l}</span><span class="po">${esc(poText(r))}${r.hard ? `<span class="mini">Hard</span>` : ""}${(r.rules || []).map(id => `<span class="mini">${esc(ruleName(id))}</span>`).join("")}${tag ? `<span class="mini">${tag}</span>` : ""}<span class="mini pts">${fmtPts(lbScore(r))} pts</span></span><span class="date">${esc(r.date)}</span>
+    b.innerHTML = `<span>${i + 1}</span><span class="rec">${r.w}–${r.l}</span><span class="po">${esc(poText(r))}${r.hard ? `<span class="mini">Hard</span>` : ""}${r.mode === "daily" ? `<span class="mini">Daily</span>` : r.mode === "dynasty" && r.dyn ? `<span class="mini">Dynasty Y${r.dyn.year}</span>` : ""}${(r.rules || []).map(id => `<span class="mini">${esc(ruleName(id))}</span>`).join("")}${tag ? `<span class="mini">${tag}</span>` : ""}<span class="mini pts">${fmtPts(lbScore(r))} pts</span></span><span class="date">${esc(r.date)}</span>
       <span class="lu">${r.players.map(p => `${p.slot} ${esc(p.name)} ${short(p.dec)}`).join(" · ")}${ppgSuffix}</span>`;
     b.setAttribute("aria-label", `Open season ${r.w}–${r.l}, ${poText(r)}, ${fmtPts(lbScore(r))} leaderboard points`);
     b.onclick = () => openRun(r, b);
@@ -4125,6 +5003,7 @@ function simPending(r) {
   const seed = r.seed || seedFor(r.w), po = playoffSim(rt, seed, r.w);
   Object.assign(r, { po: "played", seed, pw: po.pw, pl: po.pl, reached: po.reached, champ: po.champ, rounds: po.rounds });
   try { afterSeason(r, "playoffs"); } catch (e) { console.error(e); logError(e && e.message, e && e.stack); }
+  try { modeAfterPlayoffs(r); } catch (e) { console.error(e); logError(e && e.message, e && e.stack); }
   return po;
 }
 // A season from the record book whose playoffs were never played: play them now, with that season's form
@@ -4203,16 +5082,41 @@ function startOver() {
   if (poRunning || simRunning) return;
   fresh(); curRun = null; curRes = null; shuffleSeed = Math.random(); resetPlayoffs();
   $("afterPanel").hidden = true; $("copyNote").textContent = ""; $("watch").textContent = ""; $("ticker").textContent = "";
+  renderAfterButtons();
+  clearInterval(duelTimer); duelTimer = 0;
+  // Already played today's Daily Draft: show it (one try a day)
+  if (mode === "daily" && dailyRunToday()) { S.locked = true; S.lineup = lineupFromRun(dailyRunToday()) || S.lineup; render(); return; }
+  if (mode === "dynasty") {
+    let d = dynState();
+    if (!d) { startDynasty(); d = dynState(); }
+    if (d.stage === "done") { S.locked = true; if (d.lineup) S.lineup = cloneLineup(d.lineup); render(); return; }
+    if (d.stage === "offseason" && d.lineup) { S.offseason = true; S.lineup = cloneLineup(d.lineup); render(); return; }
+    if (d.stage === "season") {
+      if (dynPending(d)) { S.locked = true; if (d.lineup) S.lineup = cloneLineup(d.lineup); render(); return; }
+      if (d.lineup) { S.lineup = cloneLineup(d.lineup); render(); return; }
+    }
+  }
+  if (mode === "duel") { render(); duelPollOn(); return; }
   newDraw();
 }
-$("again").onclick = startOver;
+$("again").onclick = () => {
+  if (mode === "daily") { askMode("free"); return; }
+  if (mode === "dynasty" && dynState() && dynState().stage === "done") startDynasty();
+  startOver();
+};
+$("modeNext").onclick = () => { try { $("modePanel").scrollIntoView({ block: "start", behavior: reduce ? "auto" : "smooth" }); } catch (e) {} };
 let pendingMode = null;
 function askMode(m) {
-  if (m === mode || poRunning || simRunning) return;
-  if (picks() > 0 && !S.done) { pendingMode = m; $("modeAsk").hidden = false; return; }
+  if (m === mode || poRunning || simRunning || duelBusy || gBusy) return;
+  // A Dynasty keeps its team between visits, so only a draft in progress can be lost
+  const losing = picks() > 0 && !S.done && !S.locked && !S.offseason && S.mode !== "duel" && !(S.mode === "dynasty" && dynState() && dynState().stage === "season");
+  if (losing) { pendingMode = m; $("modeAsk").hidden = false; return; }
   mode = m; store.set(KEY_MODE, mode); startOver();
 }
 $("mFree").onclick = () => askMode("free");
+$("mDaily").onclick = () => askMode("daily");
+$("mDynasty").onclick = () => askMode("dynasty");
+$("mDuel").onclick = () => askMode("duel");
 $("modeYes").onclick = () => { $("modeAsk").hidden = true; if (pendingMode) { mode = pendingMode; store.set(KEY_MODE, mode); pendingMode = null; startOver(); } };
 $("modeNo").onclick = () => { $("modeAsk").hidden = true; pendingMode = null; };
 $("copy").onclick = () => {
@@ -4225,21 +5129,25 @@ function boot() {
   $("appVer").textContent = `Version ${APP_VERSION}.`;
   soundOn = store.get(KEY_SOUND, false) === true; renderSoundBtn();
   const seeded = loadCareer();
+  loadDuel();
   fresh();
   const sv = store.get(KEY_CUR, null);
   const validDraw = d => d && DATA[d.dec] && DATA[d.dec][d.fid] ? d : null;
-  const stale = sv && sv.mode === "daily" && sv.day !== todayKey();
-  if (sv && !stale && sv.lineup && (validDraw(sv.draw) || SLOTS.some(k => sv.lineup[k]))) {
-    mode = sv.mode === "daily" ? "daily" : "free";
+  // Yesterday's unfinished Daily Draft is gone, and so is today's if it was already played
+  const stale = sv && sv.mode === "daily" && (sv.day !== dayPT() || !!dailyRunToday());
+  const lastMode = store.get(KEY_MODE, "free");
+  if (sv && !stale && sv.mode !== "duel" && sv.lineup && (validDraw(sv.draw) || SLOTS.some(k => sv.lineup[k]))) {
+    mode = MODE_NAMES[sv.mode] ? sv.mode : "free";
     S.mode = mode; S.day = sv.day || todayKey(); S.drawCount = sv.drawCount || 0;
     for (const k of SLOTS) S.lineup[k] = sv.lineup[k] || null;
     S.draw = validDraw(sv.draw);
     S.teamRedraw = sv.teamRedraw ?? 1; S.eraRedraw = sv.eraRedraw ?? 1;
     S.rules = Array.isArray(sv.rules) ? sv.rules : []; S.lockDec = sv.lockDec || null; S.lockName = sv.lockName || null;
     S.redrawsUsed = sv.redrawsUsed || 0; S.draftXp = sv.draftXp || 0;
-    $("hardmode").checked = !!sv.hard;
+    $("hardmode").checked = mode === "free" && !!sv.hard;
+    if (mode === "daily") S.teamRedraw = S.eraRedraw = 0;
     if (picks() < 5 && (!S.draw || !hasPickable(S.draw.dec, S.draw.fid))) newDraw(); else render();
-  } else newDraw();
+  } else { mode = MODE_NAMES[lastMode] ? lastMode : "free"; startOver(); }
   // This version added a lot of trophies: check the whole record book against them once, quietly
   let retro = null;
   if (career.retro !== 2) {
@@ -4262,6 +5170,11 @@ function boot() {
   // Version 29 changed how leaderboard points count: say so once, with your best season under the new count
   const top = lbBestForMode("normal") || lbBest();
   if (pointsNews && top) toast(`🏀 Leaderboard points now count your playoff record, not team rating, so a better season always scores more. Your best: <b>${esc(recText(top))}</b>, ${fmtPts(lbScore(top))} pts.`);
+  // Version 32: say what's new once
+  if (seeded === null && !career.seen32 && runs.length) toast(`New: <b>Daily Draft, Dynasty and Vs Friend</b> at the top, the <b>Legends Gauntlet</b> in Head-to-head, and <b>card levels</b> in your collection`);
+  career.seen32 = 1;
+  checkCareerTrophies();
+  saveCareer();
 }
 boot();
 </script>

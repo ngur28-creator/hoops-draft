@@ -107,5 +107,45 @@ await t("a 16–0 title adds the full 120", async () => {
   const r = await call("POST", "", { board: "normal", token: tok("2"), name: "Hal", run: { ...bobNormal, pl: 0 } });
   assert.equal(r.status, 200, JSON.stringify(r.body)); assert.equal(r.body.score, 1410);
 });
+await t("Daily Draft: today's board takes a season, wrong days are refused", async () => {
+  const { dayPT } = await import("../netlify/functions/lb/lb.mjs");
+  const day = dayPT();
+  const entry = { ...bobNormal, pl: 2 };
+  let r = await call("POST", "", { board: "daily", day, token: tok("1"), name: "Gus", entry });
+  assert.equal(r.status, 200, JSON.stringify(r.body)); assert.equal(r.body.score, 1390);
+  r = await call("POST", "", { board: "daily", day: "2020-01-01", token: tok("1"), name: "Gus", entry });
+  assert.equal(r.status, 400); assert.match(r.body.error, /over/);
+  const b = await call("GET", `?board=daily&day=${day}`);
+  assert.deepEqual(b.body.entries.map(e => [e.name, e.score, e.w, e.l, e.champ]), [["Gus", 1390, 79, 3, true]]);
+  assert.equal((await call("GET", "?board=daily")).status, 400);
+  // a hard mode flag can't sneak a season in: Daily seasons are always normal
+  r = await call("POST", "", { board: "daily", day, token: tok("2"), name: "Hal", entry: { ...bobHard } });
+  assert.equal(r.status, 200, JSON.stringify(r.body)); assert.equal(r.body.score, 1350);
+});
+await t("Legends Gauntlet: beaten and lost come back on the board; impossible runs refused", async () => {
+  const players = bobNormal.players;
+  let r = await call("POST", "", { board: "gauntlet", token: tok("1"), name: "Gus", entry: { beat: 19, lost: 30, team: "79–3 Payton…", players } });
+  assert.equal(r.status, 200, JSON.stringify(r.body)); assert.equal(r.body.score, 1969);
+  r = await call("POST", "", { board: "gauntlet", token: tok("1"), name: "Gus", entry: { beat: 12, lost: 10, players } });
+  assert.equal(r.body.kept, true);
+  for (const bad of [{ beat: 25, lost: 0 }, { beat: 3, lost: 40 }, { beat: 0, lost: 0 }]) {
+    r = await call("POST", "", { board: "gauntlet", token: tok("1"), name: "Gus", entry: { ...bad, players } });
+    assert.equal(r.status, 400, JSON.stringify(bad));
+  }
+  const b = await call("GET", "?board=gauntlet");
+  assert.deepEqual(b.body.entries.map(e => [e.name, e.beat, e.lost]), [["Gus", 19, 30]]);
+});
+await t("Dynasty: titles and wins are counted by the server", async () => {
+  const yr = (w, champ, pl = 4) => ({ w, l: 82 - w, champ, pw: champ ? 16 : 9, pl: champ ? pl : 6 });
+  const years = [yr(72, true), yr(74, true), yr(72, false), yr(69, false), yr(75, false)];
+  let r = await call("POST", "", { board: "dynasty", token: tok("1"), name: "Gus", entry: { titles: 5, wins: 999, years, players: bobNormal.players } });
+  assert.equal(r.status, 200, JSON.stringify(r.body)); assert.equal(r.body.score, 2362);
+  const b = await call("GET", "?board=dynasty");
+  assert.deepEqual(b.body.entries.map(e => [e.name, e.titles, e.wins]), [["Gus", 2, 362]]);
+  r = await call("POST", "", { board: "dynasty", token: tok("1"), name: "Gus", entry: { years: years.slice(0, 4), players: bobNormal.players } });
+  assert.equal(r.status, 400);
+  r = await call("POST", "", { board: "dynasty", token: tok("1"), name: "Gus", entry: { years: [...years.slice(0, 4), { w: 30, l: 52, champ: true, pw: 16, pl: 0 }], players: bobNormal.players } });
+  assert.equal(r.status, 400);
+});
 console.log(results.join("\n"));
 process.exitCode = results.some(r => r.startsWith("FAIL")) ? 1 : 0;
