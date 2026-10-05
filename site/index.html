@@ -80,7 +80,7 @@ h1 .dash { color: var(--accent); }
 h2 { font-family: var(--display); font-weight: 900; font-size: 28px; line-height: 1; margin: 0; }
 h3 { font-family: var(--display); font-weight: 800; font-size: 20px; line-height: 1; margin: 0; }
 .head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
-.stack { display: grid; gap: 12px; min-width: 0; }
+.stack { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; min-width: 0; }
 .note { color: var(--muted); font-size: 14px; margin: 0; }
 .confirm { display: inline-flex; gap: 6px; align-items: center; font-size: 14px; flex-wrap: wrap; font-weight: 600; }
 
@@ -299,6 +299,12 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
 .h2hvs b { overflow-wrap: anywhere; }
 .h2hvs .vs { font-family: var(--display); font-weight: 900; font-size: 26px; color: var(--accent); }
 .h2harena .btn { justify-self: start; }
+.h2hfriend { display: grid; gap: 8px; padding: 12px; border: 2px solid color-mix(in srgb, var(--accent) 45%, var(--line)); border-radius: 12px; background: color-mix(in srgb, var(--accent) 6%, var(--bg)); }
+.h2hfriend > b { font-family: var(--display); font-weight: 400; font-size: 18px; }
+.h2hfound { display: grid; gap: 6px; }
+.h2hfound:empty { display: none; }
+.h2hrow { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; justify-content: space-between; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); font-size: 14px; }
+.h2hrow > span { min-width: 0; overflow-wrap: anywhere; }
 .lbauto { display: grid; gap: 8px; padding: 12px; border: 2px dashed var(--accent); border-radius: 10px; background: color-mix(in srgb, var(--accent) 6%, var(--bg)); }
 
 /* Toast + confetti */
@@ -797,8 +803,18 @@ h3 { font-family: var(--display); font-weight: 400; font-size: 16px; line-height
 
   <section class="panel stack" id="h2hPanel" aria-label="Head-to-head">
     <div class="head"><h2>⚔️ Head-to-head</h2><span class="label" id="h2hSum"></span></div>
-    <p class="note">Send one of your saved teams against an all-time great roster, best of seven. You can also tap any team on the global leaderboard below and play them.</p>
+    <p class="note">Send one of your saved teams against an all-time great roster, best of seven. You can also 1v1 a friend by their username, or tap any team on the global leaderboard below and play them.</p>
     <div class="row-gap"><label class="label" for="h2hTeam">Your team</label><select id="h2hTeam"></select><span class="note" id="h2hMine"></span></div>
+    <div class="h2hfriend">
+      <b>⚔️ 1v1 a friend</b>
+      <div class="row-gap">
+        <input class="lb-input" id="h2hFriendName" maxlength="40" placeholder="Their username" autocomplete="off" aria-label="Your friend's username">
+        <button class="btn primary mid" id="h2hFriendBtn">Find them</button>
+      </div>
+      <span class="note" id="h2hFriendNote">Type the name they have on the leaderboard. Your team plays their best team, best of seven.</span>
+      <div class="h2hfound" id="h2hFound"></div>
+      <div class="h2harena" id="h2hFriendArena" hidden></div>
+    </div>
     <div class="h2harena" id="h2hArena" hidden></div>
     <div class="h2hlist" id="h2hList"></div>
   </section>
@@ -857,7 +873,7 @@ h3 { font-family: var(--display); font-weight: 400; font-size: 16px; line-height
 <div class="toast" id="toast" hidden role="status"></div>
 
 <script>
-const APP_VERSION = 30;
+const APP_VERSION = 31;
 // How leaderboard points are counted. Version 1 also counted team rating; entries saved under it are re-scored when shown.
 const SCORE_V = 2;
 // Anything that goes wrong is noted (last 20, in this browser and in your private cloud save) so it can be fixed
@@ -2507,7 +2523,7 @@ function afterSeason(run, phase) {
 /* ---------- Career save ---------- */
 const KEY_CAREER = "hoops82.career.v1";
 const blankPack = () => ({ have: { normal: 0, gold: 0, legend: 0 }, opened: 0, legends: 0, allNew: 0, gold: 0, legendPacks: 0, daily: "", streak: 0, bestStreak: 0 });
-const blankH2h = () => ({ won: 0, lost: 0, sweeps: 0, g7: 0, upsets: 0, streak: 0, best: 0, beat: {} });
+const blankH2h = () => ({ won: 0, lost: 0, sweeps: 0, g7: 0, upsets: 0, streak: 0, best: 0, beat: {}, vs: {} });
 const blankCareer = () => ({ v: 1, xp: 0, coll: {}, ch: [], chDone: 0, skips: 2, rules: [], bosses: {}, life: { seasons: 0, wins: 0, titles: 0, playoffWins: 0, perfect: 0, w60: 0, w70: 0, hard: 0, hardTitles: 0 },
   h2h: blankH2h(), posted: {}, pack: blankPack(), finalsLost: {}, clutch: { made: 0, missed: 0, finals: 0, streak: 0, best: 0, otSaves: 0 }, seeded: false, retro: 0 });
 let career = blankCareer();
@@ -2533,6 +2549,7 @@ function fixCareerShape() {
   career.pack.have = Object.assign(blankPack().have, career.pack.have || {});
   career.finalsLost = career.finalsLost && typeof career.finalsLost === "object" ? career.finalsLost : {};
   career.clutch = Object.assign({ made: 0, missed: 0, finals: 0, streak: 0, best: 0, otSaves: 0 }, career.clutch && typeof career.clutch === "object" ? career.clutch : {});
+  career.h2h.vs = career.h2h.vs && typeof career.h2h.vs === "object" ? career.h2h.vs : {};
   // Points are counted differently from version 29 on, so your best seasons get posted again under the new count
   if (career.postedV !== SCORE_V) {
     if (career.postedV || Object.keys(career.posted || {}).length) pointsNews = true;
@@ -2844,6 +2861,7 @@ async function recheckAccess() {
 // One line under your rank: can this view post, as whom, and what happened last
 function renderPostState() {
   const el = $("lbPost");
+  renderFriendNote();
   if (!el) return;
   if (LB_REST) { el.hidden = true; return; } // the website has its own name box and notes
   const n = runs.length, board = b => b === "hard" ? "Hard Mode" : "Normal";
@@ -3299,7 +3317,7 @@ function showLbDetail(entry, anchor) {
   $("modal").hidden = false;
   document.body.style.overflow = "hidden";
   placeModal(anchor);
-  if ($("mH2h")) $("mH2h").onclick = () => playH2H({ key: `B:${lbDocsMode}:${entry.id}`, label: `${displayName}'s ${d.w || 0}–${d.l || 0}`, L: oppL }, $("mH2hArena"));
+  if ($("mH2h")) $("mH2h").onclick = () => playH2H({ key: `B:${lbDocsMode}:${entry.id}`, label: `${displayName}'s ${d.w || 0}–${d.l || 0}`, L: oppL, who: displayName }, $("mH2hArena"));
   $("mClose").onclick = closeRun;
   $("mClose").focus({ preventScroll: true });
 }
@@ -3680,6 +3698,12 @@ async function playH2H(opp, box) {
   }
   // Record it: the first win over each team is worth the most
   const h = career.h2h, won = a === 4, upset = rB.team - rA.team >= 3;
+  // Your record against each opponent (a rivalry with a friend, say), oldest dropped past 200
+  h.vs = h.vs && typeof h.vs === "object" ? h.vs : {};
+  const vs = h.vs[opp.key] = Array.isArray(h.vs[opp.key]) ? h.vs[opp.key] : [0, 0];
+  won ? vs[0]++ : vs[1]++;
+  const vsKeys = Object.keys(h.vs);
+  if (vsKeys.length > 200) delete h.vs[vsKeys[0]];
   let xp = 2;
   if (won) {
     h.won++; h.streak++; h.best = Math.max(h.best, h.streak);
@@ -3691,7 +3715,8 @@ async function playH2H(opp, box) {
     xp = first ? 40 + (upset ? 30 : 0) + (b === 0 ? 10 : 0) : 5;
   } else { h.lost++; h.streak = 0; }
   box.querySelector("#h2hScore").classList.add(won ? "w" : "l");
-  box.querySelector("#h2hNote").innerHTML = (won ? `<b>You win the series ${a}–${b}!</b>${upset ? " An upset." : ""}` : `<b>They win the series ${b}–${a}.</b>`) + ` +${xp} XP${won && xp === 5 ? " (you've beaten them before)" : ""}`;
+  box.querySelector("#h2hNote").innerHTML = (won ? `<b>You win the series ${a}–${b}!</b>${upset ? " An upset." : ""}` : `<b>They win the series ${b}–${a}.</b>`) + ` +${xp} XP${won && xp === 5 ? " (you've beaten them before)" : ""}` +
+    (opp.who ? ` · Your record vs ${esc(opp.who)}: <b>${vs[0]}–${vs[1]}</b>` : "");
   const again = document.createElement("button");
   again.className = "btn sm"; again.textContent = "Rematch";
   again.onclick = () => playH2H(opp, box);
@@ -3704,6 +3729,86 @@ async function playH2H(opp, box) {
   saveCareer();
   renderH2H();
 }
+
+/* ---------- 1v1 a friend ----------
+   Type someone's username (the name they have on the leaderboard) and your team plays their posted team,
+   best of seven. It works both ways: they type yours. Everyone on both boards is loaded once a minute at most. */
+let everyone = null, everyoneAt = 0, friendSearched = false;
+const userKey = s => String(s || "").toLowerCase().normalize("NFKC").replace(/[\s.,_'"`~!?*\-]+/g, "");
+async function loadEveryone() {
+  if (everyone && Date.now() - everyoneAt < 60000) return everyone;
+  const out = [];
+  if (LB_REST) {
+    for (const board of ["normal", "hard"]) {
+      const r = await fetch(`${LB_API}?board=${board}`, { cache: "no-store" });
+      if (!r.ok) throw { code: "offline" };
+      const { entries } = await r.json();
+      for (const d of entries || []) out.push({ board, id: d.id, data: d, name: d.name || "", alt: "" });
+    }
+  } else {
+    if (!lbDb) throw { code: "signedout" };
+    const cols = [["normal", false], ["normal", true], ["hard", false], ["hard", true]];
+    const snaps = await Promise.all(cols.map(([b, g]) => lbDb.collection(boardCol(b, g)).orderBy("score", "desc").limit(500).get().catch(() => ({ docs: [] }))));
+    const all = [];
+    snaps.forEach((s, i) => (s.docs || []).forEach(doc => all.push({ board: cols[i][0], id: doc.id, data: doc.data(), guest: cols[i][1] })));
+    const ids = [...new Set(all.filter(e => !e.guest).map(e => e.id))];
+    let profiles = {};
+    if (lbUser && ids.length) { try { profiles = (await lbUser.profiles(ids)) || {}; } catch (e) {} }
+    for (const e of all) out.push({ ...e, name: (!e.guest && profiles[e.id] && profiles[e.id].name) || e.data.name || "", alt: e.data.name || "" });
+  }
+  everyone = out; everyoneAt = Date.now();
+  return out;
+}
+// The name friends type to find you
+function myUsername() {
+  return LB_REST || lbWay === "guest" ? String(store.get(KEY_LBNAME, "") || "") : lbMeName;
+}
+function renderFriendNote() {
+  const el = $("h2hFriendNote");
+  if (!el || friendSearched) return;
+  const me = myUsername(), canPost = LB_REST || !!lbWay;
+  el.innerHTML = `Type the name they have on the leaderboard. Your team plays their best team, best of seven.` +
+    (!canPost ? " Friends can't find you yet, because this view can't post your seasons." : me ? ` Your username is <b>${esc(me)}</b>, so friends can type that to play you.` : "");
+}
+async function findFriend() {
+  const q = $("h2hFriendName").value.trim(), note = $("h2hFriendNote"), box = $("h2hFound"), btn = $("h2hFriendBtn");
+  friendSearched = true;
+  if (!q) { note.textContent = "Type a username first."; $("h2hFriendName").focus(); return; }
+  note.textContent = "Looking…"; box.innerHTML = ""; btn.disabled = true;
+  let all;
+  try { all = await loadEveryone(); }
+  catch (e) { note.textContent = e && e.code === "signedout" ? "Sign in to claude.ai to see who's on the leaderboard." : "Couldn't reach the leaderboard. Try again."; return; }
+  finally { btn.disabled = false; }
+  const k = userKey(q);
+  const match = e => { const a = userKey(e.name), b = userKey(e.alt); return a === k || b === k ? 3 : a.startsWith(k) || b.startsWith(k) ? 2 : a.includes(k) || b.includes(k) ? 1 : 0; };
+  const hits = all.map(e => [match(e), e]).filter(([m]) => m > 0)
+    .sort((x, y) => y[0] - x[0] || entryScore(y[1].data) - entryScore(x[1].data)).map(([, e]) => e).slice(0, 8);
+  if (!hits.length) {
+    note.textContent = `Nobody called "${q}" is on the leaderboard yet. A player shows up once one of their seasons is posted.`;
+    return;
+  }
+  note.textContent = hits.length === 1 ? "Found them. Pick your team above, then play:" : `Found ${hits.length}. Pick your team above, then play one:`;
+  const mine = myDocId();
+  box.innerHTML = hits.map((e, i) => {
+    const d = e.data, me = !!mine && e.id === mine;
+    return `<div class="h2hrow"><span><b>${esc(e.name || "Anonymous")}</b>${me ? ' <span class="lb-tag">you</span>' : ""} · ${e.board === "hard" ? "🔥 Hard" : "Normal"} · ${esc(recText(d))} · ${fmtPts(entryScore(d))} pts</span>
+      <button class="btn sm primary" data-fi="${i}"${me ? " disabled" : ""}>⚔️ 1v1</button></div>`;
+  }).join("");
+  box.querySelectorAll("[data-fi]").forEach(b => b.onclick = () => playFriend(hits[+b.dataset.fi]));
+}
+async function playFriend(e) {
+  if (h2hBusy) return;
+  let d = e.data;
+  // The website's board only lists names and scores; the team loads when you play
+  if (LB_REST && !Array.isArray(d.players)) {
+    try { const r = await fetch(`${LB_API}?board=${e.board}&id=${encodeURIComponent(e.id)}`, { cache: "no-store" }); if (!r.ok) throw 0; d = await r.json(); }
+    catch (x) { toast("Couldn't load their team. Try again."); return; }
+  }
+  const who = e.name || "Their team";
+  await playH2H({ key: `B:${e.board}:${e.id}`, label: `${who}'s ${d.w}–${d.l}`, L: rebuildLineup(d.players), who }, $("h2hFriendArena"));
+}
+$("h2hFriendBtn").addEventListener("click", findFriend);
+$("h2hFriendName").addEventListener("keydown", e => { if (e.key === "Enter") findFriend(); });
 
 /* ---------- Automatic posting ----------
    After every season and playoff run, your best season on each board posts itself: hard mode seasons on the
