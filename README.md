@@ -7,5 +7,7 @@ Roll a random era and franchise, draft five players, and chase an 82–0 season 
   secret token so only its owner can replace their entry. The server looks every player up in
   `valid.mjs` and recalculates the score itself, so ratings can't be faked.
 - Scores live in Netlify Blobs (store `hoops-lb`). Deploy previews use a separate throwaway store.
+- Players pick a name once; after that their best season on each board posts itself after every season
+  (hard mode seasons go to the Hard Mode board, everything else to Normal).
 
 Run it locally with `npm install && npm run dev`, then open http://localhost:8888. Tests: `npm test`.
