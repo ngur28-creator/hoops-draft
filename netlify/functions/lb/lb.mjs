@@ -2,12 +2,13 @@
 //
 //   GET  /api/lb?board=normal|hard           top 500: { entries: [{ id, name, score, w, l, champ, hard }] }
 //   GET  /api/lb?board=normal|hard&id=<id>   one entry with its full team and season stats
-//   POST /api/lb  { board, token, name, run } submit your best season for that board
+//   POST /api/lb  { board, token, name, run, replace? } submit your best season for that board
 //
 // Anyone can submit. Each browser keeps a secret token; your player id is a hash of it, so only you can
-// replace your own entry. One entry per player per board, and a lower score never replaces a higher one.
-// The server never trusts the page's score: it looks every player up in the game's own data and
-// recalculates the score from their real ratings.
+// replace your own entry. One entry per player per board, and a lower score never replaces a higher one
+// unless you ask for it (replace: true, when you pick a season to show from your record book).
+// The server never trusts the page's score: it recalculates it from the record, checks the playoff
+// result adds up, and looks every player up in the game's own data.
 //
 // Storage (one Netlify Blobs store):
 //   e/<board>/<id>                                        full entry (each player only ever writes their own)
@@ -110,9 +111,9 @@ async function submit(req, store) {
   }
   const score = scoreOf(run);
 
-  // One entry per player per board, and a lower score never replaces a higher one
+  // One entry per player per board, and a lower score never replaces a higher one unless you ask
   const prev = await store.get(`e/${board}/${id}`, { type: "json" });
-  if (prev && prev.score > score) {
+  if (prev && prev.score > score && body.replace !== true) {
     return reply({ ok: true, kept: true, id, score: prev.score, rank: await rankOf(store, board, id) });
   }
 
@@ -155,10 +156,11 @@ function nameKey(name) {
   return k ? Buffer.from(k, "utf8").toString("base64url") : "";
 }
 
-// Same formula as the game: wins, a title, a perfect season, team rating, and the hard mode bonus
+// Same points as the game: 10 a win; a title is 500 plus 10 for every playoff loss under 12 (16–0 adds 120),
+// otherwise 10 a playoff win; 82–0 adds 1,000 and hard mode 200. Team rating doesn't count.
 function scoreOf(r) {
-  const avgOvr = r.players.reduce((a, p) => a + p.ovr, 0) / 5;
-  return r.w * 10 + (r.champ ? 500 : 0) + (r.w === 82 ? 1000 : 0) + Math.round(avgOvr * 2) + (r.hard ? 200 : 0);
+  const pw = Math.min(16, r.pw), pl = Math.min(12, r.pl);
+  return r.w * 10 + (r.champ ? 500 + (12 - pl) * 10 : Math.min(15, pw) * 10) + (r.w === 82 ? 1000 : 0) + (r.hard ? 200 : 0);
 }
 
 function checkRun(r) {
@@ -182,7 +184,9 @@ function checkRun(r) {
   const run = {
     w, l, champ, hard: r.hard === true, players, box, date: String(r.date ?? "").slice(0, 20),
     pf: int(r.pf, 0, 20000), pa: int(r.pa, 0, 20000), reached: int(r.reached, 0, 3), pw: int(r.pw, 0, 16), pl: int(r.pl, 0, 16),
+    rid: Number.isSafeInteger(r.rid) && r.rid > 0 ? r.rid : null,
   };
-  if (champ && (run.reached !== 3 || run.pw !== 16)) throw "That season's playoff result doesn't add up.";
+  // A champion wins 16 and loses at most 3 a round; anyone else wins at most 15
+  if (champ ? (run.reached !== 3 || run.pw !== 16 || run.pl > 12) : run.pw > 15) throw "That season's playoff result doesn't add up.";
   return run;
 }

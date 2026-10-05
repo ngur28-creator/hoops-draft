@@ -232,7 +232,8 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
 .lb-row:last-child { border-bottom: 0; }
 .lb-row .lb-rank { color: var(--muted); font-family: var(--mono); font-size: 13px; text-align: right; }
 .lb-row .lb-name { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.lb-row .lb-wins { color: var(--win); font-family: var(--mono); font-size: 13px; }
+.lb-row .lb-wins { color: var(--win); font-family: var(--mono); font-size: 13px; white-space: nowrap; }
+.lb-row .lb-po { color: var(--muted); font-size: 11px; margin-left: 4px; }
 .lb-row .lb-score { font-family: var(--mono); font-weight: 700; color: var(--accent); }
 .lb-row.lb-me { background: color-mix(in srgb, var(--accent) 8%, var(--panel)); border-radius: 6px; }
 .lb-row .lb-tag { font-size: 11px; color: var(--muted); }
@@ -244,6 +245,18 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
 .lb-codeout { width: 100%; box-sizing: border-box; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); font-family: var(--mono); font-size: 12px; line-height: 1.4; resize: vertical; word-break: break-all; }
 .lb-myrank { padding: 9px 12px; border-radius: 8px; border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--line)); background: color-mix(in srgb, var(--accent) 9%, var(--panel)); font-size: 14px; line-height: 1.45; }
 .lb-myrank b { color: var(--accent); font-family: var(--mono); }
+.lb-post { font-size: 13px; line-height: 1.45; color: var(--sub); display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; }
+.lb-post .ok { color: var(--win); font-weight: 700; }
+.lb-post .no { color: var(--loss); font-weight: 700; }
+.lb-how { font-size: 13px; color: var(--sub); }
+.lb-how summary { cursor: pointer; font-weight: 700; color: var(--ink); }
+.lb-how ul { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 2px; }
+.mini.pts { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); text-transform: none; letter-spacing: 0; }
+.scorecard { border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--line)); background: color-mix(in srgb, var(--accent) 7%, var(--bg)); border-radius: 10px; padding: 10px 12px; display: grid; gap: 8px; }
+.scorecard h3 { color: var(--accent); font-size: 26px; }
+.scorecard.best { border: 2px solid var(--gold); background: color-mix(in srgb, var(--gold) 12%, var(--bg)); }
+.scorecard .sc-line { font-weight: 700; }
+.scorecard .row-gap .note { flex: 1 1 200px; }
 .lb-tab { flex: 1; padding: 8px 0; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--sub); font-weight: 700; font-size: 13px; cursor: pointer; transition: background .15s, color .15s; }
 .lb-tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
 .lb-tab:hover:not(.active) { background: var(--panel); }
@@ -690,6 +703,7 @@ h3 { font-family: var(--display); font-weight: 400; font-size: 16px; line-height
     </div>
 
     <div class="panel stack" id="afterPanel" hidden>
+      <div class="scorecard" id="scoreCard" hidden></div>
       <div class="xpsum" id="xpSum" hidden></div>
       <div class="lbauto" id="lbAuto" hidden></div>
       <div class="stack" id="newsWrap" hidden>
@@ -784,12 +798,23 @@ h3 { font-family: var(--display); font-weight: 400; font-size: 16px; line-height
       <button class="lb-tab" id="lbTabHard" onclick="switchLbTab('hard')">🔥 Hard Mode</button>
     </div>
     <div class="lb-myrank" id="lbMyRank" hidden></div>
+    <div class="lb-post" id="lbPost" hidden></div>
     <div class="plist" id="lbRows"></div>
+    <details class="lb-how">
+      <summary>How points work</summary>
+      <ul>
+        <li>10 for every regular-season win</li>
+        <li>Title: +500, plus 10 for every playoff loss under 12, so a 16–0 run adds 120 more and 16–1 adds 110</li>
+        <li>No title: +10 for every playoff win</li>
+        <li>82–0: +1,000 · Hard mode: +200</li>
+        <li>Team rating doesn't count, so a better record always scores more. Your best season on each board posts by itself, and you can post any season from its page in your record book.</li>
+      </ul>
+    </details>
     <div class="row-gap" id="lbSubmitWrap" hidden>
       <input class="lb-input" id="lbName" maxlength="24" placeholder="Your name for the board" autocomplete="nickname" aria-label="Your name for the board" hidden>
       <button class="btn primary" id="lbSubmitBtn">Submit my best score</button>
       <span class="note" id="lbSubmitNote"></span>
-      <span class="note" style="flex-basis:100%">One entry per player on each board. Submitting again only replaces yours if the new score is higher.</span>
+      <span class="note" style="flex-basis:100%">One entry per player on each board. Submitting again only replaces yours if the new score is higher. To show a different season, open it in your record book and post it from there.</span>
     </div>
     <div class="lb-code" id="lbCodeWrap" hidden>
       <div class="row-gap">
@@ -819,7 +844,9 @@ h3 { font-family: var(--display); font-weight: 400; font-size: 16px; line-height
 <div class="toast" id="toast" hidden role="status"></div>
 
 <script>
-const APP_VERSION = 28;
+const APP_VERSION = 29;
+// How leaderboard points are counted. Version 1 also counted team rating; entries saved under it are re-scored when shown.
+const SCORE_V = 2;
 // Anything that goes wrong is noted (last 20, in this browser and in your private cloud save) so it can be fixed
 const KEY_ERRS = "hoops82.errors";
 let errSaveTimer = 0;
@@ -1176,10 +1203,10 @@ function renderProjection(hard) {
 }
 function renderHeader() {
   $("mFree").setAttribute("aria-pressed", mode === "free");
-  const sorted = [...runs].sort((a, b) => runScore(b) - runScore(a));
+  const top = lbBestForMode("normal") || lbBest();
   const titles = runs.filter(r => r.champ).length;
   const got = gotCount();
-  $("bests").innerHTML = (sorted[0] ? `<span class="pill">Best <b>${sorted[0].w}–${sorted[0].l}</b></span>` : "") +
+  $("bests").innerHTML = (top ? `<span class="pill" title="Your best season: ${fmtPts(lbScore(top))} leaderboard points">Best <b>${top.w}–${top.l}${top.champ ? " 🏆" : ""}</b></span>` : "") +
     `<span class="pill">Titles <b>${titles}</b></span><span class="pill">Trophies <b>${fmtPts(got)}/${fmtPts(ACH.length)}</b></span>`;
 }
 
@@ -2143,6 +2170,37 @@ function renderXpSummary(run) {
     <ul class="xplog">${log.map(([l, x]) => `<li><span>${esc(l)}</span><b>${x ? "+" + fmtPts(x) : "🎁"}</b></li>`).join("")}</ul>`;
 }
 
+// After a season: its leaderboard points, how they add up, whether it beat your best, and whether it's posted
+function renderScoreCard(run) {
+  const box = $("scoreCard");
+  if (!box) return;
+  if (!run || !Number.isFinite(run.w)) { box.hidden = true; return; }
+  const board = run.hard ? "hard" : "normal", score = lbScore(run);
+  const prev = bestOf(runs.filter(r => r !== run && r.id !== run.id && !!r.hard === !!run.hard));
+  const prevScore = prev ? lbScore(prev) : -1;
+  const pending = run.po === "pending" && run.w >= 42;
+  const isBest = !prev || score > prevScore;
+  const line = !prev ? `Your first ${run.hard ? "hard mode " : ""}season, so it's your best.`
+    : score > prevScore ? `🎉 New best! It beats your ${recText(prev)} (${fmtPts(prevScore)} pts) by ${fmtPts(score - prevScore)}.`
+    : score === prevScore ? `It ties your best, ${recText(prev)}.`
+    : `Your best is still ${recText(prev)}: ${fmtPts(prevScore)} pts, ${fmtPts(prevScore - score)} more.`;
+  const mine = lbMine[board];
+  let post = "";
+  if (LB_REST || lbWay) {
+    if (lbPosting) post = "Posting to the leaderboard…";
+    else if (mine && mine.rid && mine.rid === run.id) post = "✓ It's your entry on the leaderboard.";
+    else if (mine && mine.score >= score) post = `Your leaderboard entry stays${mine.rec ? ` (${mine.rec})` : ""}: ${fmtPts(mine.score)} pts.`;
+    else if (isBest) post = pending ? "It goes on the leaderboard now, and again with more points after the playoffs." : "It goes on the leaderboard by itself.";
+  } else if (lbWhy !== "checking") post = "This view can't post scores. The leaderboard section says why.";
+  box.className = "scorecard" + (isBest && prev ? " best" : "");
+  box.innerHTML = `<div class="head"><h3>${fmtPts(score)} leaderboard points</h3><span class="label">${run.hard ? "🔥 Hard Mode board" : "Normal board"}</span></div>
+    <ul class="xplog">${lbParts(run).map(([l, x]) => `<li><span>${esc(l)}</span><b>+${fmtPts(x)}</b></li>`).join("")}</ul>
+    ${pending ? `<span class="note">Playoffs still to play: a title adds 500 to 620 more.</span>` : ""}
+    <span class="sc-line">${esc(line)}</span>
+    ${post ? `<span class="note">${esc(post)}</span>` : ""}`;
+  box.hidden = false;
+}
+
 /* ---------- Rules ---------- */
 // Optional rules for a draft: harder or stranger, for bonus XP. They unlock as you level up.
 const RULES = [
@@ -2428,7 +2486,7 @@ function afterSeason(run, phase) {
   checkChallenges(run, log);
   checkTrophies(run, log);
   saveCareer();
-  if (run === curRun) renderXpSummary(run);
+  if (run === curRun) { renderXpSummary(run); renderScoreCard(run); }
   renderCareer(); renderChallenges(); renderCollection(); renderH2H();
   setTimeout(() => autoPost(true), 0); // after the season is saved
 }
@@ -2462,7 +2520,13 @@ function fixCareerShape() {
   career.pack.have = Object.assign(blankPack().have, career.pack.have || {});
   career.finalsLost = career.finalsLost && typeof career.finalsLost === "object" ? career.finalsLost : {};
   career.clutch = Object.assign({ made: 0, missed: 0, finals: 0, streak: 0, best: 0, otSaves: 0 }, career.clutch && typeof career.clutch === "object" ? career.clutch : {});
+  // Points are counted differently from version 29 on, so your best seasons get posted again under the new count
+  if (career.postedV !== SCORE_V) {
+    if (career.postedV || Object.keys(career.posted || {}).length) pointsNews = true;
+    career.posted = {}; career.postedV = SCORE_V;
+  }
 }
+let pointsNews = false; // set when a save from before version 29 is loaded, for a one-time note
 // Lifetime counters added later (60- and 70-win seasons, hard mode), counted from one season
 function countLife(r) {
   const life = career.life;
@@ -2565,7 +2629,7 @@ function slimRun(r) {
     w: r.w, l: r.l || 0, champ: !!r.champ, hard: !!r.hard, date: r.date || "",
     players: r.players.map(p => ({ slot: p.slot, name: p.name, dec: p.dec, team: p.team })),
     box: (r.box || []).map(b => ({ ppg: b.ppg, rpg: b.rpg, apg: b.apg, spg: b.spg, bpg: b.bpg })),
-    pf: r.pf || 0, pa: r.pa || 0, reached: r.reached || 0, pw: r.pw || 0, pl: r.pl || 0
+    pf: r.pf || 0, pa: r.pa || 0, reached: r.reached || 0, pw: r.pw || 0, pl: r.pl || 0, rid: Number.isFinite(r.id) ? r.id : null
   };
 }
 
@@ -2581,6 +2645,7 @@ async function submitRest() {
     const out = await postRest(board, best, name);
     career.posted[board] = Math.max(career.posted[board] || 0, out.score || 0);
     saveCareer();
+    lbLast = { board, rec: out.kept ? (lbMine[board] && lbMine[board].rec) || "" : recText(best), kept: !!out.kept };
     const rank = out.rank ? ` You're #${out.rank}.` : "";
     note.textContent = out.kept ? `Your entry here is already higher (${fmtPts(out.score)} pts), so it stays.${rank}` : `✓ Submitted! ${fmtPts(out.score)} pts.${rank}`;
     loadLbTabRest(board, true);
@@ -2610,14 +2675,36 @@ function importFromLink() {
   updateLbSubmit();
   toast(`Added ${added} season${added === 1 ? "" : "s"} to your record book. Submit them on the leaderboard.`);
 }
-function lbScore(r) {
-  const avgOvr = r.players ? r.players.reduce((a, p) => a + p.ovr, 0) / 5 : 80;
-  return r.w * 10 + (r.champ ? 500 : 0) + (r.w === 82 ? 1000 : 0) + Math.round(avgOvr * 2) + (r.hard ? 200 : 0);
+/* ---------- Leaderboard points ----------
+   10 for every regular-season win. A title adds 500, plus 10 for every playoff loss under 12 (16–0 adds 120 more).
+   No title: 10 for every playoff win. 82–0 adds 1,000 and hard mode 200. Team rating doesn't count, so a
+   better season always means more points. */
+function lbParts(r) {
+  const w = r.w || 0, pw = Math.max(0, Math.min(16, r.pw || 0)), pl = Math.max(0, Math.min(12, r.pl || 0));
+  const parts = [[`${w} win${w === 1 ? "" : "s"} × 10`, w * 10]];
+  if (r.champ) parts.push(["Title", 500], [`${pw}–${pl} in the playoffs`, (12 - pl) * 10]);
+  else if (pw) parts.push([`${Math.min(15, pw)} playoff win${pw === 1 ? "" : "s"} × 10`, Math.min(15, pw) * 10]);
+  if (w === 82) parts.push(["82–0", 1000]);
+  if (r.hard) parts.push(["Hard mode", 200]);
+  return parts;
 }
-function lbBest() {
-  if (!runs.length) return null;
-  return runs.reduce((best, r) => lbScore(r) > lbScore(best) ? r : best);
+function lbScore(r) { return lbParts(r).reduce((a, [, x]) => a + x, 0); }
+// A board entry's points under today's rules (older entries are re-scored from their record)
+function entryScore(d) { return (LB_REST || d.sv === SCORE_V) ? (d.score || 0) : lbScore(d); }
+// Which season is better: more points, then a bigger point differential, then the newer one. Positive means a.
+function betterRun(a, b) {
+  return (lbScore(a) - lbScore(b)) || (((a.pf || 0) - (a.pa || 0)) - ((b.pf || 0) - (b.pa || 0))) || ((a.id || 0) - (b.id || 0));
 }
+function bestOf(list) { return list.length ? list.reduce((best, r) => betterRun(r, best) > 0 ? r : best) : null; }
+function lbBest() { return bestOf(runs); }
+// "79–3 🏆 16–1" or "75–7, 15 playoff wins"
+function recText(r) {
+  if (!r) return "";
+  const rec = `${r.w}–${r.l || 0}`;
+  if (r.champ) return `${rec} 🏆 ${r.pw || 16}–${r.pl || 0}`;
+  return r.pw ? `${rec}, ${r.pw} playoff win${r.pw === 1 ? "" : "s"}` : rec;
+}
+function ptsSum(r) { return lbParts(r).map(([l, x]) => `${l} +${fmtPts(x)}`).join(" · "); }
 
 // Cloud save: persist runs+trophies to db so they survive cookie clears
 async function cloudSave() {
@@ -2678,37 +2765,120 @@ let lbCurrentTab = "normal";
 let lbUnsub = null;
 let lbDocsMode = null; // which tab the loaded board (window._lbDocs) belongs to
 
-// "Your rank" bar: your spot if you're on the board, otherwise where your best season would land
+/* How this view puts seasons on the board:
+   "self"   your entry is keyed by your Claude id (the owner, and people invited by email as Editors)
+   "guest"  an invited Editor Claude gives no id: the entry is keyed by a random code kept in this browser,
+            in its own list (lbguest / lbguest_hard) that shows on the same board
+   ""       it can't post, and lbWhy says why */
+let lbWay = "", lbWhy = "checking", lbIsOwner = false, lbMeName = "", lbReadOnly = false;
+let lbPosting = false, lbLast = null; // lbLast: { board, rec, kept } from the last post
+const lbMine = { normal: null, hard: null }; // your entry on each board as last seen: { score, rid, rec }
+const KEY_GTOKEN = "hoops82.gtoken";
+function guestKey() {
+  let t = store.get(KEY_GTOKEN, null);
+  if (typeof t !== "string" || !/^[0-9a-f]{20}$/.test(t)) {
+    const a = new Uint8Array(10);
+    crypto.getRandomValues(a);
+    t = [...a].map(b => b.toString(16).padStart(2, "0")).join("");
+    store.set(KEY_GTOKEN, t);
+  }
+  return "g_" + t;
+}
+function myDocId() { return LB_REST || lbWay === "self" ? lbMyId : lbWay === "guest" ? guestKey() : null; }
+function boardCol(board, guest) { return (guest ? "lbguest" : "leaderboard") + (board === "hard" ? "_hard" : ""); }
+function isRefusal(e) { return !!e && (e.code === "invalid_argument" || e.code === "not_granted" || e.code === "revoked"); }
+function noteMine(board, d) { lbMine[board] = d ? { score: entryScore(d), rid: d.rid || null, rec: recText(d) } : null; }
+
+// Works out whether (and how) this view can put seasons on the board. Safe to run again ("Check again").
+async function probeAccess() {
+  lbWay = "";
+  if (!lbDb) { lbWhy = "signedout"; lbReadOnly = true; return false; }
+  if (lbIsOwner && lbMyId) { lbWay = "self"; lbWhy = ""; lbReadOnly = false; return true; }
+  let canWrite = null;
+  if (lbUser) { try { canWrite = await lbUser.can("data.write"); } catch (e) {} }
+  if (canWrite === false) { lbWhy = "view"; lbReadOnly = true; return false; }
+  // Claude often says nothing about guests from outside (null), so one tiny write finds out
+  if (canWrite !== true) {
+    try { await lbDb.doc(lbMyId ? "data/users/" + lbMyId + "/probe" : "lbprobe/" + guestKey()).set({ ts: Date.now() }); }
+    catch (e) { if (isRefusal(e)) { lbWhy = "refused:" + e.code; lbReadOnly = true; return false; } }
+  }
+  lbWay = lbMyId ? "self" : "guest"; lbWhy = ""; lbReadOnly = false;
+  return true;
+}
+async function recheckAccess() {
+  const btn = $("lbRecheck");
+  if (btn) { btn.disabled = true; btn.textContent = "Checking…"; }
+  if (await probeAccess()) {
+    $("lbSignIn").hidden = true;
+    if (!$("lbAutoName")) { $("lbAuto").hidden = true; $("lbAuto").innerHTML = ""; }
+    if (!$("lbName").value) $("lbName").value = store.get(KEY_LBNAME, "") || lbMeName.slice(0, 24);
+    loadLbTab(lbCurrentTab);
+    toast("✓ This view can post scores now");
+    autoPost(true);
+  } else showLbReadOnly();
+  updateLbSubmit(); renderPostState();
+}
+
+// One line under your rank: can this view post, as whom, and what happened last
+function renderPostState() {
+  const el = $("lbPost");
+  if (!el) return;
+  if (LB_REST) { el.hidden = true; return; } // the website has its own name box and notes
+  const n = runs.length, board = b => b === "hard" ? "Hard Mode" : "Normal";
+  let html;
+  if (lbWhy === "checking") html = `<span>Checking whether this view can post scores…</span>`;
+  else if (lbWay) {
+    const who = lbWay === "guest" ? String(store.get(KEY_LBNAME, "") || "") : lbMeName;
+    html = `<span class="ok">✓ Posting is on${who ? ` for ${esc(who)}` : ""}</span><span>Your best season on each board posts by itself.</span>`;
+    if (lbPosting) html += `<span>Posting…</span>`;
+    else if (lbLast) html += `<span>Last: ${esc(lbLast.rec)} on ${board(lbLast.board)}, ${lbLast.kept ? "already up there" : "posted"} ✓</span>`;
+  } else {
+    const code = String(lbWhy).startsWith("refused:") ? lbWhy.slice(8) : "";
+    const why = lbWhy === "signedout" ? "You're signed out of claude.ai. Sign in, then reload this page."
+      : lbWhy === "view" ? "Claude says this account can only view the game."
+      : code ? `Claude refused to save scores for this account (${esc(code)}).` : "";
+    html = `<span class="no">✗ This view can't post scores.</span><span>${why} ${lbMeName ? `Signed in as ${esc(lbMeName)}. ` : ""}${n} season${n === 1 ? "" : "s"} saved on this device.</span>`;
+    if (lbDb) html += `<button class="btn sm" id="lbRecheck">Check again</button>`;
+  }
+  el.innerHTML = html;
+  el.hidden = false;
+  if ($("lbRecheck")) $("lbRecheck").onclick = recheckAccess;
+}
+
+// "Your rank" bar: your spot and which season is up there, or where your best season would land
 function updateLbRank() {
   const el = $("lbMyRank");
+  renderPostState();
   const docs = lbDocsMode === lbCurrentTab ? window._lbDocs : null;
   if (!el || (!lbDb && !LB_REST) || !docs) { if (el) el.hidden = true; return; }
   const best = lbBestForMode(lbCurrentTab);
   const myScore = best ? lbScore(best) : null;
-  const myIdx = lbMyId ? docs.findIndex(d => d.id === lbMyId) : -1;
+  const me = myDocId();
+  const myIdx = me ? docs.findIndex(d => d.id === me) : -1;
   const rankOf = s => docs.filter(d => (d.data.score || 0) > s).length + 1;
-  const rec = best ? `${best.w}–${best.l || 0}${best.champ ? " 🏆" : ""}` : "";
+  const canPost = LB_REST || !!lbWay;
   let html;
   if (myIdx >= 0) {
-    const mine = docs[myIdx].data.score || 0;
-    html = `You're <b>#${myIdx + 1}</b> of ${docs.length} with ${fmtPts(mine)} pts.`;
-    if (myScore != null && myScore > mine) html += ` Your newer best (${rec}, ${fmtPts(myScore)} pts) would be <b>#${rankOf(myScore)}</b>${lbReadOnly ? "" : ", so submit it"}.`;
+    const d = docs[myIdx].data, mine = d.score || 0;
+    html = `You're <b>#${myIdx + 1}</b> of ${docs.length} with ${esc(recText(d))}: ${fmtPts(mine)} pts.`;
+    if (myScore != null && myScore > mine) html += ` Your best season (${esc(recText(best))}, ${fmtPts(myScore)} pts) would be <b>#${rankOf(myScore)}</b>.${canPost ? ` <button class="btn sm primary" id="lbPostBest">Post it now</button>` : ""}`;
+    else if (myScore != null && myScore === mine) html += " That's your best season ✓";
   } else if (myScore != null) {
     const r = rankOf(myScore);
     html = docs.length >= 500 && r > 500
-      ? `Your best season (${rec}, ${fmtPts(myScore)} pts) would land outside the top 500.`
-      : `Your best season (${rec}, ${fmtPts(myScore)} pts) would rank <b>#${r}</b> of ${Math.min(docs.length + 1, 500)}.`;
+      ? `Your best season (${esc(recText(best))}, ${fmtPts(myScore)} pts) would land outside the top 500.`
+      : `Your best season (${esc(recText(best))}, ${fmtPts(myScore)} pts) would rank <b>#${r}</b> of ${Math.min(docs.length + 1, 500)}.`;
+    if (canPost && !lbPosting) html += ` <button class="btn sm primary" id="lbPostBest">Post it now</button>`;
   } else {
     html = lbCurrentTab === "hard" ? "Finish a hard mode season to see where you'd rank." : "Finish a season to see where you'd rank.";
   }
   el.innerHTML = html;
   el.hidden = false;
+  if ($("lbPostBest")) $("lbPostBest").onclick = submitLeaderboard;
 }
 
 function lbBestForMode(mode) {
-  const filtered = runs.filter(r => mode === "hard" ? !!r.hard : !r.hard);
-  if (!filtered.length) return null;
-  return filtered.reduce((best, r) => lbScore(r) > lbScore(best) ? r : best);
+  return bestOf(runs.filter(r => mode === "hard" ? !!r.hard : !r.hard));
 }
 
 function switchLbTab(mode) {
@@ -2720,42 +2890,60 @@ function switchLbTab(mode) {
 }
 
 function loadLbTab(mode) {
-  const col = mode === "hard" ? "leaderboard_hard" : "leaderboard";
   if (lbUnsub) { try { lbUnsub(); } catch(e) {} lbUnsub = null; }
   $("lbStatus").textContent = "Loading…";
   $("lbRows").innerHTML = "";
   window._lbDocs = null; lbDocsMode = null; updateLbRank();
   if (LB_REST) { loadLbTabRest(mode); return; }
   if (!lbDb) { $("lbStatus").textContent = "Sign in to claude.ai to see the leaderboard"; return; }
-  try {
-    lbUnsub = lbDb.collection(col).orderBy("score", "desc").limit(500).onSnapshot(async snap => {
-      const docs = snap.docs || [];
-      let profiles = {};
-      if (lbUser && docs.length) {
-        try { profiles = await lbUser.profiles(docs.map(d => d.id)); } catch (e) {}
-      }
-      if (mode !== lbCurrentTab) return; // tab changed while names were loading
-      renderLbBoard(mode, docs.map(doc => ({ id: doc.id, data: doc.data(), profile: profiles[doc.id] })));
-    }, () => { $("lbStatus").textContent = "Could not load leaderboard"; });
-  } catch (e) { $("lbStatus").textContent = "Could not load leaderboard"; }
+  // Two lists make one board: entries under Claude ids, and entries from invited editors Claude gives no id
+  const parts = [null, []], subs = [];
+  let seq = 0;
+  const draw = async () => {
+    if (!parts[0]) return;
+    const n = ++seq, docs = [...parts[0], ...parts[1]];
+    const ids = docs.filter(d => !d.guest).map(d => d.id);
+    let profiles = {};
+    if (lbUser && ids.length) { try { profiles = (await lbUser.profiles(ids)) || {}; } catch (e) {} }
+    if (mode !== lbCurrentTab || n !== seq) return; // tab changed, or a newer list came in, while names loaded
+    renderLbBoard(mode, docs.map(d => ({ id: d.id, data: d.data, profile: d.guest ? null : profiles[d.id] })));
+  };
+  [boardCol(mode, false), boardCol(mode, true)].forEach((col, i) => {
+    try {
+      subs.push(lbDb.collection(col).orderBy("score", "desc").limit(500).onSnapshot(snap => {
+        parts[i] = (snap.docs || []).map(doc => ({ id: doc.id, data: doc.data(), guest: i === 1 }));
+        draw();
+      }, () => {
+        if (i === 0) $("lbStatus").textContent = "Could not load leaderboard";
+        else { parts[1] = []; draw(); }
+      }));
+    } catch (e) { if (i === 0) $("lbStatus").textContent = "Could not load leaderboard"; }
+  });
+  lbUnsub = () => subs.forEach(u => { try { u(); } catch (e) {} });
 }
 
-// Draws the board from a list of { id, data, profile } in rank order (from Claude's database or the website's server)
+// Draws the board from a list of { id, data, profile } (from Claude's database or the website's server).
+// Entries saved under the old points are re-scored first, then everyone is ranked by points.
 function renderLbBoard(mode, list) {
+  list = list.map(e => ({ ...e, data: { ...e.data, score: entryScore(e.data) } })).sort((a, b) => b.data.score - a.data.score);
   const label = mode === "hard" ? "🔥 Hard Mode" : "Normal";
   $("lbStatus").textContent = list.length ? `${label} · Top ${list.length} player${list.length === 1 ? "" : "s"} · tap a row to see their team` : `${label} · No scores yet`;
+  const me = myDocId();
+  const mine = me ? list.find(e => e.id === me) : null;
+  if (mine && (!LB_REST || !lbMine[mode])) noteMine(mode, mine.data);
   window._lbDocs = list;
   lbDocsMode = mode;
   updateLbRank();
   $("lbRows").innerHTML = list.map((doc, i) => {
     const d = doc.data;
-    const isMe = lbMyId && doc.id === lbMyId;
+    const isMe = !!me && doc.id === me;
     const displayName = (doc.profile && doc.profile.name) || d.name || "Anonymous";
     const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `${i + 1}.`;
-    return `<button type="button" class="lb-row${isMe ? " lb-me" : ""}" data-lbi="${i}" aria-label="${esc(displayName)}, ${d.w || 0}–${d.l || 0}, ${fmtPts(d.score || 0)} points. See their team">
+    const po = d.champ && d.pl != null ? `${d.pw || 16}–${d.pl}` : "";
+    return `<button type="button" class="lb-row${isMe ? " lb-me" : ""}" data-lbi="${i}" aria-label="${esc(displayName)}, ${d.w || 0}–${d.l || 0}${d.champ ? `, champions${po ? " " + po : ""}` : ""}, ${fmtPts(d.score || 0)} points. See their team">
       <span class="lb-rank">${medal}</span>
       <span class="lb-name">${esc(displayName)}${isMe ? ' <span class="lb-tag">you</span>' : ''}${d.hard ? ' <span class="lb-tag" style="color:#f97316">🔥 blind</span>' : ''}</span>
-      <span class="lb-wins">${d.w || 0}–${d.l || 0}${d.champ ? " 🏆" : ""}</span>
+      <span class="lb-wins">${d.w || 0}–${d.l || 0}${d.champ ? ` 🏆${po ? `<span class="lb-po">${po}</span>` : ""}` : ""}</span>
       <span class="lb-score">${fmtPts(d.score || 0)} pts</span>
     </button>`;
   }).join("") || `<div style="padding:20px;text-align:center;color:var(--muted)">No ${mode === "hard" ? "hard mode " : ""}scores yet — be the first!</div>`;
@@ -2779,12 +2967,11 @@ async function openLbEntry(entry, row) {
   showLbDetail(entry, row);
 }
 
-let lbReadOnly = false;
 function showLbReadOnly() {
-  lbReadOnly = true;
-  $("lbSignIn").textContent = "View only: Claude only lets the game's owner and people invited by email with \"Can edit\" save scores here, and only while \"Anyone with the link\" is off. Ask the owner to do that for your email, and your best seasons will post by themselves. Until then, you can copy your score code below and send it to them.";
+  lbReadOnly = true; lbWay = "";
+  $("lbSignIn").textContent = "View only: Claude only lets the game's owner and people invited by email as Editors (\"Can edit\") save scores here, and only while \"Anyone with the link\" is off. Once the owner sets that up for your email, reload this page (or tap Check again) and your best seasons post by themselves. Until then, you can copy your score code below and send it to them.";
   $("lbSignIn").hidden = false;
-  updateLbSubmit();
+  updateLbSubmit(); renderPostState();
 }
 
 async function initLeaderboard() {
@@ -2792,46 +2979,38 @@ async function initLeaderboard() {
   const use = n => (window.claude && window.claude.use ? window.claude.use(n) : Promise.resolve(null));
   const [dbCap, userCap] = await Promise.all([use("db"), use("user")]);
   lbDb = dbCap; lbUser = userCap;
-  $("lbCodeName").value = store.get(KEY_LBNAME, "") || "";
-  if (lbUser && !$("lbCodeName").value) {
-    try { const me = await lbUser.me(); if (me && me.name) $("lbCodeName").value = me.name.slice(0, 24); } catch (e) {}
+  if (lbUser) {
+    try {
+      const me = await lbUser.me();
+      lbMyId = (me && me.id) || null; lbMeName = (me && me.name) || ""; lbIsOwner = !!(me && me.isOwner);
+    } catch (e) {}
+    if (!lbIsOwner) { try { lbIsOwner = !!(await lbUser.isOwner()); } catch (e) {} }
   }
+  $("lbCodeName").value = store.get(KEY_LBNAME, "") || lbMeName.slice(0, 24);
+  $("lbName").value = store.get(KEY_LBNAME, "") || lbMeName.slice(0, 24);
+  if (lbIsOwner) $("lbAddWrap").hidden = false;
   if (!lbDb) {
     // Signed out: no board, but they can still copy a score code for the owner
-    lbReadOnly = true;
+    lbReadOnly = true; lbWhy = "signedout";
     $("lbStatus").textContent = "Sign in to claude.ai to see the leaderboard";
-    updateLbSubmit();
+    updateLbSubmit(); renderPostState();
     return;
   }
-  if (lbUser) {
-    try { lbMyId = await lbUser.id(); } catch (e) { lbMyId = null; }
-    let isOwner = false, canWrite = null;
-    try { isOwner = await lbUser.isOwner(); } catch (e) {}
-    try { canWrite = await lbUser.can("data.write"); } catch (e) {}
-    if (isOwner) $("lbAddWrap").hidden = false;
-    // Visitors on the public link can't write here, but people the owner invites as Editors can, and the platform
-    // doesn't always say which one this is (null). So unless it says no, the first automatic post finds out:
-    // a refused write flips the page to view-only (with the score code) for the rest of the visit.
-    if (!isOwner && canWrite === false) lbReadOnly = true;
-    // Not told either way: one tiny write to your own save slot tells the two apart right away
-    if (!isOwner && canWrite !== true && !lbReadOnly && lbMyId) {
-      try { await lbDb.doc("data/users/" + lbMyId + "/probe").set({ ts: Date.now() }); }
-      catch (e) { if (e && (e.code === "invalid_argument" || e.code === "not_granted" || e.code === "revoked")) lbReadOnly = true; }
-    }
-  }
-  if (!lbMyId) lbReadOnly = true;
+  // Visitors on the public link can't write here, but people the owner invites by email as Editors can
+  await probeAccess();
   if (lbReadOnly) showLbReadOnly();
   if (lbMyId) await cloudRestore();
   loadLbTab("normal");
-  updateLbSubmit();
+  updateLbSubmit(); renderPostState();
   autoPost(false);
 }
 
 let lbCodeFor = null; // which run + board the visible score code belongs to
 function updateLbSubmit() {
   const best = lbBestForMode(lbCurrentTab);
-  const canSubmit = LB_REST ? !!best : !!(lbDb && lbMyId && !lbReadOnly && best);
-  $("lbName").hidden = !LB_REST;
+  const canSubmit = LB_REST ? !!best : !!(lbDb && lbWay && best);
+  // Your name is typed in on the website, and by invited editors Claude doesn't name
+  $("lbName").hidden = !(LB_REST || lbWay === "guest");
   if (canSubmit) {
     $("lbSubmitWrap").hidden = false;
     if (lbCurrentTab === "hard") {
@@ -2868,29 +3047,40 @@ function updateLbSubmit() {
 async function submitLeaderboard() {
   if (LB_REST) return submitRest();
   const best = lbBestForMode(lbCurrentTab);
-  if (!best || !lbDb || !lbMyId || lbReadOnly) return;
+  if (!best || !lbDb || !lbWay) return;
   const btn = $("lbSubmitBtn"), note = $("lbSubmitNote");
+  if (lbWay === "guest") {
+    const name = $("lbName").value.replace(/\s+/g, " ").trim().slice(0, 24);
+    if (!name) { note.textContent = "Type the name you want on the board first."; $("lbName").focus(); return; }
+    store.set(KEY_LBNAME, name);
+  }
   btn.disabled = true; note.textContent = "Submitting…";
+  const board = lbCurrentTab;
   try {
-    // One entry per player per board: your doc id is your user id, and a lower score never replaces a higher one
-    const board = lbCurrentTab, out = await postClaude(board, best);
+    // One entry per player per board, and a lower score never replaces a higher one here
+    // (to put up a lower one on purpose, post it from its page in the record book)
+    const out = await postClaude(board, best);
     career.posted[board] = Math.max(career.posted[board] || 0, out.score || 0);
     saveCareer();
-    if (out.kept && out.score > lbScore(best)) { note.textContent = `Your entry here is already higher (${fmtPts(out.score)} pts), so it stays.`; return; }
-    note.textContent = "✓ Submitted!";
-    setTimeout(() => { note.textContent = ""; }, 2500);
+    lbLast = { board, rec: out.kept && lbMine[board] ? lbMine[board].rec : recText(best), kept: !!out.kept };
+    if (out.kept && out.score > lbScore(best)) { note.textContent = `Your entry here is already higher (${fmtPts(out.score)} pts), so it stays. To swap it, open a season in your record book and post it from there.`; return; }
+    note.textContent = out.kept ? "✓ It's already on the board." : "✓ Submitted!";
+    if (!out.kept) toast(`📤 Your ${recText(best)} season is on the ${board === "hard" ? "🔥 Hard Mode" : "Normal"} leaderboard`);
+    setTimeout(() => { note.textContent = ""; }, 4000);
   } catch (e) {
     const code = e && e.code;
-    if (code === "invalid_argument" || code === "not_granted" || code === "revoked") { note.textContent = ""; showLbReadOnly(); }
+    if (isRefusal(e)) { note.textContent = ""; lbWhy = "refused:" + code; showLbReadOnly(); }
+    else if (code === "need_name") { note.textContent = "Type the name you want on the board first."; $("lbName").focus(); }
     else if (code === "quota_exceeded") note.textContent = "The leaderboard is full right now.";
     else note.textContent = "Couldn't submit. Try again in a moment.";
-  } finally { btn.disabled = false; }
+  } finally { btn.disabled = false; updateLbRank(); }
 }
 
-// The leaderboard document for one season (used by your own submit and by the owner's import)
+// The leaderboard document for one season (used by your own submit and by the owner's import).
+// sv says which points rules made `score`; rid is the season's id in the poster's record book.
 function lbEntry(run, name) {
   return {
-    name, score: lbScore(run), w: run.w, l: run.l || 0, champ: !!run.champ,
+    name, score: lbScore(run), sv: SCORE_V, rid: Number.isFinite(run.id) ? run.id : null, w: run.w, l: run.l || 0, champ: !!run.champ,
     avgOvr: run.players ? Math.round(run.players.reduce((a, p) => a + p.ovr, 0) / 5) : 0,
     date: run.date || "", hard: !!run.hard,
     players: run.players || [], box: run.box || [],
@@ -2953,7 +3143,7 @@ function readScoreCode(text) {
     w, l, champ, hard: c.h === 1, players, box, date: String(c.d || "").slice(0, 20),
     pf: int(c.f, 0, 20000), pa: int(c.a, 0, 20000), reached: int(c.r, 0, 4), pw: int(c.pw, 0, 16), pl: int(c.pl, 0, 16)
   };
-  if (champ && (run.reached !== 3 || run.pw !== 16)) throw "That code's playoff result doesn't add up.";
+  if (champ ? (run.reached !== 3 || run.pw !== 16 || run.pl > 12) : run.pw > 15) throw "That code's playoff result doesn't add up.";
   return { run, name, uid };
 }
 
@@ -3019,8 +3209,8 @@ async function addFriendScore() {
   try {
     const ref = lbDb.doc(col + "/" + docId);
     const cur = await ref.get();
-    if (cur.exists && (cur.data().score || 0) > score) {
-      note.textContent = `${name} already has a higher entry on that board (${fmtPts(cur.data().score)} pts), so it stays.`;
+    if (cur.exists && entryScore(cur.data()) > score) {
+      note.textContent = `${name} already has a higher entry on that board (${fmtPts(entryScore(cur.data()))} pts), so it stays.`;
       return;
     }
     await ref.set({ ...lbEntry(run, name), via: "code" });
@@ -3053,11 +3243,11 @@ function showLbDetail(entry, anchor) {
   lastFocus = anchor || document.activeElement;
   const d = entry.data;
   const displayName = (entry.profile && entry.profile.name) || d.name || "Anonymous";
-  const oppL = rebuildLineup(d.players), isMe = !!lbMyId && entry.id === lbMyId;
-  const ROUND_NAMES = ["First Round", "Semifinals", "Conference Finals", "NBA Finals"];
-  const poResult = d.champ ? `🏆 Champions · ${d.pw || 0}–${d.pl || 0} in playoffs` :
-    (d.reached > 0) ? `Lost in ${ROUND_NAMES[(d.reached || 1) - 1] || "playoffs"} · ${d.pw || 0}–${d.pl || 0}` :
-    (d.w >= 42) ? "Did not play playoffs" : "Missed playoffs";
+  const oppL = rebuildLineup(d.players), isMe = !!myDocId() && entry.id === myDocId();
+  // reached is the last round played (0 = first round)
+  const poResult = d.champ ? `🏆 Champions · ${d.pw || 16}–${d.pl || 0} in playoffs` :
+    ((d.pw || 0) + (d.pl || 0) > 0) ? `Lost in the ${ROUNDS[d.reached || 0] || "playoffs"} · ${d.pw || 0}–${d.pl || 0}` :
+    (d.w >= 42) ? "Playoffs not played" : "Missed playoffs";
   const statCols = [["ppg","PPG"],["rpg","RPG"],["apg","APG"],["spg","SPG"],["bpg","BPG"]];
   const bRows = (d.box || []).map(b =>
     `<div class="prow"><div class="pname"><b>${esc(b.name)}</b><span class="chips"><span class="chip open">${esc(b.slot)}</span><span class="chip">${esc(b.dec)} ${esc(b.team)}</span></span></div><div class="pstats" style="grid-template-columns:repeat(5,2.9em)">${statCols.map(([k,l]) => `<div class="st"><span class="k">${l}</span><span class="v">${b[k] != null ? b[k] : "—"}</span></div>`).join("")}</div><div></div></div>`
@@ -3077,6 +3267,7 @@ function showLbDetail(entry, anchor) {
       ${d.ppg != null ? `<div class="grade"><span class="label">Tm PPG</span><b>${d.ppg}</b></div>` : ""}
       ${d.papg != null ? `<div class="grade"><span class="label">Opp PPG</span><b>${d.papg}</b></div>` : ""}
     </div>
+    <p class="note">${fmtPts(d.score || 0)} pts: ${esc(ptsSum(d))}</p>
     ${bRows ? `<div class="stack"><span class="label">Season averages · 82 GP each</span><div class="plist">${bRows}</div></div>` : '<p class="note">No stat detail stored for this entry.</p>'}
     ${oppL && !isMe ? `<div class="stack"><div class="row-gap"><button class="btn primary mid" id="mH2h">⚔️ Play them with your team</button><span class="note">${h2hMyTeams().length ? "Best of seven, using the team picked under Head-to-head." : "Finish a season first."}</span></div><div class="h2harena" id="mH2hArena" hidden></div></div>` : ""}`;
   $("modal").hidden = false;
@@ -3432,23 +3623,31 @@ async function playH2H(opp, box) {
    After every season and playoff run, your best season on each board posts itself: hard mode seasons on the
    Hard Mode board, everything else on Normal. Inside Claude only the owner and invited editors can write. */
 let autoBusy = false;
-async function postClaude(board, run) {
-  const col = board === "hard" ? "leaderboard_hard" : "leaderboard";
-  let name = "Anonymous";
-  if (lbUser) { try { const me = await lbUser.me(); name = (me && me.name) || "Anonymous"; } catch (e) {} }
-  const ref = lbDb.doc(col + "/" + lbMyId);
+// Puts a season up as your entry on one board. Unless `replace` is set, an entry with as many points stays.
+async function postClaude(board, run, replace) {
+  const guest = lbWay === "guest", id = myDocId();
+  if (!id) throw { code: "invalid_argument" };
+  let name = guest ? String(store.get(KEY_LBNAME, "") || "").trim() : "";
+  if (!name && lbUser) { try { const me = await lbUser.me(); name = (me && me.name) || ""; } catch (e) {} }
+  if (!name) { if (guest) throw { code: "need_name" }; name = "Anonymous"; }
+  const ref = lbDb.doc(boardCol(board, guest) + "/" + id);
   const cur = await ref.get();
   const score = lbScore(run);
-  if (cur.exists && (cur.data().score || 0) >= score) return { kept: true, score: cur.data().score || 0 };
-  await ref.set(lbEntry(run, name));
-  cloudSave();
+  if (cur.exists) noteMine(board, cur.data());
+  if (cur.exists && !replace && entryScore(cur.data()) >= score) return { kept: true, score: entryScore(cur.data()), same: lbMine[board].rid === run.id };
+  const entry = guest ? { ...lbEntry(run, name), guest: true } : lbEntry(run, name);
+  await ref.set(entry);
+  noteMine(board, entry);
+  if (!guest) cloudSave();
   return { ok: true, score };
 }
-async function postRest(board, run, name) {
-  const r = await fetch(LB_API, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ board, token: lbToken, name, run: slimRun(run) }) });
+async function postRest(board, run, name, replace) {
+  const r = await fetch(LB_API, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ board, token: lbToken, name, run: slimRun(run), replace: !!replace }) });
   const out = await r.json().catch(() => ({}));
   if (!r.ok) throw { status: r.status, message: out.error || "Couldn't post your score. Try again in a moment." };
   if (out.id) lbMyId = out.id;
+  if (!out.kept) lbMine[board] = { score: out.score, rid: run.id || null, rec: recText(run) };
+  else if (!lbMine[board] || lbMine[board].score !== out.score) lbMine[board] = { score: out.score, rid: null, rec: "" };
   return out;
 }
 function showAutoName(msg) {
@@ -3471,14 +3670,14 @@ function showAutoName(msg) {
   $("lbAutoName").onkeydown = e => { if (e.key === "Enter") go(); };
 }
 function showViewOnlyNote() {
-  $("lbAuto").innerHTML = `<span class="note">Your seasons can't post from here yet. Claude only lets the game's owner and people invited by email with "Can edit" save scores, and only while "Anyone with the link" is off. Ask the owner to invite your email that way, and your best seasons will post by themselves.</span>`;
+  $("lbAuto").innerHTML = `<span class="note">Your seasons can't post from here yet. Claude only lets the game's owner and people invited by email as Editors ("Can edit") save scores, and only while "Anyone with the link" is off. Once the owner sets that up for your email, reload this page and your best seasons post by themselves. The leaderboard below says what Claude told this page.</span>`;
   $("lbAuto").hidden = false;
 }
 async function autoPost(prompt) {
   if (autoBusy) return;
-  const canClaude = !LB_REST && !!lbDb && !!lbMyId && !lbReadOnly;
-  if (!LB_REST && !canClaude) {
+  if (!LB_REST && !(lbDb && lbWay)) {
     if (prompt && lbReadOnly) showViewOnlyNote();
+    renderPostState();
     return;
   }
   autoBusy = true;
@@ -3488,6 +3687,7 @@ async function autoPost(prompt) {
       if (!best) continue;
       const score = lbScore(best);
       if ((career.posted[board] || 0) >= score) continue;
+      lbPosting = true; renderPostState();
       let out;
       if (LB_REST) {
         const name = String(store.get(KEY_LBNAME, "") || "").trim();
@@ -3496,16 +3696,19 @@ async function autoPost(prompt) {
       } else out = await postClaude(board, best);
       career.posted[board] = Math.max(score, out.score || 0);
       saveCareer();
-      if (!out.kept) toast(`📤 Your ${best.w}–${best.l}${best.champ ? " title" : ""} season is on the ${board === "hard" ? "🔥 Hard Mode" : "Normal"} leaderboard${out.rank ? `, #${out.rank}` : ""}`);
+      if (!out.kept || !lbLast) lbLast = { board, rec: out.kept && lbMine[board] && lbMine[board].rec ? lbMine[board].rec : recText(best), kept: !!out.kept };
+      if (!out.kept) toast(`📤 Your ${recText(best)} season is on the ${board === "hard" ? "🔥 Hard Mode" : "Normal"} leaderboard${out.rank ? `, #${out.rank}` : ""}`);
       if (LB_REST && board === lbCurrentTab) loadLbTabRest(board, true);
     }
-    if (LB_REST && $("lbAutoName")) { $("lbAuto").hidden = true; $("lbAuto").innerHTML = ""; }
+    if ($("lbAutoName")) { $("lbAuto").hidden = true; $("lbAuto").innerHTML = ""; }
   } catch (e) {
     if (LB_REST) { if (prompt || $("lbAutoName")) showAutoName(e && e.message); }
-    else if (e && (e.code === "invalid_argument" || e.code === "not_granted" || e.code === "revoked")) { showLbReadOnly(); if (prompt) showViewOnlyNote(); }
+    else if (e && e.code === "need_name") { if (prompt || $("lbAutoName")) showAutoName(); }
+    else if (isRefusal(e)) { lbWhy = "refused:" + e.code; showLbReadOnly(); if (prompt) showViewOnlyNote(); }
   } finally {
-    autoBusy = false;
+    autoBusy = false; lbPosting = false;
     updateLbSubmit();
+    if (curRun && !$("afterPanel").hidden) renderScoreCard(curRun);
   }
 }
 
@@ -3575,7 +3778,6 @@ function poText(r) {
   if (r.champ) return r.pl === 0 ? "Champions 16–0" : `Champions (${r.pw}–${r.pl})`;
   return `Lost in ${ROUNDS[r.reached]} (${r.pw}–${r.pl})`;
 }
-const runScore = r => r.w * 100 + (r.champ ? 80 : 0) + (r.po === "played" ? r.reached * 10 + r.pw : 0);
 
 /* ---------- Record book ---------- */
 let bookSort = "best", bookFilter = "all";
@@ -3590,8 +3792,10 @@ function renderBook() {
   }
   let list = [...runs];
   if (bookFilter === "titles") list = list.filter(r => r.champ);
-  list.sort(bookSort === "best" ? (a, b) => runScore(b) - runScore(a) : (a, b) => b.id - a.id);
-  const bestId = [...runs].sort((a, b) => runScore(b) - runScore(a))[0].id;
+  // "Best" is the same order the leaderboard uses: most points first
+  list.sort(bookSort === "best" ? (a, b) => betterRun(b, a) : (a, b) => b.id - a.id);
+  const bestN = lbBestForMode("normal"), bestH = lbBestForMode("hard");
+  const bestTag = r => r === bestN ? "Best" : r === bestH ? "Best hard" : "";
   const titles = runs.filter(r => r.champ).length;
   const perfect = runs.filter(r => r.w === 82).length;
   const avgW = runs.reduce((a, r) => a + r.w, 0) / runs.length;
@@ -3602,11 +3806,12 @@ function renderBook() {
   box.innerHTML = list.length ? "" : `<div class="prow"><span class="note">No seasons here yet.</span></div>`;
   list.slice(0, 25).forEach((r, i) => {
     const b = document.createElement("button");
-    b.className = "brow" + (r.id === bestId ? " top" : "");
-    const ppgSuffix = r.pf != null ? `<span class="brow-ppg"> · ${(r.pf/82).toFixed(1)} / ${(r.pa/82).toFixed(1)} pts</span>` : "";
-    b.innerHTML = `<span>${i + 1}</span><span class="rec">${r.w}–${r.l}</span><span class="po">${esc(poText(r))}${r.hard ? `<span class="mini">Hard</span>` : ""}${(r.rules || []).map(id => `<span class="mini">${esc(ruleName(id))}</span>`).join("")}${r.id === bestId ? `<span class="mini">Best</span>` : ""}</span><span class="date">${esc(r.date)}</span>
+    const tag = bestTag(r);
+    b.className = "brow" + (tag ? " top" : "");
+    const ppgSuffix = r.pf != null ? `<span class="brow-ppg"> · ${(r.pf/82).toFixed(1)} / ${(r.pa/82).toFixed(1)} a game</span>` : "";
+    b.innerHTML = `<span>${i + 1}</span><span class="rec">${r.w}–${r.l}</span><span class="po">${esc(poText(r))}${r.hard ? `<span class="mini">Hard</span>` : ""}${(r.rules || []).map(id => `<span class="mini">${esc(ruleName(id))}</span>`).join("")}${tag ? `<span class="mini">${tag}</span>` : ""}<span class="mini pts">${fmtPts(lbScore(r))} pts</span></span><span class="date">${esc(r.date)}</span>
       <span class="lu">${r.players.map(p => `${p.slot} ${esc(p.name)} ${short(p.dec)}`).join(" · ")}${ppgSuffix}</span>`;
-    b.setAttribute("aria-label", `Open season ${r.w}–${r.l}, ${poText(r)}`);
+    b.setAttribute("aria-label", `Open season ${r.w}–${r.l}, ${poText(r)}, ${fmtPts(lbScore(r))} leaderboard points`);
     b.onclick = () => openRun(r, b);
     box.appendChild(b);
   });
@@ -3618,12 +3823,15 @@ function openRun(r, anchor) {
   const games = r.games || [];
   const grades = r.off != null ? [["Offense", letter(r.off), r.off], ["Defense", letter(r.def), r.def]] : [];
   // Seasons moved in from elsewhere can be missing some of these, so add each only when it's there
-  const extra = [["Score", fmtPts(lbScore(r)) + " pts"]];
+  const extra = [];
   if (r.pf != null) extra.push(["PPG", (r.pf / 82).toFixed(1)], ["Opp PPG", (r.pa / 82).toFixed(1)]);
   if (r.home) extra.push(["Home", `${r.home[0]}–${r.home[1]}`]);
   if (r.away) extra.push(["Road", `${r.away[0]}–${r.away[1]}`]);
   if (r.streak != null) extra.push(["Streak", r.streak]);
   const earned = (r.ach || []).map(id => ACH_BY_ID[id]).filter(Boolean);
+  // Any season can be put on the board from here, even one with fewer points than your entry
+  const canPostHere = LB_REST ? !!lbToken : !!(lbDb && lbWay);
+  const mineNow = lbMine[r.hard ? "hard" : "normal"], onBoard = !!(mineNow && mineNow.rid && mineNow.rid === r.id);
   $("mBox").innerHTML = `
     <div class="mtop">
       <div><span class="label">${esc(r.date)}${r.hard ? " · Hard mode" : ""}${(r.rules || []).map(id => " · " + esc(ruleName(id))).join("")}</span>
@@ -3632,6 +3840,9 @@ function openRun(r, anchor) {
     </div>
     ${r.po === "pending" && r.w >= 42 && r !== curRun && runLineup(r) ? `<div class="row-gap"><button class="btn primary cta" id="mPlayoffs">🏆 Play this season's playoffs</button><span class="note">You never played them. Same team, same form.</span></div>` : ""}
     ${grades.length || extra.length ? `<div class="grades">${grades.map(([k, g, v]) => `<div class="grade"><span class="label">${k}</span><b>${g}</b><span class="foot">${(+v).toFixed(1)}</span></div>`).join("")}${extra.map(([k, v]) => `<div class="grade"><span class="label">${k}</span><b>${v}</b></div>`).join("")}</div>` : ""}
+    <div class="stack"><span class="label">Leaderboard points · ${fmtPts(lbScore(r))}</span><span class="note">${esc(ptsSum(r))}</span>
+      ${canPostHere ? `<div class="row-gap"><button class="btn mid" id="mPost"${onBoard ? " hidden" : ""}>📤 Put this season on the ${r.hard ? "Hard Mode" : "Normal"} leaderboard</button><span class="note" id="mPostNote">${onBoard ? "✓ This season is your entry on the leaderboard." : ""}</span></div>` : ""}
+    </div>
     ${r.mvp ? `<div class="awards">${awardCards({ box, mvp: { name: r.mvp }, dpoy: { name: r.dpoy }, seasonHigh: r.seasonHigh })}</div>` : ""}
     <div class="stack"><span class="label">Lineup and season stats</span><div class="plist">${boxRows(box.map(b => ({ ...b, ovr: b.ovr ?? (r.players.find(p => p.name === b.name) || {}).ovr })))}</div></div>
     ${games.length ? `<div class="stack"><span class="label">All 82 games · tap a square for the score</span><div class="games">${games.map((x, i) => `<div class="g ${x[0] > x[1] ? "w" : "l"}" title="Game ${i + 1} · ${x[2] ? "vs" : "at"} ${esc(x[3] || "")} · ${x[0] > x[1] ? "W" : "L"} ${x[0]}–${x[1]}">${x[0] > x[1] ? "W" : "L"}</div>`).join("")}</div></div>` : `<p class="note">Game-by-game detail wasn't saved for this season.</p>`}
@@ -3646,12 +3857,52 @@ function openRun(r, anchor) {
   $("mClose").onclick = closeRun;
   $("mClose").focus({ preventScroll: true });
   if ($("mPlayoffs")) $("mPlayoffs").onclick = () => playPendingPlayoffs(r, anchor);
+  if ($("mPost")) $("mPost").onclick = () => postThisSeason(r);
   $("mCopy").onclick = () => {
     const txt = `82-0 Hoops Draft: ${r.w}-${r.l} · ${poText(r)}\n` + r.players.map(p => `${p.slot} ${p.name} (${short(p.dec)} ${p.team})`).join("\n");
     const fb = () => { $("mCopyNote").textContent = txt.replace(/\n/g, " · "); };
     try { navigator.clipboard.writeText(txt).then(() => { $("mCopyNote").textContent = "Copied"; }, fb); } catch (e) { fb(); }
   };
 }
+// The record book's "Put this season on the leaderboard". If your entry has more points, a second tap swaps it anyway.
+async function postThisSeason(r) {
+  const btn = $("mPost"), note = $("mPostNote");
+  if (!btn || btn.disabled) return;
+  const board = r.hard ? "hard" : "normal", label = r.hard ? "Hard Mode" : "Normal", score = lbScore(r);
+  const replace = btn.dataset.confirm === "1";
+  let name = "";
+  if (LB_REST || lbWay === "guest") {
+    name = String(store.get(KEY_LBNAME, "") || $("lbName").value || "").replace(/\s+/g, " ").trim().slice(0, 24);
+    if (!name) { note.textContent = "Type your name for the board in the leaderboard section first."; return; }
+    store.set(KEY_LBNAME, name);
+  }
+  btn.disabled = true; note.textContent = "Posting…";
+  try {
+    let out = LB_REST ? await postRest(board, r, name, replace) : await postClaude(board, r, replace);
+    // Same points as your entry but a different season: just swap it in
+    if (out.kept && out.score <= score && !out.same && !LB_REST) out = await postClaude(board, r, true);
+    if (out.kept && out.score > score) {
+      btn.dataset.confirm = "1";
+      btn.textContent = "Replace my entry with this season";
+      const m = lbMine[board];
+      note.textContent = `Your ${label} entry${m && m.rec ? ` (${m.rec})` : ""} has more points: ${fmtPts(out.score)} vs ${fmtPts(score)}. Tap again to put this season up instead.`;
+      return;
+    }
+    // Count your best as dealt with, so the automatic post doesn't swap your pick straight back
+    const best = lbBestForMode(board);
+    career.posted[board] = Math.max(career.posted[board] || 0, best ? lbScore(best) : 0, score);
+    saveCareer();
+    lbLast = { board, rec: recText(r), kept: !!out.kept };
+    btn.hidden = true;
+    note.textContent = out.kept ? "✓ This season is already your entry on the leaderboard." : `✓ Posted! It's your entry on the ${label} board now${out.rank ? `, #${out.rank}` : ""}.`;
+    if (LB_REST) loadLbTabRest(board, true);
+  } catch (e) {
+    if (!LB_REST && isRefusal(e)) { lbWhy = "refused:" + e.code; showLbReadOnly(); note.textContent = "This view can't post scores. The leaderboard section says why."; }
+    else if (e && e.code === "need_name") note.textContent = "Type your name for the board in the leaderboard section first.";
+    else note.textContent = (e && e.message) || "Couldn't post it. Try again in a moment.";
+  } finally { btn.disabled = false; updateLbRank(); }
+}
+
 // Every season whose playoffs never happened, played in one go
 async function playAllPending() {
   if (poRunning) return;
@@ -3817,6 +4068,9 @@ function boot() {
   } else if (retro) {
     toast(retro.count ? `New: ${added} more trophies, season form and head-to-head! Your record book already unlocked <b>${retro.count}</b> of them (+${fmtPts(retro.xp)} XP).` : `New: ${added} more trophies, season form (career years and slumps) and head-to-head games.`);
   }
+  // Version 29 changed how leaderboard points count: say so once, with your best season under the new count
+  const top = lbBestForMode("normal") || lbBest();
+  if (pointsNews && top) toast(`🏀 Leaderboard points now count your playoff record, not team rating, so a better season always scores more. Your best: <b>${esc(recText(top))}</b>, ${fmtPts(lbScore(top))} pts.`);
 }
 boot();
 </script>

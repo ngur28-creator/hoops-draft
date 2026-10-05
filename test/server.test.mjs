@@ -19,13 +19,13 @@ const results = [];
 const t = async (name, fn) => { try { await fn(); results.push("PASS " + name); } catch (e) { results.push("FAIL " + name + ": " + e.message); } };
 
 await t("empty board", async () => { const r = await call("GET", "?board=normal"); assert.equal(r.status, 200); assert.deepEqual(r.body.entries, []); });
-await t("Bob's normal season scores 1,483 like on Claude (ignores inflated ratings)", async () => {
+await t("Bob's normal season scores 1,380 like in the game: 790 + title 500 + 90 for 16–3", async () => {
   const r = await call("POST", "", { board: "normal", token: tok("b"), name: "bob", run: bobNormal });
-  assert.equal(r.status, 200, JSON.stringify(r.body)); assert.equal(r.body.score, 1483); assert.equal(r.body.rank, 1);
+  assert.equal(r.status, 200, JSON.stringify(r.body)); assert.equal(r.body.score, 1380); assert.equal(r.body.rank, 1);
 });
-await t("Bob's hard season scores 1,666 like on Claude", async () => {
+await t("Bob's hard season scores 1,550 like in the game (16–6 title, +200 hard)", async () => {
   const r = await call("POST", "", { board: "hard", token: tok("b"), name: "bob", run: bobHard });
-  assert.equal(r.status, 200, JSON.stringify(r.body)); assert.equal(r.body.score, 1666);
+  assert.equal(r.status, 200, JSON.stringify(r.body)); assert.equal(r.body.score, 1550);
 });
 await t("hard season can't go on the normal board", async () => { const r = await call("POST", "", { board: "normal", token: tok("c"), name: "Cat", run: bobHard }); assert.equal(r.status, 400); assert.match(r.body.error, /Hard Mode board/); });
 await t("normal season can't go on the hard board", async () => { const r = await call("POST", "", { board: "hard", token: tok("c"), name: "Cat", run: bobNormal }); assert.equal(r.status, 400); assert.match(r.body.error, /Only hard mode/); });
@@ -72,12 +72,40 @@ await t("bad token, bad board, blank name, wrong method, huge body", async () =>
 await t("ties: earlier submission ranks first", async () => {
   await call("POST", "", { board: "hard", token: tok("f"), name: "Fay", run: bobHard });
   const b = await call("GET", "?board=hard");
-  assert.deepEqual(b.body.entries.map(e => [e.name, e.score]), [["bob", 1666], ["Fay", 1666]]);
+  assert.deepEqual(b.body.entries.map(e => [e.name, e.score]), [["bob", 1550], ["Fay", 1550]]);
 });
 await t("names with emoji and non-English letters work", async () => {
   const r = await call("POST", "", { board: "hard", token: tok("a"), name: "Zoë 🏀", run: { ...bobHard, w: 70, l: 12, champ: false, reached: 2, pw: 8, pl: 6 } });
   assert.equal(r.status, 200, JSON.stringify(r.body));
   assert.ok((await call("GET", "?board=hard")).body.entries.some(e => e.name === "Zoë 🏀"));
+});
+await t("same record, cleaner title run scores more and replaces the entry (79–3, 16–1 beats 16–3)", async () => {
+  const r = await call("POST", "", { board: "normal", token: tok("b"), name: "bob", run: { ...bobNormal, pl: 1 } });
+  assert.equal(r.status, 200, JSON.stringify(r.body)); assert.equal(r.body.kept, undefined); assert.equal(r.body.score, 1400);
+});
+await t("team rating doesn't change the score", async () => {
+  const low = { ...bobNormal, players: bobHard.players };
+  const r = await call("POST", "", { board: "normal", token: tok("1"), name: "Gus", run: low });
+  assert.equal(r.status, 200, JSON.stringify(r.body)); assert.equal(r.body.score, 1380);
+});
+await t("replace: true puts a lower season up on purpose", async () => {
+  const r = await call("POST", "", { board: "normal", token: tok("1"), name: "Gus", run: { ...bobNormal, w: 70, l: 12, champ: false, reached: 2, pw: 9, pl: 6 }, replace: true });
+  assert.equal(r.status, 200, JSON.stringify(r.body)); assert.equal(r.body.kept, undefined); assert.equal(r.body.score, 790);
+  const b = await call("GET", "?board=normal");
+  assert.equal(b.body.entries.find(e => e.name === "Gus").score, 790);
+});
+await t("without replace, the lower season is kept out", async () => {
+  await call("POST", "", { board: "normal", token: tok("1"), name: "Gus", run: bobNormal });
+  const r = await call("POST", "", { board: "normal", token: tok("1"), name: "Gus", run: { ...bobNormal, w: 70, l: 12, champ: false, reached: 2, pw: 9, pl: 6 } });
+  assert.equal(r.body.kept, true); assert.equal(r.body.score, 1380);
+});
+await t("impossible playoff records are rejected", async () => {
+  const bad = [{ ...bobNormal, pl: 13 }, { ...bobNormal, champ: false, reached: 3, pw: 16, pl: 4 }];
+  for (const run of bad) { const r = await call("POST", "", { board: "normal", token: tok("2"), name: "Hal", run }); assert.equal(r.status, 400, JSON.stringify(r.body)); }
+});
+await t("a 16–0 title adds the full 120", async () => {
+  const r = await call("POST", "", { board: "normal", token: tok("2"), name: "Hal", run: { ...bobNormal, pl: 0 } });
+  assert.equal(r.status, 200, JSON.stringify(r.body)); assert.equal(r.body.score, 1410);
 });
 console.log(results.join("\n"));
 process.exitCode = results.some(r => r.startsWith("FAIL")) ? 1 : 0;
