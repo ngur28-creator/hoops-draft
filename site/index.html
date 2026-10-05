@@ -248,6 +248,8 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
 .lb-post { font-size: 13px; line-height: 1.45; color: var(--sub); display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; }
 .lb-post .ok { color: var(--win); font-weight: 700; }
 .lb-post .no { color: var(--loss); font-weight: 700; }
+@keyframes lbflash { from { background: color-mix(in srgb, var(--loss) 22%, transparent); } to { background: transparent; } }
+.lb-post.flash { animation: lbflash 1.4s ease-out; border-radius: 8px; }
 .lb-how { font-size: 13px; color: var(--sub); }
 .lb-how summary { cursor: pointer; font-weight: 700; color: var(--ink); }
 .lb-how ul { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 2px; }
@@ -554,6 +556,17 @@ h3 { font-family: var(--display); font-weight: 400; font-size: 16px; line-height
 .meter { position: relative; height: 38px; border-radius: 10px; background: linear-gradient(90deg, #ff5c7a33, #ff5c7a22); border: 2px solid color-mix(in srgb, var(--board-fg) 25%, transparent); overflow: hidden; }
 .meter .zone { position: absolute; top: 0; bottom: 0; background: #57e38a; box-shadow: 0 0 16px #57e38a; }
 .meter .mark { position: absolute; top: -4px; bottom: -4px; width: 6px; margin-left: -3px; left: 0; background: #fff4e0; border-radius: 3px; box-shadow: 0 0 10px #fff; }
+.meter { cursor: pointer; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+.meter .mark.hit { background: #fff; box-shadow: 0 0 0 2px #0b3d1f, 0 0 16px #fff; width: 8px; margin-left: -4px; }
+.meter .mark.miss { background: #ff5c7a; box-shadow: 0 0 14px #ff5c7a; width: 8px; margin-left: -4px; }
+#shootBtn { touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+.shooters { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.shooters .label { color: var(--board-dim); margin-right: 2px; }
+.shooter { display: inline-flex; gap: 5px; align-items: baseline; padding: 5px 10px; border-radius: 999px; border: 1px solid var(--board-dim); background: transparent; color: var(--board-fg); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+.shooter span { font-family: var(--mono); color: #ffc93c; }
+.shooter[aria-pressed="true"] { background: #ffc93c; border-color: #ffc93c; color: #1b1b1b; }
+.shooter[aria-pressed="true"] span { color: #1b1b1b; }
+.shooter:disabled { opacity: .6; cursor: default; }
 #shotNote { color: var(--board-fg); font-weight: 800; font-size: 16px; min-height: 1.3em; }
 .clutch .btn:not(.primary) { color: var(--board-fg); border-color: var(--board-dim); background: transparent; }
 .series .g.clutch { outline: 2px solid #ffc93c; outline-offset: 1px; }
@@ -844,7 +857,7 @@ h3 { font-family: var(--display); font-weight: 400; font-size: 16px; line-height
 <div class="toast" id="toast" hidden role="status"></div>
 
 <script>
-const APP_VERSION = 29;
+const APP_VERSION = 30;
 // How leaderboard points are counted. Version 1 also counted team rating; entries saved under it are re-scored when shown.
 const SCORE_V = 2;
 // Anything that goes wrong is noted (last 20, in this browser and in your private cloud save) so it can be fixed
@@ -2805,17 +2818,26 @@ async function probeAccess() {
   lbWay = lbMyId ? "self" : "guest"; lbWhy = ""; lbReadOnly = false;
   return true;
 }
+let lbChecked = ""; // when "Check again" last ran and still couldn't post
 async function recheckAccess() {
   const btn = $("lbRecheck");
   if (btn) { btn.disabled = true; btn.textContent = "Checking…"; }
+  await sleep(400); // long enough to see that it actually checked
   if (await probeAccess()) {
+    lbChecked = "";
     $("lbSignIn").hidden = true;
     if (!$("lbAutoName")) { $("lbAuto").hidden = true; $("lbAuto").innerHTML = ""; }
     if (!$("lbName").value) $("lbName").value = store.get(KEY_LBNAME, "") || lbMeName.slice(0, 24);
     loadLbTab(lbCurrentTab);
     toast("✓ This view can post scores now");
     autoPost(true);
-  } else showLbReadOnly();
+  } else {
+    lbChecked = new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit", second: "2-digit" });
+    showLbReadOnly();
+    toast("Still view only. Nothing changes until the owner turns off \"Anyone with the link\" in Share. Then reload this page.");
+    const el = $("lbPost");
+    if (el && !reduce) { el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash"); }
+  }
   updateLbSubmit(); renderPostState();
 }
 
@@ -2836,8 +2858,12 @@ function renderPostState() {
     const code = String(lbWhy).startsWith("refused:") ? lbWhy.slice(8) : "";
     const why = lbWhy === "signedout" ? "You're signed out of claude.ai. Sign in, then reload this page."
       : lbWhy === "view" ? "Claude says this account can only view the game."
-      : code ? `Claude refused to save scores for this account (${esc(code)}).` : "";
-    html = `<span class="no">✗ This view can't post scores.</span><span>${why} ${lbMeName ? `Signed in as ${esc(lbMeName)}. ` : ""}${n} season${n === 1 ? "" : "s"} saved on this device.</span>`;
+      : code ? `Claude refused to save scores for this account (${esc(code)}), so it's only allowed to view the game.` : "";
+    // Invited people usually come with a name; nobody named means Claude isn't treating this view as an invite
+    const who = lbMeName ? `Signed in as ${esc(lbMeName)}. ` : lbDb ? "Claude didn't tell this page who you are, which usually means it isn't treating you as invited. " : "";
+    html = `<span class="no">✗ This view can't post scores.</span><span>${why} ${who}${n} season${n === 1 ? "" : "s"} saved on this device.</span>`;
+    if (lbDb) html += `<span>To fix it, the owner turns off "Anyone with the link" in Share and invites the email you use for claude.ai with "Can edit". Then reload this page.</span>`;
+    if (lbChecked) html += `<span><b>Checked again at ${esc(lbChecked)}: still view only.</b></span>`;
     if (lbDb) html += `<button class="btn sm" id="lbRecheck">Check again</button>`;
   }
   el.innerHTML = html;
@@ -3440,45 +3466,89 @@ function renderSoundBtn() {
 
 /* ---------- Game 7: take the last shot ----------
    When a playoff series goes to Game 7, the score is tied with seconds left and you take the shot: stop the
-   marker in the green. A better team gets a bigger green zone. Make it and you win; miss and it goes to
-   overtime, where the sim decides. On Instant speed the sim decides everything. */
+   marker in the green. Who shoots matters most: the better the shooter, the slower the marker and the bigger
+   the green. Your best shooter has the ball, and you can give it to anyone else. A better team also gets a
+   little more green, and each round is a bit faster. Make it and you win; miss and it goes to overtime, where
+   the sim decides. On Instant speed the sim decides everything. */
 const blankClutch = () => ({ made: 0, missed: 0, finals: 0, streak: 0, best: 0, otSaves: 0 });
+// Known great shooters and known bricklayers (names as the game's data spells them)
+const SHOOTERS = new Set(["Stephen Curry", "Klay Thompson", "Ray Allen", "Reggie Miller", "Larry Bird", "Dirk Nowitzki", "Kevin Durant", "Steve Nash",
+  "Damian Lillard", "Kyle Korver", "Peja Stojaković", "Mark Price", "Dale Ellis", "Steve Kerr", "Dražen Petrović", "Chris Mullin", "Jerry West",
+  "Michael Jordan", "Kobe Bryant", "Devin Booker", "Kyrie Irving", "Chauncey Billups", "Robert Horry", "Paul Pierce", "Glen Rice", "Rick Barry",
+  "Calvin Murphy", "Trae Young", "Luka Dončić", "Jayson Tatum", "James Harden", "Allan Houston", "Jeff Hornacek", "Joe Dumars", "Sam Cassell",
+  "JJ Redick", "Tracy McGrady", "Vince Carter", "Carmelo Anthony", "Mitch Richmond", "Manu Ginóbili", "Pete Maravich", "George Gervin",
+  "Bill Sharman", "Kevin Martin", "Kemba Walker", "Isaiah Thomas", "Shai Gilgeous-Alexander", "Jalen Brunson", "Donovan Mitchell", "Kawhi Leonard",
+  "Paul George", "Bradley Beal", "Buddy Hield", "Duncan Robinson", "Ben Gordon", "Hubert Davis", "Craig Hodges", "Dell Curry", "Michael Redd",
+  "Jason Terry", "Kyle Lowry", "Chris Paul", "John Stockton", "Tim Hardaway", "Jamal Murray", "Tyrese Haliburton", "Detlef Schrempf", "Dan Majerle"]);
+const BRICKS = new Set(["Shaquille O'Neal", "Ben Wallace", "Dennis Rodman", "Wilt Chamberlain", "DeAndre Jordan", "Dwight Howard", "Andre Drummond",
+  "Rudy Gobert", "Ben Simmons", "Shawn Bradley", "Chris Dudley", "Clint Capela", "Tyson Chandler", "Steven Adams", "Bill Russell", "Manute Bol",
+  "Mark Eaton", "Dikembe Mutombo", "Mitchell Robinson", "Theo Ratliff", "Michael Kidd-Gilchrist", "Tony Allen"]);
+// Great scorers who get theirs at the rim, not with a jumper at the buzzer
+const SLASHERS = new Set(["Giannis Antetokounmpo", "Russell Westbrook", "Zion Williamson", "Rajon Rondo", "Shawn Kemp", "Ja Morant"]);
+// How good a last-shot shooter someone is, 30–99: scoring (adjusted for era), rating and position, then the lists above
+function shooterRating(p) {
+  if (!p) return 50;
+  const POS = { PG: 6, SG: 7, SF: 3, PF: -3, C: -9 };
+  const list = (Array.isArray(p.pos) ? p.pos : [p.pos || p.slot || "SF"]).filter(x => x in POS);
+  const posAdj = list.length ? list.reduce((a, x) => a + POS[x], 0) / list.length : 0; // "PG/SG/SF/PF/C" players land in the middle
+  let s = 36 + (p.ppg || 0) * ((ERA_STAT[p.dec] || {}).p || 1) * 1.6 + ((p.ovr || 75) - 75) * .5 + posAdj;
+  if (SHOOTERS.has(p.name)) s = Math.max(s + 8, 88);
+  else if (posAdj <= -3) s = Math.min(s, 90); // big men score inside; the jumper at the buzzer is harder
+  if (SLASHERS.has(p.name)) s = Math.min(s, 80);
+  if (BRICKS.has(p.name)) s = Math.min(s - 18, 48);
+  return Math.round(Math.max(30, Math.min(99, s)));
+}
+const shotFeel = s => s >= 90 ? "slow" : s >= 75 ? "steady" : s >= 55 ? "quick" : "fast";
+const shortName = n => { const w = String(n).split(" "), l = w[w.length - 1]; return w.length > 1 && /^(Jr\.?|Sr\.?|II|III|IV)$/.test(l) ? w[w.length - 2] : l; };
 function clutchGame(g, r, st, i) {
   if (speed === "instant" || reduceClutch()) return Promise.resolve([...g, 0]);
   return new Promise(resolve => {
     const box = $("clutch");
     const edge = r.team - (st.oOff + st.oDef) / 2;
-    const green = Math.max(9, Math.min(30, 17 + edge * 1.6));
-    const lo = (100 - green) / 2, hi = lo + green;
-    const pace = 1.05 + i * .22; // bar lengths per second; faster deeper in the playoffs
+    const five = SLOTS.filter(k => S.lineup[k]).map(k => ({ k, p: S.lineup[k], s: shooterRating(S.lineup[k]) }));
+    if (!five.length) return resolve([...g, 0]);
+    let who = five.reduce((a, b) => b.s > a.s ? b : a);
+    // Better shooter: more green and a slower marker. Better team: a bit more green. Later rounds: a bit faster.
+    const feel = s => ({ green: Math.max(10, Math.min(30, 14 + (s - 70) * .2 + edge * .8)), pace: 1.55 - (s - 30) * .0125 + i * .05 });
+    let { green, pace } = feel(who.s), lo = 0, hi = 0;
     box.hidden = false;
     box.innerHTML = `<b class="ctitle">Game 7${i === 3 ? " of the NBA Finals" : `, ${ROUNDS[i]}`}. Tied, 4 seconds left.</b>
-      <span class="note">You have the ball. Stop the marker in the green to hit the game-winner.</span>
-      <div class="meter" aria-hidden="true"><i class="zone" style="left:${lo}%;width:${green}%"></i><i class="mark"></i></div>
+      <span class="note" id="shotWho"></span>
+      <div class="meter" id="shotMeter" aria-hidden="true"><i class="zone"></i><i class="mark"></i></div>
       <div class="row-gap"><button class="btn primary cta" id="shootBtn">🏀 Shoot!</button><button class="btn sm" id="simShot">Let the sim decide</button></div>
+      <div class="shooters" role="group" aria-label="Who takes the last shot"><span class="label">Give it to</span>${five.map(w =>
+        `<button type="button" class="shooter" data-shooter="${w.k}" aria-pressed="false">${w.k} ${esc(shortName(w.p.name))} <span>${w.s}</span></button>`).join("")}</div>
       <p class="note" id="shotNote" role="status"></p>`;
     try { box.scrollIntoView({ block: "center", behavior: reduce ? "auto" : "smooth" }); } catch (e) {}
-    const mark = box.querySelector(".mark");
-    let x = 0, dir = 1, last = performance.now(), live = true;
-    const step = t => {
-      if (!live) return;
-      x += dir * pace * 100 * Math.min(.05, (t - last) / 1000); last = t;
-      if (x >= 100) { x = 100; dir = -1; } else if (x <= 0) { x = 0; dir = 1; }
-      mark.style.left = x + "%";
-      requestAnimationFrame(step);
+    const mark = box.querySelector(".mark"), zone = box.querySelector(".zone");
+    // The marker bounces end to end at `pace` bar lengths a second; u is where it is in one there-and-back (0–200)
+    let t0 = performance.now(), u0 = 0, live = true;
+    const phaseAt = t => ((u0 + (t - t0) / 1000 * pace * 100) % 200 + 200) % 200;
+    const posAt = t => { const u = phaseAt(t); return u <= 100 ? u : 200 - u; };
+    const setShooter = w => {
+      const now = performance.now();
+      u0 = phaseAt(now); t0 = now; // the marker stays where it is and moves on at the new speed
+      who = w; ({ green, pace } = feel(w.s)); lo = (100 - green) / 2; hi = lo + green;
+      zone.style.left = lo + "%"; zone.style.width = green + "%";
+      $("shotWho").innerHTML = `<b>${esc(w.p.name)}</b> has the ball · shooter ${w.s} · ${shotFeel(w.s)} marker. Stop it in the green to win.`;
+      box.querySelectorAll("[data-shooter]").forEach(b => b.setAttribute("aria-pressed", b.dataset.shooter === w.k));
     };
+    setShooter(who);
+    const step = () => { if (!live) return; mark.style.left = posAt(performance.now()) + "%"; requestAnimationFrame(step); };
     requestAnimationFrame(step);
     const T = Math.max(84, Math.min(g[0], g[1]));
-    const finish = made => {
+    const name = () => shortName(who.p.name);
+    const finish = (made, x) => {
       if (!live) return;
       live = false;
+      if (x != null) { mark.style.left = x + "%"; mark.classList.add(made ? "hit" : "miss"); }
       const c = career.clutch;
       let out, msg;
       if (made === null) { out = [...g, 0]; msg = g[0] > g[1] ? "The sim says: you win it." : "The sim says: they win it."; }
       else if (made) {
         out = [T + (Math.random() < .35 ? 3 : 2), T, g[2], 0, 1];
         c.made++; c.streak++; c.best = Math.max(c.best, c.streak); if (i === 3) c.finals++;
-        msg = `SWISH! ${out[0] - T === 3 ? "A three" : "Game-winner"} at the buzzer. You win Game 7!`;
+        msg = `SWISH! ${name()} hits ${out[0] - T === 3 ? "a three" : "the game-winner"} at the buzzer. You win Game 7!`;
         sfx("swish"); setTimeout(() => sfx("cheer"), 250); confetti();
       } else {
         // Overtime: the better team has a small edge
@@ -3487,20 +3557,36 @@ function clutchGame(g, r, st, i) {
         const [u, v] = otWin ? [Math.max(a, b) + 1, Math.min(a, b)] : [Math.min(a, b), Math.max(a, b) + 1];
         out = [T + u, T + v, g[2], 1, 2];
         c.missed++; c.streak = 0; if (otWin) c.otSaves++;
-        msg = otWin ? `Rimmed out! But you won it in overtime, ${out[0]}–${out[1]}.` : `Rimmed out. They won it in overtime, ${out[1]}–${out[0]}.`;
+        msg = otWin ? `${name()}'s shot rims out! But you won it in overtime, ${out[0]}–${out[1]}.` : `${name()}'s shot rims out. They won it in overtime, ${out[1]}–${out[0]}.`;
         sfx("brick"); setTimeout(() => sfx("buzzer"), 300);
       }
       saveCareer();
       $("shotNote").textContent = msg;
-      box.querySelector("#shootBtn").disabled = box.querySelector("#simShot").disabled = true;
-      setTimeout(() => { box.hidden = true; resolve(out); }, made === null ? 700 : 1900);
+      box.querySelectorAll("button").forEach(b => { b.disabled = true; });
+      setTimeout(() => { box.hidden = true; resolve(out); }, made === null ? 700 : 2100);
     };
-    $("shootBtn").onclick = () => {
-      const inGreen = x >= lo && x <= hi, near = !inGreen && x >= lo - 6 && x <= hi + 6;
-      finish(inGreen || (near && Math.random() < .5));
+    // The shot counts where the marker was the moment you pressed, not when the tap or click finished
+    const shoot = e => {
+      if (!live) return;
+      if (e && e.cancelable) e.preventDefault();
+      const now = performance.now(), ts = e && e.timeStamp;
+      const x = posAt(ts > 0 && Math.abs(now - ts) < 500 ? ts : now);
+      const inGreen = x >= lo && x <= hi, near = !inGreen && x >= lo - 5 && x <= hi + 5;
+      // Just outside the green, a better shooter gets the friendly bounce more often
+      finish(inGreen || (near && Math.random() < .3 + (who.s - 30) / 69 * .4), x);
     };
+    const btn = $("shootBtn");
+    btn.addEventListener("pointerdown", shoot);
+    btn.addEventListener("click", shoot); // keyboard presses arrive as clicks
+    btn.addEventListener("keydown", e => { if (e.key === " " || e.key === "Enter") shoot(e); });
+    $("shotMeter").addEventListener("pointerdown", shoot);
+    box.querySelectorAll("[data-shooter]").forEach(b => b.onclick = () => {
+      if (!live) return;
+      setShooter(five.find(w => w.k === b.dataset.shooter));
+      btn.focus({ preventScroll: true });
+    });
     $("simShot").onclick = () => finish(null);
-    $("shootBtn").focus({ preventScroll: true });
+    btn.focus({ preventScroll: true });
   });
 }
 // Automated test pages can skip the shot
