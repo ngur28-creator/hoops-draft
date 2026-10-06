@@ -759,6 +759,15 @@ h3 { font-family: var(--display); font-weight: 400; font-size: 16px; line-height
 .speedbar b { font-family: var(--display); font-weight: 400; font-size: 20px; font-variant-numeric: tabular-nums; }
 @media (prefers-reduced-motion: no-preference) { .speedbar.low:not([hidden]) { animation: spdPulse .45s ease-in-out infinite alternate; } @keyframes spdPulse { to { border-color: var(--loss); } } }
 
+/* The game's website */
+.sitebox { display: grid; gap: 6px; padding: 12px; border-radius: 12px; border: 2px solid color-mix(in srgb, var(--navy) 45%, var(--line)); background: color-mix(in srgb, var(--navy) 6%, var(--bg)); }
+.sitebox a:not(.btn), .lb-post a, .lbauto a, #modePanel .note a { color: var(--accent-text); font-weight: 800; }
+.sitebox .btn { text-decoration: none; }
+.savein summary { cursor: pointer; font-weight: 800; }
+.savein[open] { display: grid; gap: 6px; }
+.savein[open] summary { margin-bottom: 2px; }
+.sitelink { text-decoration: none; color: var(--ink); font-weight: 700; }
+
 /* Toast */
 .toast { border-radius: 999px; border: 2px solid var(--accent); background: var(--ink-2); padding: 10px 18px; }
 .toast b { color: #ffc93c; }
@@ -790,6 +799,7 @@ h3 { font-family: var(--display); font-weight: 400; font-size: 16px; line-height
       <span class="confirm" id="modeAsk" hidden>Switch modes? Your current picks will be lost. <button class="btn sm" id="modeYes">Start over</button><button class="btn sm" id="modeNo">Keep drafting</button></span>
       <div class="bests" id="bests"></div>
       <button class="pill soundbtn" id="soundBtn" aria-pressed="false">🔈 Sound off</button>
+      <a class="pill sitelink" id="siteLink" href="https://claudba.netlify.app/" target="_blank" rel="noopener" hidden>🌐 Website</a>
     </div>
     <div class="career" aria-label="Your level">
       <div class="lvl"><span class="lvlnum" id="lvlNum">1</span><div><b id="lvlTitle">Rookie</b><span class="label" id="xpText">0 / 150 XP</span></div></div>
@@ -986,6 +996,7 @@ h3 { font-family: var(--display); font-weight: 400; font-size: 16px; line-height
   <section class="panel stack" id="lbPanel" aria-label="Global leaderboard">
     <div class="head"><h2>🌍 Global leaderboard</h2><span class="label" id="lbStatus">Loading…</span></div>
     <div id="lbSignIn" hidden style="padding:12px 0;color:var(--sub)">Sign in to claude.ai to submit your score and appear here.</div>
+    <div class="sitebox" id="siteBox" hidden></div>
     <div class="lb-tabs">
       <button class="lb-tab active" id="lbTabNormal" onclick="switchLbTab('normal')">🏀 Normal</button>
       <button class="lb-tab" id="lbTabHard" onclick="switchLbTab('hard')">🔥 Hard Mode</button>
@@ -1037,7 +1048,7 @@ h3 { font-family: var(--display); font-weight: 400; font-size: 16px; line-height
 <div class="toast" id="toast" hidden role="status"></div>
 
 <script>
-const APP_VERSION = 33;
+const APP_VERSION = 34;
 // How leaderboard points are counted. Version 1 also counted team rating; entries saved under it are re-scored when shown.
 const SCORE_V = 2;
 // Anything that goes wrong is noted (last 20, in this browser and in your private cloud save) so it can be fixed
@@ -2964,6 +2975,7 @@ async function initLeaderboardRest() {
   lbToken = t;
   try { lbMyId = (await sha256hex(t)).slice(0, 20); } catch (e) { lbMyId = null; }
   importFromLink();
+  saveFromLink();
   loadLbTab(lbCurrentTab);
   updateLbSubmit();
   autoPost(false);
@@ -3219,7 +3231,8 @@ function renderPostState() {
     // Invited people usually come with a name; nobody named means Claude isn't treating this view as an invite
     const who = lbMeName ? `Signed in as ${esc(lbMeName)}. ` : lbDb ? "Claude didn't tell this page who you are, which usually means it isn't treating you as invited. " : "";
     html = `<span class="no">✗ This view can't post scores.</span><span>${why} ${who}${n} season${n === 1 ? "" : "s"} saved on this device.</span>`;
-    if (lbDb) html += `<span>To fix it, the owner turns off "Anyone with the link" in Share and invites the email you use for claude.ai with "Can edit". Then reload this page.</span>`;
+    html += `<span><b>Easiest fix: play on <a href="${SITE_URL}" target="_blank" rel="noopener">the game's website</a></b>, where anyone can post scores. Your save can come with you (see the box at the top of the leaderboard).</span>`;
+    if (lbDb) html += `<span>Or the owner turns off "Anyone with the link" in Share and invites the email you use for claude.ai with "Can edit". Then reload this page.</span>`;
     if (lbChecked) html += `<span><b>Checked again at ${esc(lbChecked)}: still view only.</b></span>`;
     if (lbDb) html += `<button class="btn sm" id="lbRecheck">Check again</button>`;
   }
@@ -4204,7 +4217,7 @@ function showAutoName(msg) {
   $("lbAutoName").onkeydown = e => { if (e.key === "Enter") go(); };
 }
 function showViewOnlyNote() {
-  $("lbAuto").innerHTML = `<span class="note">Your seasons can't post from here yet. Claude only lets the game's owner and people invited by email as Editors ("Can edit") save scores, and only while "Anyone with the link" is off. Once the owner sets that up for your email, reload this page and your best seasons post by themselves. The leaderboard below says what Claude told this page.</span>`;
+  $("lbAuto").innerHTML = `<span class="note">Your seasons can't post from here. Claude only lets the game's owner and people invited by email as Editors save scores. <b>Play on <a href="${SITE_URL}" target="_blank" rel="noopener">the game's website</a> instead</b>: anyone can post there, and your save can come with you (see the leaderboard section).</span>`;
   $("lbAuto").hidden = false;
 }
 async function autoPost(prompt) {
@@ -4863,7 +4876,7 @@ function renderDuel(keepArena) {
       html += `${nm ? "" : `<div class="row-gap"><input class="lb-input" id="dMyName" maxlength="24" placeholder="Your username" aria-label="Your username"><button class="btn mid" id="dSaveName">Save name</button></div>`}
         <div class="row-gap"><button class="btn primary mid" id="dCreate"${duelBusy || !nm ? " disabled" : ""}>Create a duel</button><span class="note">${nm ? `Then your friend taps Join and types <b>${esc(nm)}</b>.` : "Pick your username first."}</span></div>
         <div class="row-gap"><input class="lb-input" id="dHost" maxlength="24" placeholder="Friend's username" aria-label="Your friend's username"><button class="btn mid" id="dJoin"${duelBusy || !nm ? " disabled" : ""}>Join their duel</button></div>`;
-    } else html += `<p class="note">Playing on two phones works on the game's own website, where everyone has a username. Here, play on one device.</p>`;
+    } else html += `<p class="note">Playing on two phones works on <a href="${SITE_URL}" target="_blank" rel="noopener">the game's website</a>, where everyone has a username. Here, play on one device.</p>`;
     html += `</div>`;
   } else {
     const L = duelLineups(duel), done = duelDone(duel), i = duel.picks.length, by = done ? null : pickerAt(i);
@@ -5836,6 +5849,151 @@ function renderSpeedPanel() {
   wireArcName();
 }
 
+/* ---------- The game's website ----------
+   The same game lives at claudba.netlify.app, where anyone can post scores without an invite. Inside Claude a
+   box links there and packs your whole save (seasons, level, collection, trophies, Arcade) into a code; on the
+   website, pasting that code (or opening a link that carries it) brings everything across. It only ever adds:
+   seasons and trophies from both, the further-along level, and every player from both collections. */
+const SITE_URL = "https://claudba.netlify.app/";
+const SAVE_TAG = "HOOPS82SAVE1";
+const b64bytes = u8 => { let s = ""; for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000)); return btoa(s); };
+const unb64bytes = str => { const s = atob(str.replace(/-/g, "+").replace(/_/g, "/")); const u8 = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) u8[i] = s.charCodeAt(i); return u8; };
+// gzip (or gunzip, with back) where the browser can; null where it can't
+async function gzipBytes(u8, back) {
+  const Z = back ? window.DecompressionStream : window.CompressionStream;
+  if (typeof Z !== "function") return null;
+  return new Uint8Array(await new Response(new Blob([u8]).stream().pipeThrough(new Z("gzip"))).arrayBuffer());
+}
+async function packSave() {
+  const data = { v: 1, at: Date.now(), name: myUsername() || "", runs: runs.map(({ games, ...r }) => r), career,
+    trophies: Object.fromEntries(Object.entries(trophies).map(([k, v]) => [k, (v && v.day) || ""])) };
+  const raw = new TextEncoder().encode(JSON.stringify(data));
+  const z = await gzipBytes(raw).catch(() => null);
+  return z ? `${SAVE_TAG}.z.${b64bytes(z)}` : `${SAVE_TAG}.j.${b64bytes(raw)}`;
+}
+async function unpackSave(code) {
+  const m = String(code || "").replace(/\s+/g, "").match(/^HOOPS82SAVE1\.([zj])\.([A-Za-z0-9+/_=-]+)$/);
+  if (!m) throw new Error("That isn't a save code. Copy the whole code from the Claude version and try again.");
+  let bytes;
+  try { bytes = unb64bytes(m[2]); } catch (e) { throw new Error("That save code is cut off. Copy it again."); }
+  if (m[1] === "z") {
+    bytes = await gzipBytes(bytes, true).catch(() => null);
+    if (!bytes) throw new Error("That save code is cut off, or this browser can't open it. Copy it again, or try Chrome or Safari.");
+  }
+  let d;
+  try { d = JSON.parse(new TextDecoder().decode(bytes)); } catch (e) { throw new Error("That save code is cut off. Copy it again."); }
+  if (!d || d.v !== 1 || !Array.isArray(d.runs) || !d.career || typeof d.career !== "object") throw new Error("That save code couldn't be read.");
+  return d;
+}
+function applySave(d) {
+  // Seasons: every one in the save that isn't here yet
+  const byId = new Map(runs.map(r => [r.id, r]));
+  let added = 0;
+  for (const r of d.runs) {
+    if (!r || typeof r !== "object" || !Array.isArray(r.players) || r.players.length !== 5 || !Number.isFinite(r.id) || byId.has(r.id)) continue;
+    repairRun(r); byId.set(r.id, r); added++;
+  }
+  runs = [...byId.values()].sort((a, b) => a.id - b.id).slice(-150);
+  store.set(KEY_RUNS, runs);
+  // Trophies from both
+  const t = Object.fromEntries(Object.entries(d.trophies || {}).map(([k, v]) => [k, typeof v === "string" ? { day: v } : v]));
+  trophies = Object.assign({}, t, trophies);
+  store.set(KEY_TROPHY, trophies);
+  // Level and the rest: whichever is further along; players and card levels from both, so nobody is lost
+  const took = (d.career.xp || 0) > (career.xp || 0), other = took ? career : d.career;
+  if (took) {
+    career = Object.assign(blankCareer(), d.career);
+    career.life = Object.assign(blankCareer().life, career.life || {});
+    career.h2h = Object.assign(blankH2h(), career.h2h || {});
+    career.h2h.beat = career.h2h.beat && typeof career.h2h.beat === "object" ? career.h2h.beat : {};
+    fixCareerShape();
+  }
+  career.coll = Object.assign({}, other.coll || {}, career.coll || {});
+  if (other.cards && typeof other.cards === "object") for (const [k, v] of Object.entries(other.cards)) career.cards[k] = Math.max(career.cards[k] || 0, +v || 0);
+  // The website's boards are its own, so your best seasons go up there again
+  if (LB_REST) { career.posted = {}; career.postedV = SCORE_V; }
+  collCache = null; h2hLineups.clear(); ensureChallenges(); saveCareer();
+  const name = String(d.name || "").replace(/\s+/g, " ").trim().slice(0, 24);
+  if (LB_REST && name && !String(store.get(KEY_LBNAME, "") || "").trim()) { store.set(KEY_LBNAME, name); $("lbName").value = name; }
+  renderBook(); renderTrophies(); renderCareer(); renderChallenges(); renderCollection(); renderRules(); renderHeader(); renderH2H(); renderGauntlet(); renderPackBar(); updateLbSubmit();
+  if (S && (S.mode === "arcade" || S.mode === "speed")) renderModePanel();
+  checkCareerTrophies();
+  setTimeout(() => autoPost(true), 0);
+  // Arcade bests that carry their numbers go on this site's boards too
+  const a = arcState();
+  if (a.hol.best) arcPost("hol", { score: a.hol.best, streak: a.hol.best });
+  if (a.buzz.best && a.buzz.bestMakes) arcPost("buzz", { score: a.buzz.best, points: a.buzz.best, makes: a.buzz.bestMakes });
+  return { added, took, level: levelOf(career.xp).level, seasons: runs.length, players: collStats().total };
+}
+// Inside Claude: the website's link, and your save as a code (and a link carrying it, where it fits)
+async function copySave() {
+  const btn = $("saveCopy"), out = $("saveOut"), note = $("saveNote");
+  btn.disabled = true; note.textContent = "Packing your save…";
+  try {
+    const code = await packSave();
+    out.value = code; out.hidden = false;
+    let ok = legacyCopy(code);
+    if (!ok && navigator.clipboard) ok = await navigator.clipboard.writeText(code).then(() => true, () => false);
+    note.innerHTML = ok ? `✓ Copied. On <a href="${SITE_URL}" target="_blank" rel="noopener">the website</a>, open “Bring your progress” at the top of the leaderboard and paste it.`
+      : `Select all of the code above and copy it, then paste it on the website under “Bring your progress”.`;
+    if (code.length < 60000) { const go = $("saveGo"); go.href = `${SITE_URL}#save=${code.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "")}`; go.hidden = false; }
+  } catch (e) { note.textContent = "Couldn't pack your save. Try again."; }
+  finally { btn.disabled = false; }
+}
+// On the website: a save code pasted in, or one that arrived in the link
+let pendingSave = null; // { code, d } from a link, waiting for "Load it"
+async function loadSave(code) {
+  const note = $("saveInNote"), btn = $("saveLoad");
+  if (!String(code || "").trim()) { note.textContent = "Paste your save code first."; return; }
+  btn.disabled = true; note.textContent = "Opening your save…";
+  try {
+    const d = pendingSave && pendingSave.code === code ? pendingSave.d : await unpackSave(code);
+    const r = applySave(d);
+    pendingSave = null;
+    $("saveIn").value = "";
+    const who = String(store.get(KEY_LBNAME, "") || "").trim();
+    note.innerHTML = `✓ Loaded: Level ${r.level}, ${r.seasons} seasons, ${fmtPts(r.players)} players${r.added ? ` (${r.added} new season${r.added === 1 ? "" : "s"})` : ""}. ${who ? `Your best seasons are going up on the boards as <b>${esc(who)}</b>.` : "Type your name in the leaderboard section to put your best seasons on the boards."}`;
+    toast(`📥 Your progress is here: <b>Level ${r.level}</b>, ${r.seasons} seasons`);
+    confetti();
+  } catch (e) { note.textContent = (e && e.message) || "That save couldn't be read."; }
+  finally { btn.disabled = false; }
+}
+async function saveFromLink() {
+  const m = location.hash.match(/save=([A-Za-z0-9._-]+)/);
+  if (!m) return;
+  try { history.replaceState(null, "", location.pathname + location.search); } catch (e) {}
+  try {
+    const d = await unpackSave(m[1]);
+    pendingSave = { code: m[1], d };
+    const lv = levelOf(d.career.xp || 0).level;
+    renderSiteBox();
+    $("saveIn").value = m[1];
+    $("saveInNote").textContent = `This link carries a save from the Claude version: Level ${lv}, ${d.runs.length} seasons. Tap “Load my save” to bring it in.`;
+    try { $("siteBox").scrollIntoView({ block: "center" }); } catch (e) {}
+  } catch (e) { toast(esc(e.message || "That save link looks broken.")); }
+}
+function renderSiteBox() {
+  const el = $("siteBox");
+  if (!el) return;
+  if ($("siteLink")) $("siteLink").hidden = LB_REST;
+  if (!LB_REST) {
+    el.innerHTML = `<b>🌐 Play on the website: <a href="${SITE_URL}" target="_blank" rel="noopener">claudba.netlify.app</a></b>
+      <span class="note">The same game, where anyone can post scores without an invite, Vs Friend works on two phones and every board is open. Send it to your friends. To take your level, collection, trophies and seasons with you, copy your save and paste it there.</span>
+      <div class="row-gap"><button class="btn primary mid" id="saveCopy">📋 Copy my save</button><a class="btn mid" id="saveGo" href="${SITE_URL}" target="_blank" rel="noopener" hidden>Open the website with my save</a></div>
+      <textarea class="lb-codeout" id="saveOut" rows="3" readonly hidden aria-label="Your save code"></textarea>
+      <span class="note" id="saveNote"></span>`;
+    $("saveCopy").onclick = copySave;
+  } else {
+    el.innerHTML = `<details class="savein"${pendingSave ? " open" : ""}><summary>📥 Bring your progress from the Claude version</summary>
+      <span class="note">In the Claude version, tap “Copy my save” in the leaderboard section, then paste it here. Your seasons, level, collection, trophies and Arcade bests come with it, and your best seasons go on this site's boards.</span>
+      <textarea class="lb-codeout" id="saveIn" rows="3" placeholder="Paste your save code here" spellcheck="false" aria-label="Your save code"></textarea>
+      <div class="row-gap"><button class="btn primary mid" id="saveLoad">Load my save</button></div>
+      <span class="note" id="saveInNote"></span></details>`;
+    $("saveLoad").onclick = () => loadSave($("saveIn").value);
+  }
+  el.hidden = false;
+}
+
 /* ---------- Confetti ---------- */
 function confetti() {
   if (reduce) return;
@@ -6235,6 +6393,10 @@ function boot() {
   // Versions 32 and 33: say what's new once
   if (seeded === null && !career.seen33 && runs.length) toast(`New: the <b>🎮 Arcade</b> (Higher or Lower, Buzzer Beater, Survival, Mystery Player and Speed Draft) and <b>📋 Daily quests</b>${career.seen32 ? "" : `, plus the <b>Daily Draft, Dynasty, Vs Friend</b>, the <b>Legends Gauntlet</b> and <b>card levels</b>`}`);
   career.seen32 = career.seen33 = 1;
+  // Version 34: the game's website
+  renderSiteBox();
+  if (!LB_REST && seeded === null && runs.length && !career.seen34) toast(`🌐 The game has its own website now, where anyone can post scores: <b>claudba.netlify.app</b>. Your save can move there too (in the leaderboard section).`);
+  career.seen34 = 1;
   // The quests change at midnight in California; keep their countdown fresh
   setInterval(() => { try { renderQuests(); } catch (e) {} }, 60000);
   checkCareerTrophies();
