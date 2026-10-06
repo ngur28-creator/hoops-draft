@@ -13,6 +13,7 @@
 //   board=surv                   Survival: most wins in a run (entry: { wins, losses, players })
 //   board=guess&day=YYYY-MM-DD   the day's Mystery Player: fewest guesses (entry: { tries })
 //   board=speed                  Speed Draft: a season plus its time bonus (entry: a season, like run, and bonus)
+//   GET board=monthly&month=YYYY-MM   the Daily Draft's month: every day's points added up, per player
 //
 // Anyone can submit. Each browser keeps a secret token; your player id is a hash of it, so only you can
 // replace your own entry. One entry per player per board, and a lower score never replaces a higher one
@@ -75,7 +76,13 @@ function reply(body, status = 200) {
 }
 
 async function readBoard(url, store) {
-  const kind = url.searchParams.get("board"), key = boardKey(kind, url.searchParams.get("day"));
+  const kind = url.searchParams.get("board");
+  if (kind === "monthly") {
+    const month = url.searchParams.get("month");
+    if (!MONTH.test(month || "")) return reply({ error: "Which month? Use month=YYYY-MM." }, 400);
+    return reply({ entries: await monthBoard(store, month) });
+  }
+  const key = boardKey(kind, url.searchParams.get("day"));
   if (!key) return reply({ error: DAILY.has(kind) ? "Which day? Use day=YYYY-MM-DD." : "Unknown board" }, 400);
   const id = url.searchParams.get("id");
   if (id !== null) {
@@ -98,6 +105,30 @@ async function listBoard(store, board, kind = board) {
   }
   // Higher score first; on a tie, whoever got there first
   return [...best.values()].sort((a, b) => b.score - a.score || a.ts - b.ts).map(({ ts, ...e }) => e);
+}
+
+// The Daily Draft's month: each player's best entry on each day of the month, added up. One listing reads the
+// whole month, because every day's board shares the prefix i/daily-YYYY-MM-.
+const MONTH = /^\d{4}-(0[1-9]|1[0-2])$/;
+async function monthBoard(store, month) {
+  const { blobs } = await store.list({ prefix: `i/daily-${month}-` });
+  const perDay = new Map(); // "day|id" -> that day's entry
+  for (const { key } of blobs) {
+    const rest = key.slice(2), slash = rest.indexOf("/"), day = rest.slice(6, slash);
+    const e = slash > 0 && DAY.test(day) ? parseIndexKey(rest.slice(slash + 1), "daily") : null;
+    if (!e) continue;
+    const cur = perDay.get(`${day}|${e.id}`);
+    if (!cur || e.score > cur.score) perDay.set(`${day}|${e.id}`, e);
+  }
+  const by = new Map();
+  for (const e of perDay.values()) {
+    const cur = by.get(e.id) || { id: e.id, name: e.name, score: 0, days: 0, best: 0, ts: -1 };
+    cur.score += e.score; cur.days++; cur.best = Math.max(cur.best, e.score);
+    if (e.ts >= cur.ts) { cur.ts = e.ts; cur.name = e.name; }
+    by.set(e.id, cur);
+  }
+  // Most points first; on a tie, more days played, then whoever got there first
+  return [...by.values()].sort((a, b) => b.score - a.score || b.days - a.days || a.ts - b.ts).map(({ ts, ...e }) => e).slice(0, SHOWN);
 }
 
 // The index marker carries what a board row shows: for seasons the record, for the Gauntlet the legends

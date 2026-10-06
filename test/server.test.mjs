@@ -199,5 +199,26 @@ await t("Speed Draft: the season's points plus the time bonus, which can't be mo
   const b = await call("GET", "?board=speed");
   assert.deepEqual(b.body.entries.map(e => [e.name, e.score, e.w, e.l, e.champ]), [["Gus", 1595, 79, 3, true], ["Hal", 1350, 79, 3, true]]);
 });
+await t("Daily Draft month: each player's days add up, and a day only counts once", async () => {
+  const { dayPT } = await import("../netlify/functions/lb/lb.mjs");
+  const today = dayPT(), yday = dayPT(-1), month = today.slice(0, 7), sameMonth = yday.startsWith(month);
+  // Gus already has 1,390 today (from the Daily Draft test); now yesterday too, and Hal yesterday as well
+  let r = await call("POST", "", { board: "daily", day: yday, token: tok("1"), name: "Gus", entry: { ...bobNormal, w: 70, l: 12, champ: false, reached: 2, pw: 9, pl: 6 } });
+  assert.equal(r.status, 200, JSON.stringify(r.body)); assert.equal(r.body.score, 790);
+  r = await call("POST", "", { board: "daily", day: yday, token: tok("2"), name: "Hal", entry: { ...bobNormal, w: 50, l: 32, champ: false, reached: 0, pw: 1, pl: 4 } });
+  assert.equal(r.status, 200, JSON.stringify(r.body)); assert.equal(r.body.score, 510);
+  // a worse try the same day doesn't add anything
+  await call("POST", "", { board: "daily", day: today, token: tok("1"), name: "Gus", entry: { ...bobNormal, w: 40, l: 42, champ: false, reached: 0, pw: 0, pl: 0 } });
+  const b = await call("GET", `?board=monthly&month=${month}`);
+  assert.equal(b.status, 200, JSON.stringify(b.body));
+  const row = n => b.body.entries.find(e => e.name === n);
+  assert.deepEqual([row("Gus").score, row("Gus").days, row("Gus").best], sameMonth ? [2180, 2, 1390] : [1390, 1, 1390]);
+  assert.deepEqual([row("Hal").score, row("Hal").days], sameMonth ? [1860, 2] : [1350, 1]);
+  assert.equal(b.body.entries[0].name, "Gus");
+  // yesterday's month (when today is the 1st) has yesterday's entries
+  if (!sameMonth) { const p = await call("GET", `?board=monthly&month=${yday.slice(0, 7)}`); assert.deepEqual(p.body.entries.map(e => [e.name, e.score]), [["Gus", 790], ["Hal", 510]]); }
+  for (const q of ["?board=monthly", "?board=monthly&month=2026-13", "?board=monthly&month=26-10"]) assert.equal((await call("GET", q)).status, 400, q);
+  assert.deepEqual((await call("GET", "?board=monthly&month=2001-01")).body.entries, []);
+});
 console.log(results.join("\n"));
 process.exitCode = results.some(r => r.startsWith("FAIL")) ? 1 : 0;

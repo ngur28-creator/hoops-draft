@@ -1048,7 +1048,7 @@ h3 { font-family: var(--display); font-weight: 400; font-size: 16px; line-height
 <div class="toast" id="toast" hidden role="status"></div>
 
 <script>
-const APP_VERSION = 35;
+const APP_VERSION = 36;
 // How leaderboard points are counted. Version 1 also counted team rating; entries saved under it are re-scored when shown.
 const SCORE_V = 2;
 // Anything that goes wrong is noted (last 20, in this browser and in your private cloud save) so it can be fixed
@@ -2762,6 +2762,10 @@ function buildFamilies() {
   ladder(23, "dl_streak", [[3, 1, 30], [7, 2, 80], [14, 3, 150], [30, 4, 400]], v => `${v}-day Daily streak`, v => `Play the Daily Draft ${v} days in a row`, () => DL().bestStreak || 0);
   ladder(23, "dl_played", [[10, 2, 60], [50, 3, 200], [100, 4, 400]], v => `${v} Daily Drafts`, v => `Play ${v} Daily Drafts`, () => DL().played || 0);
   ladder(23, "dl_titles", [[5, 3, 150], [25, 4, 400]], v => `${v} Daily titles`, v => `Win the title in ${v} Daily Drafts`, () => DL().titles || 0);
+  const DM = () => career.dailyMonths || {};
+  out.push(A(23, 3, "dl_month1", "Monthly champion", "Finish a month at #1 in the Daily Draft standings", () => (DM().wins || 0) >= 1, null, 150));
+  out.push(A(23, 2, "dl_monthpod", "Monthly podium", "Finish a month in the top 3 of the Daily Draft standings (with 4 or more players)", () => (DM().podiums || 0) >= 1, null, 60));
+  out.push(A(23, 3, "dl_ironman", "Ironman", "Play every Daily Draft in a month", () => (DM().full || 0) >= 1, null, 200));
   // Dynasty
   const DS = () => career.dynStats || {};
   out.push(A(24, 1, "dy_ring", "Dynasty ring", "Win a title in a Dynasty", () => (DS().rings || 0) >= 1, null, 40));
@@ -4404,7 +4408,7 @@ function postDaily(run) {
   saveCareer();
   modePost("daily", { score, sv: SCORE_V, w: run.w, l: run.l, champ: !!run.champ, pw: run.pw || 0, pl: run.pl || 0, reached: run.reached || 0, pf: run.pf || 0, pa: run.pa || 0,
     players: run.players.map(p => ({ slot: p.slot, name: p.name, dec: p.dec, team: p.team, ovr: p.ovr })) }, run.day)
-    .then(() => { const list = modeBoardCache["daily" + run.day]; const i = list ? list.findIndex(e => e.me) : -1; if (i >= 0 && i < 3 && !run.dailyTop3) { run.dailyTop3 = true; d.top3++; saveCareer(); checkCareerTrophies(); } });
+    .then(() => { loadMonthInto(monthOf(run.day)); const list = modeBoardCache["daily" + run.day]; const i = list ? list.findIndex(e => e.me) : -1; if (i >= 0 && i < 3 && !run.dailyTop3) { run.dailyTop3 = true; d.top3++; saveCareer(); checkCareerTrophies(); } });
 }
 function dailyShareText(run) {
   return `🏀 82–0 Hoops Draft · Daily Draft ${dayLabel(run.day)}\n${recText(run)} · ${fmtPts(lbScore(run))} pts\n${run.players.map(p => `${p.slot} ${p.name}`).join(" · ")}\nSame five rolls for everyone today. Can you beat it?`;
@@ -4430,9 +4434,93 @@ function renderDailyPanel() {
   } else {
     html += `<p class="note">Everyone gets the same five rolls today. One try, no re-draws, no rules, and the season is the same for anyone who drafts the same team, so it's all about your picks. Your season goes on today's board.</p>`;
   }
-  html += `<span class="label">Today's board</span>` + modeBoardHtml("daily", list, e => `${esc(recText(e))} · ${fmtPts(e.score || 0)} pts`);
+  const month = monthOf(today), last = prevMonth(month), ml = modeBoardCache["month" + month];
+  if (!ml && !modeBoardCache["loading:month" + month]) loadMonthInto(month);
+  const mi = ml ? ml.findIndex(e => e.me) : -1;
+  if (mi >= 0) html += `<p class="note">${esc(monthName(month))} so far: <b>#${mi + 1}</b> of ${ml.length} with ${fmtPts(ml[mi].score)} pts from ${ml[mi].days} Daily Draft${ml[mi].days === 1 ? "" : "s"}.</p>`;
+  const tabs = [["day", "Today"], ["month", monthName(month)], ["last", monthName(last)]];
+  html += `<div class="row-gap"><span class="label">Daily Draft board</span><div class="seg" role="group" aria-label="Which Daily Draft board">${tabs.map(([v, l]) => `<button data-dbv="${v}" aria-pressed="${dailyBoardView === v}">${esc(l)}</button>`).join("")}</div></div>`;
+  if (dailyBoardView === "day") html += modeBoardHtml("daily", list, e => `${esc(recText(e))} · ${fmtPts(e.score || 0)} pts`);
+  else {
+    const m = dailyBoardView === "month" ? month : last;
+    html += `<p class="note">${dailyBoardView === "month" ? `Every Daily Draft you play in ${esc(monthName(month))} adds its points here, so playing every day is how you climb. The standings are final when the month ends.` : `Final standings for ${esc(monthName(last))}.`}</p>` + monthBoardHtml(m);
+  }
   $("modePanel").innerHTML = html;
   if ($("dailyShare")) $("dailyShare").onclick = () => shareDaily(run, $("dailyShare"));
+  $("modePanel").querySelectorAll("[data-dbv]").forEach(b => b.onclick = () => { dailyBoardView = b.dataset.dbv; renderModePanel(); });
+  monthCheck();
+}
+
+/* ---------- The Daily Draft month ----------
+   Every Daily Draft you play adds its points to your month, so the month's board rewards playing every day.
+   Inside Claude the game adds up the month's Daily Draft entries; on the website the server does. When a
+   month ends, the game tells you where you finished, and the top spots and a full month earn trophies. */
+const monthOf = day => day.slice(0, 7);
+const prevMonth = month => prevDay(`${month}-01`).slice(0, 7);
+const monthName = month => { const [y, m] = month.split("-").map(Number); return new Date(Date.UTC(y, m - 1, 15)).toLocaleDateString(undefined, { month: "long", timeZone: "UTC" }); };
+const daysInMonth = month => { const [y, m] = month.split("-").map(Number); return new Date(Date.UTC(y, m, 0)).getUTCDate(); };
+let dailyBoardView = "day";
+async function loadMonthBoard(month) {
+  let list;
+  if (LB_REST) {
+    const r = await fetch(`${LB_API}?board=monthly&month=${month}`, { cache: "no-store" });
+    if (!r.ok) throw 0;
+    list = ((await r.json()).entries || []).map(e => ({ ...e, me: !!lbMyId && e.id === lbMyId }));
+  } else {
+    if (!lbDb) return null;
+    const snap = await lbDb.collection("daily").where("day", ">=", `${month}-01`).where("day", "<=", `${month}-31`).limit(1000).get();
+    const by = new Map(), seen = new Set();
+    for (const doc of snap.docs || []) {
+      const e = doc.data() || {}, id = doc.id.slice(11), s = entryScore(e);
+      if (typeof e.day !== "string" || !e.day.startsWith(month) || seen.has(doc.id)) continue;
+      seen.add(doc.id);
+      const cur = by.get(id) || { id, name: e.name || "Anonymous", guest: !!e.guest, score: 0, days: 0, best: 0, ts: -1 };
+      cur.score += s; cur.days++; cur.best = Math.max(cur.best, s);
+      if ((e.ts || 0) >= cur.ts) { cur.ts = e.ts || 0; if (e.name) cur.name = e.name; }
+      by.set(id, cur);
+    }
+    const mine = myDocId();
+    list = [...by.values()].sort((a, b) => b.score - a.score || b.days - a.days).map(e => ({ ...e, me: !!mine && e.id === mine }));
+    const ids = list.filter(e => !e.guest).map(e => e.id);
+    if (lbUser && ids.length) { try { const ps = (await lbUser.profiles(ids)) || {}; list.forEach(e => { const p = ps[e.id]; if (!e.guest && p && p.name) e.name = p.name; }); } catch (e) {} }
+  }
+  modeBoardCache["month" + month] = list;
+  return list;
+}
+function loadMonthInto(month) {
+  modeBoardCache["loading:month" + month] = 1;
+  loadMonthBoard(month).then(() => { if (S && S.mode === "daily") renderModePanel(); }, () => {});
+}
+function monthBoardHtml(month) {
+  const list = modeBoardCache["month" + month];
+  if (!list && !modeBoardCache["loading:month" + month]) loadMonthInto(month);
+  return modeBoardHtml("month", list, e => `${fmtPts(e.score || 0)} pts · ${e.days} day${e.days === 1 ? "" : "s"}`);
+}
+// Once a month: where you finished last month (and whether you played every day of it)
+let monthChecking = false;
+async function monthCheck() {
+  const last = prevMonth(monthOf(dayPT()));
+  if (monthChecking || (career.dailyMonths && career.dailyMonths.checked === last) || (!LB_REST && !lbDb)) return;
+  monthChecking = true;
+  let list = null;
+  try { list = await loadMonthBoard(last); } catch (e) {} finally { monthChecking = false; }
+  if (!list) return;
+  const dm = career.dailyMonths = career.dailyMonths && typeof career.dailyMonths === "object" ? career.dailyMonths : {};
+  for (const [f, v] of Object.entries({ checked: "", wins: 0, podiums: 0, full: 0, last: null })) if (dm[f] === undefined) dm[f] = v;
+  if (dm.checked === last) return;
+  dm.checked = last;
+  const played = new Set(runs.filter(r => r.mode === "daily" && typeof r.day === "string" && r.day.startsWith(last + "-")).map(r => r.day)).size;
+  if (played >= daysInMonth(last)) { dm.full++; toast(`🗓️ You played every Daily Draft in ${esc(monthName(last))}. Ironman!`); }
+  const i = list.findIndex(e => e.me);
+  if (i >= 0) {
+    dm.last = { month: last, rank: i + 1, of: list.length, score: list[i].score, days: list[i].days };
+    const champ = i === 0 && list.length >= 2;
+    if (champ) dm.wins++;
+    if (i < 3 && list.length >= 4) dm.podiums++;
+    toast(`🗓️ ${esc(monthName(last))} Daily Draft standings: you finished <b>#${i + 1} of ${list.length}</b> with ${fmtPts(list[i].score)} pts${champ ? ". Monthly champion! 🏆" : ""}`);
+    if (champ) confetti();
+  }
+  saveCareer(); checkCareerTrophies();
 }
 
 /* ---------- Dynasty ----------
@@ -6408,6 +6496,8 @@ function boot() {
   career.seen32 = career.seen33 = 1;
   // Version 34: the game's website
   renderSiteBox();
+  // Version 36: last month's Daily Draft standings, once the leaderboard is connected
+  setTimeout(() => { try { monthCheck(); } catch (e) {} }, 4000);
   if (!LB_REST && seeded === null && runs.length && !career.seen34) toast(`🌐 The game has its own website now, where anyone can post scores: <b>claudba.netlify.app</b>. Your save can move there too (in the leaderboard section).`);
   career.seen34 = 1;
   // The quests change at midnight in California; keep their countdown fresh
