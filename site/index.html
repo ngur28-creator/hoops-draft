@@ -1048,7 +1048,7 @@ h3 { font-family: var(--display); font-weight: 400; font-size: 16px; line-height
 <div class="toast" id="toast" hidden role="status"></div>
 
 <script>
-const APP_VERSION = 34;
+const APP_VERSION = 35;
 // How leaderboard points are counted. Version 1 also counted team rating; entries saved under it are re-scored when shown.
 const SCORE_V = 2;
 // Anything that goes wrong is noted (last 20, in this browser and in your private cloud save) so it can be fixed
@@ -5887,20 +5887,20 @@ async function unpackSave(code) {
 }
 function applySave(d) {
   // Seasons: every one in the save that isn't here yet
-  const byId = new Map(runs.map(r => [r.id, r]));
-  let added = 0;
+  const byId = new Map(runs.map(r => [r.id, r])), addedRuns = [];
   for (const r of d.runs) {
     if (!r || typeof r !== "object" || !Array.isArray(r.players) || r.players.length !== 5 || !Number.isFinite(r.id) || byId.has(r.id)) continue;
-    repairRun(r); byId.set(r.id, r); added++;
+    repairRun(r); byId.set(r.id, r); addedRuns.push(r);
   }
   runs = [...byId.values()].sort((a, b) => a.id - b.id).slice(-150);
-  store.set(KEY_RUNS, runs);
+  saveRuns();
   // Trophies from both
   const t = Object.fromEntries(Object.entries(d.trophies || {}).map(([k, v]) => [k, typeof v === "string" ? { day: v } : v]));
   trophies = Object.assign({}, t, trophies);
   store.set(KEY_TROPHY, trophies);
-  // Level and the rest: whichever is further along; players and card levels from both, so nobody is lost
-  const took = (d.career.xp || 0) > (career.xp || 0), other = took ? career : d.career;
+  // Level and the rest: whichever is further along; players and card levels from both, so nobody is lost.
+  // What's already on this version's boards stays this version's (each version has its own boards).
+  const postedBefore = career.posted || {}, took = (d.career.xp || 0) > (career.xp || 0), other = took ? career : d.career;
   if (took) {
     career = Object.assign(blankCareer(), d.career);
     career.life = Object.assign(blankCareer().life, career.life || {});
@@ -5910,8 +5910,8 @@ function applySave(d) {
   }
   career.coll = Object.assign({}, other.coll || {}, career.coll || {});
   if (other.cards && typeof other.cards === "object") for (const [k, v] of Object.entries(other.cards)) career.cards[k] = Math.max(career.cards[k] || 0, +v || 0);
-  // The website's boards are its own, so your best seasons go up there again
-  if (LB_REST) { career.posted = {}; career.postedV = SCORE_V; }
+  // On the website your best seasons go up again; inside Claude, a new best from the website posts itself
+  career.posted = LB_REST ? {} : postedBefore; career.postedV = SCORE_V;
   collCache = null; h2hLineups.clear(); ensureChallenges(); saveCareer();
   const name = String(d.name || "").replace(/\s+/g, " ").trim().slice(0, 24);
   if (LB_REST && name && !String(store.get(KEY_LBNAME, "") || "").trim()) { store.set(KEY_LBNAME, name); $("lbName").value = name; }
@@ -5919,13 +5919,14 @@ function applySave(d) {
   if (S && (S.mode === "arcade" || S.mode === "speed")) renderModePanel();
   checkCareerTrophies();
   setTimeout(() => autoPost(true), 0);
-  // Arcade bests that carry their numbers go on this site's boards too
+  // Arcade bests that carry their numbers go on this version's boards too
   const a = arcState();
   if (a.hol.best) arcPost("hol", { score: a.hol.best, streak: a.hol.best });
   if (a.buzz.best && a.buzz.bestMakes) arcPost("buzz", { score: a.buzz.best, points: a.buzz.best, makes: a.buzz.bestMakes });
-  return { added, took, level: levelOf(career.xp).level, seasons: runs.length, players: collStats().total };
+  return { added: addedRuns.length, addedRuns: addedRuns.filter(r => runs.includes(r)), took, level: levelOf(career.xp).level, seasons: runs.length, players: collStats().total };
 }
-// Inside Claude: the website's link, and your save as a code (and a link carrying it, where it fits)
+const otherSide = () => LB_REST ? "the Claude version" : "the website";
+// Your save as a code to paste into the other version (inside Claude, also a link to the website that carries it)
 async function copySave() {
   const btn = $("saveCopy"), out = $("saveOut"), note = $("saveNote");
   btn.disabled = true; note.textContent = "Packing your save…";
@@ -5934,14 +5935,16 @@ async function copySave() {
     out.value = code; out.hidden = false;
     let ok = legacyCopy(code);
     if (!ok && navigator.clipboard) ok = await navigator.clipboard.writeText(code).then(() => true, () => false);
-    note.innerHTML = ok ? `✓ Copied. On <a href="${SITE_URL}" target="_blank" rel="noopener">the website</a>, open “Bring your progress” at the top of the leaderboard and paste it.`
-      : `Select all of the code above and copy it, then paste it on the website under “Bring your progress”.`;
-    if (code.length < 60000) { const go = $("saveGo"); go.href = `${SITE_URL}#save=${code.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "")}`; go.hidden = false; }
+    const there = LB_REST ? "in the Claude version" : `on <a href="${SITE_URL}" target="_blank" rel="noopener">the website</a>`;
+    note.innerHTML = ok ? `✓ Copied. Now, ${there}, open “Bring your progress” at the top of the leaderboard, paste it and tap Load my save.`
+      : `Select all of the code above and copy it. Then, ${there}, paste it under “Bring your progress” at the top of the leaderboard.`;
+    const go = $("saveGo");
+    if (go && code.length < 60000) { go.href = `${SITE_URL}#save=${code.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "")}`; go.hidden = false; }
   } catch (e) { note.textContent = "Couldn't pack your save. Try again."; }
   finally { btn.disabled = false; }
 }
-// On the website: a save code pasted in, or one that arrived in the link
-let pendingSave = null; // { code, d } from a link, waiting for "Load it"
+// A save code pasted in (or, on the website, one that arrived in a link)
+let pendingSave = null; // { code, d } from a link, waiting for "Load my save"
 async function loadSave(code) {
   const note = $("saveInNote"), btn = $("saveLoad");
   if (!String(code || "").trim()) { note.textContent = "Paste your save code first."; return; }
@@ -5951,8 +5954,17 @@ async function loadSave(code) {
     const r = applySave(d);
     pendingSave = null;
     $("saveIn").value = "";
-    const who = String(store.get(KEY_LBNAME, "") || "").trim();
-    note.innerHTML = `✓ Loaded: Level ${r.level}, ${r.seasons} seasons, ${fmtPts(r.players)} players${r.added ? ` (${r.added} new season${r.added === 1 ? "" : "s"})` : ""}. ${who ? `Your best seasons are going up on the boards as <b>${esc(who)}</b>.` : "Type your name in the leaderboard section to put your best seasons on the boards."}`;
+    let html = `✓ Loaded: Level ${r.level}, ${r.seasons} seasons, ${fmtPts(r.players)} players${r.added ? ` (${r.added} new season${r.added === 1 ? "" : "s"})` : ", nothing new"}.`;
+    // The best season that just came in: is it your best on its board (so it goes up by itself), or does it need a tap?
+    const nb = bestOf(r.addedRuns), canPost = LB_REST || !!lbWay;
+    if (nb) {
+      const board = nb.hard ? "hard" : "normal", top = lbBestForMode(board), label = nb.hard ? "Hard Mode" : "Normal";
+      if (top === nb) html += ` Your <b>${esc(recText(nb))}</b> (${fmtPts(lbScore(nb))} pts) is your best ${label} season${canPost ? `, so it's going on the ${label} leaderboard now` : ""}.`;
+      else html += ` Your <b>${esc(recText(nb))}</b> (${fmtPts(lbScore(nb))} pts) is in your record book. ${canPost ? `Your ${esc(recText(top))} has more points (${fmtPts(lbScore(top))}), so it stays on the leaderboard. To show the ${esc(recText(nb))} instead, open it and tap “Put this season on the leaderboard”. <button class="btn sm" id="saveOpenNew">Open my ${esc(recText(nb))}</button>` : ""}`;
+    }
+    if (LB_REST) { const who = String(store.get(KEY_LBNAME, "") || "").trim(); html += who ? ` Posting as <b>${esc(who)}</b>.` : " Type your name in the leaderboard section to put your best seasons on the boards."; }
+    note.innerHTML = html;
+    if ($("saveOpenNew")) $("saveOpenNew").onclick = () => openRun(nb, $("saveOpenNew"));
     toast(`📥 Your progress is here: <b>Level ${r.level}</b>, ${r.seasons} seasons`);
     confetti();
   } catch (e) { note.textContent = (e && e.message) || "That save couldn't be read."; }
@@ -5972,25 +5984,26 @@ async function saveFromLink() {
     try { $("siteBox").scrollIntoView({ block: "center" }); } catch (e) {}
   } catch (e) { toast(esc(e.message || "That save link looks broken.")); }
 }
+// The box at the top of the leaderboard: inside Claude, the website's link; on both, moving your save either way
 function renderSiteBox() {
   const el = $("siteBox");
   if (!el) return;
   if ($("siteLink")) $("siteLink").hidden = LB_REST;
-  if (!LB_REST) {
-    el.innerHTML = `<b>🌐 Play on the website: <a href="${SITE_URL}" target="_blank" rel="noopener">claudba.netlify.app</a></b>
-      <span class="note">The same game, where anyone can post scores without an invite, Vs Friend works on two phones and every board is open. Send it to your friends. To take your level, collection, trophies and seasons with you, copy your save and paste it there.</span>
-      <div class="row-gap"><button class="btn primary mid" id="saveCopy">📋 Copy my save</button><a class="btn mid" id="saveGo" href="${SITE_URL}" target="_blank" rel="noopener" hidden>Open the website with my save</a></div>
-      <textarea class="lb-codeout" id="saveOut" rows="3" readonly hidden aria-label="Your save code"></textarea>
-      <span class="note" id="saveNote"></span>`;
-    $("saveCopy").onclick = copySave;
-  } else {
-    el.innerHTML = `<details class="savein"${pendingSave ? " open" : ""}><summary>📥 Bring your progress from the Claude version</summary>
-      <span class="note">In the Claude version, tap “Copy my save” in the leaderboard section, then paste it here. Your seasons, level, collection, trophies and Arcade bests come with it, and your best seasons go on this site's boards.</span>
+  const other = otherSide();
+  el.innerHTML = (LB_REST ? "" : `<b>🌐 Play on the website: <a href="${SITE_URL}" target="_blank" rel="noopener">claudba.netlify.app</a></b>
+      <span class="note">The same game, where anyone can post scores without an invite, Vs Friend works on two phones and every board is open. Send it to your friends.</span>`) +
+    `<details class="savein"${pendingSave ? " open" : ""}><summary>📥 Bring your progress from ${other}</summary>
+      <span class="note">${LB_REST ? "In the Claude version" : "On the website"}, open “Take your progress” at the top of the leaderboard and tap “Copy my save”. Then paste it here. Your seasons, level, collection, trophies and Arcade bests come with it. It only ever adds: nothing here gets deleted.</span>
       <textarea class="lb-codeout" id="saveIn" rows="3" placeholder="Paste your save code here" spellcheck="false" aria-label="Your save code"></textarea>
       <div class="row-gap"><button class="btn primary mid" id="saveLoad">Load my save</button></div>
-      <span class="note" id="saveInNote"></span></details>`;
-    $("saveLoad").onclick = () => loadSave($("saveIn").value);
-  }
+      <span class="note" id="saveInNote"></span></details>
+    <details class="savein"><summary>📤 Take your progress to ${other}</summary>
+      <span class="note">Packs your seasons, level, collection, trophies and Arcade bests into a code to paste ${LB_REST ? "in the Claude version" : "on the website"}.</span>
+      <div class="row-gap"><button class="btn primary mid" id="saveCopy">📋 Copy my save</button>${LB_REST ? "" : `<a class="btn mid" id="saveGo" href="${SITE_URL}" target="_blank" rel="noopener" hidden>Open the website with my save</a>`}</div>
+      <textarea class="lb-codeout" id="saveOut" rows="3" readonly hidden aria-label="Your save code"></textarea>
+      <span class="note" id="saveNote"></span></details>`;
+  $("saveLoad").onclick = () => loadSave($("saveIn").value);
+  $("saveCopy").onclick = copySave;
   el.hidden = false;
 }
 
