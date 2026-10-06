@@ -147,5 +147,57 @@ await t("Dynasty: titles and wins are counted by the server", async () => {
   r = await call("POST", "", { board: "dynasty", token: tok("1"), name: "Gus", entry: { years: [...years.slice(0, 4), { w: 30, l: 52, champ: true, pw: 16, pl: 0 }], players: bobNormal.players } });
   assert.equal(r.status, 400);
 });
+await t("Higher or Lower: best streak on the board, a shorter one is kept out, silly ones refused", async () => {
+  let r = await call("POST", "", { board: "hol", token: tok("1"), name: "Gus", entry: { streak: 14 } });
+  assert.equal(r.status, 200, JSON.stringify(r.body)); assert.equal(r.body.score, 14); assert.equal(r.body.rank, 1);
+  r = await call("POST", "", { board: "hol", token: tok("1"), name: "Gus", entry: { streak: 9 } });
+  assert.equal(r.body.kept, true); assert.equal(r.body.score, 14);
+  r = await call("POST", "", { board: "hol", token: tok("2"), name: "Hal", entry: { streak: 21 } });
+  assert.equal(r.body.rank, 1);
+  for (const bad of [{ streak: 0 }, { streak: 1.5 }, { streak: 5000 }, {}]) assert.equal((await call("POST", "", { board: "hol", token: tok("2"), name: "Hal", entry: bad })).status, 400, JSON.stringify(bad));
+  const b = await call("GET", "?board=hol");
+  assert.deepEqual(b.body.entries.map(e => [e.name, e.score, e.streak]), [["Hal", 21, 21], ["Gus", 14, 14]]);
+});
+await t("Buzzer Beater: points and makes, and points have to fit the makes", async () => {
+  const r = await call("POST", "", { board: "buzz", token: tok("1"), name: "Gus", entry: { points: 47, makes: 15 } });
+  assert.equal(r.status, 200, JSON.stringify(r.body)); assert.equal(r.body.score, 47);
+  for (const bad of [{ points: 100, makes: 10 }, { points: 10, makes: 6 }, { points: 0, makes: 0 }]) assert.equal((await call("POST", "", { board: "buzz", token: tok("2"), name: "Hal", entry: bad })).status, 400, JSON.stringify(bad));
+  const b = await call("GET", "?board=buzz");
+  assert.deepEqual(b.body.entries.map(e => [e.name, e.points, e.makes]), [["Gus", 47, 15]]);
+});
+await t("Survival: wins with the team that got them; too many losses refused; fake players refused", async () => {
+  const players = bobNormal.players;
+  let r = await call("POST", "", { board: "surv", token: tok("1"), name: "Gus", entry: { wins: 23, losses: 4, players } });
+  assert.equal(r.status, 200, JSON.stringify(r.body)); assert.equal(r.body.score, 23);
+  r = await call("POST", "", { board: "surv", token: tok("2"), name: "Hal", entry: { wins: 5, losses: 9, players } });
+  assert.equal(r.status, 400);
+  r = await call("POST", "", { board: "surv", token: tok("2"), name: "Hal", entry: { wins: 5, losses: 3, players: players.map((p, i) => i ? p : { ...p, name: "Nobody" }) } });
+  assert.equal(r.status, 400); assert.match(r.body.error, /Couldn't find Nobody/);
+  const d = await call("GET", `?board=surv&id=${(await call("GET", "?board=surv")).body.entries[0].id}`);
+  assert.equal(d.body.wins, 23); assert.equal(d.body.players[0].ovr, 97);
+});
+await t("Mystery Player: one board a day, fewest guesses first", async () => {
+  const { dayPT } = await import("../netlify/functions/lb/lb.mjs");
+  const day = dayPT();
+  let r = await call("POST", "", { board: "guess", day, token: tok("1"), name: "Gus", entry: { tries: 4 } });
+  assert.equal(r.status, 200, JSON.stringify(r.body)); assert.equal(r.body.score, 3);
+  r = await call("POST", "", { board: "guess", day, token: tok("2"), name: "Hal", entry: { tries: 2 } });
+  assert.equal(r.body.rank, 1);
+  assert.equal((await call("POST", "", { board: "guess", day, token: tok("2"), name: "Hal", entry: { tries: 7 } })).status, 400);
+  assert.equal((await call("POST", "", { board: "guess", day: "2020-01-01", token: tok("2"), name: "Hal", entry: { tries: 1 } })).status, 400);
+  assert.equal((await call("GET", "?board=guess")).status, 400);
+  const b = await call("GET", `?board=guess&day=${day}`);
+  assert.deepEqual(b.body.entries.map(e => [e.name, e.tries]), [["Hal", 2], ["Gus", 4]]);
+});
+await t("Speed Draft: the season's points plus the time bonus, which can't be more than 400", async () => {
+  let r = await call("POST", "", { board: "speed", token: tok("1"), name: "Gus", entry: { ...bobNormal, bonus: 215 } });
+  assert.equal(r.status, 200, JSON.stringify(r.body)); assert.equal(r.body.score, 1380 + 215);
+  for (const bonus of [401, -5, 2.5, undefined]) assert.equal((await call("POST", "", { board: "speed", token: tok("2"), name: "Hal", entry: { ...bobNormal, bonus } })).status, 400, String(bonus));
+  // a hard mode flag doesn't add 200 here either
+  r = await call("POST", "", { board: "speed", token: tok("2"), name: "Hal", entry: { ...bobHard, bonus: 0 } });
+  assert.equal(r.body.score, 1350);
+  const b = await call("GET", "?board=speed");
+  assert.deepEqual(b.body.entries.map(e => [e.name, e.score, e.w, e.l, e.champ]), [["Gus", 1595, 79, 3, true], ["Hal", 1350, 79, 3, true]]);
+});
 console.log(results.join("\n"));
 process.exitCode = results.some(r => r.startsWith("FAIL")) ? 1 : 0;

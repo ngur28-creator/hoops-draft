@@ -676,6 +676,89 @@ h3 { font-family: var(--display); font-weight: 400; font-size: 16px; line-height
 .droster .pdraft { display: flex; flex-wrap: wrap; gap: 4px; justify-content: flex-end; }
 @media (max-width: 520px) { .dteams { grid-template-columns: minmax(0, 1fr); } }
 
+/* Arcade */
+.arcgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 140px), 1fr)); gap: 10px; }
+@media (max-width: 520px) { .arcgrid { gap: 8px; } .arccard { padding: 10px; } .arccard .note { font-size: 12.5px; } .arccard b { font-size: 16px; } }
+.arccard { display: grid; gap: 5px; align-content: start; text-align: left; padding: 12px 14px; border-radius: 14px; border: 2px solid var(--line); background: var(--bg); color: var(--ink); font: inherit; cursor: pointer; min-width: 0; transition: transform .08s, border-color .15s; }
+.arccard:hover { border-color: var(--accent); }
+.arccard:active { transform: translateY(2px); }
+.arccard .arcicon { font-size: 30px; line-height: 1; }
+.arccard b { font-family: var(--display); font-weight: 400; font-size: 18px; line-height: 1.1; }
+.arccard .note { font-size: 13.5px; }
+.arccard .arcbest { font-weight: 800; font-size: 14px; color: var(--accent-text); }
+.arccard .arcbest.new { color: var(--win); }
+.archead { align-items: center; gap: 8px 12px; }
+.archead h2 { margin-right: auto; }
+.arcgame { display: grid; gap: 10px; min-width: 0; }
+.arcover { display: grid; gap: 6px; padding: 12px; border-radius: 12px; border: 2px solid var(--gold); background: color-mix(in srgb, var(--gold) 10%, var(--bg)); }
+.arcover .drec { font-family: var(--display); font-weight: 400; font-size: 26px; line-height: 1.1; }
+.arcname { display: grid; gap: 6px; }
+.acard { display: grid; gap: 3px; align-content: start; padding: 10px 12px; border-radius: 14px; border: 3px solid transparent; min-width: 0;
+  background: linear-gradient(var(--panel), var(--panel)) padding-box, linear-gradient(var(--line), var(--line)) border-box; }
+.acard.rare { background: linear-gradient(var(--panel), var(--panel)) padding-box, linear-gradient(135deg, var(--navy), color-mix(in srgb, var(--navy) 40%, var(--panel))) border-box; }
+.acard.epic { background: linear-gradient(var(--panel), var(--panel)) padding-box, linear-gradient(135deg, #c77dff, #7fa2ff) border-box; }
+.acard.legendary { background: linear-gradient(color-mix(in srgb, var(--gold) 12%, var(--panel)), var(--panel)) padding-box, var(--foil) border-box; }
+.acard .ateam { font-size: 12.5px; color: var(--muted); font-weight: 700; }
+.acard .aname { font-size: 17px; line-height: 1.15; overflow-wrap: anywhere; }
+.acard .aval { font-family: var(--display); font-weight: 400; font-size: clamp(34px, 9vw, 52px); line-height: 1; color: var(--accent-text); font-variant-numeric: tabular-nums; }
+.acard .aunit, .acard .aline { font-size: 12.5px; color: var(--muted); }
+.acard.right { box-shadow: 0 0 0 3px var(--win); }
+.acard.wrong { box-shadow: 0 0 0 3px var(--loss); }
+.acard.right .aval { color: var(--win); }
+.acard.wrong .aval { color: var(--loss); }
+.holq { margin: 0; font-size: 16px; }
+.holcards { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 10px; align-items: stretch; }
+.holvs { align-self: center; font-family: var(--display); font-size: 20px; color: var(--accent); }
+.holbtns .btn { flex: 1 1 140px; }
+.holstat { display: flex; gap: 18px; align-items: baseline; font-size: 15px; }
+.holstat b { font-family: var(--display); font-weight: 400; font-size: 22px; color: var(--accent-text); }
+@media (max-width: 520px) { .holcards { grid-template-columns: minmax(0, 1fr); gap: 6px; } .holvs { justify-self: center; font-size: 15px; } }
+.bzbox.fire { border-color: #ffc93c; box-shadow: 0 0 22px color-mix(in srgb, #ff6a2b 55%, transparent); }
+.bzhud { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: baseline; }
+.bzlives span { opacity: .25; filter: grayscale(1); }
+.bzlives span.on { opacity: 1; filter: none; }
+.bzpts { font-size: 15px; }
+.bzpts b { font-family: var(--display); font-weight: 400; font-size: 30px; color: #ffc93c; }
+.bzmsg { margin: 0; font-weight: 800; font-size: 16px; min-height: 1.3em; color: var(--board-fg); }
+.svboard { display: grid; gap: 8px; padding: 14px; border-radius: 16px; background: var(--ink-2); color: var(--board-fg); border: 2px solid color-mix(in srgb, var(--accent) 45%, #000); }
+.svboard .note, .svboard .label { color: var(--board-dim); }
+.svnext { display: grid; gap: 1px; padding: 8px 10px; border-radius: 10px; border: 1px solid color-mix(in srgb, var(--board-fg) 25%, transparent); }
+.svnext b { font-family: var(--display); font-weight: 400; font-size: 18px; }
+.svnext.boss { border-color: #ffc93c; background: color-mix(in srgb, #ffc93c 12%, transparent); }
+.svnext.boss b { color: #ffc93c; }
+.svlog .g { width: 22px; }
+.svteam { display: grid; gap: 4px; padding: 8px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); }
+.svcards { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 8px; }
+.svput { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.svput select { max-width: 100%; }
+.gsmode { justify-self: start; }
+.gsgrid { display: grid; gap: 6px; }
+.gsrow { display: grid; gap: 3px; }
+.gsrow b { font-size: 15px; }
+.gsrow.got b { color: var(--win); }
+.gscells { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; }
+.gshead span { font-size: 12px; font-weight: 800; color: var(--muted); text-align: center; }
+.gc { display: grid; place-items: center; min-height: 34px; padding: 4px 2px; border-radius: 8px; text-align: center; font-weight: 800; font-size: 13px; line-height: 1.1; background: var(--empty); color: var(--ink); overflow-wrap: anywhere; }
+.gc.hit { background: var(--win); color: #fff; }
+.gc.near { background: #ffc93c; color: #1b1b1b; }
+.gc.sm { display: inline-block; min-height: 0; padding: 0 6px; font-size: 12px; }
+.gskey { font-size: 12.5px; }
+.gshint { margin: 0; font-weight: 800; color: var(--accent-text); }
+.gsin, .gssug { display: grid; gap: 6px; }
+.gsopt { text-align: left; padding: 8px 11px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); font: inherit; font-weight: 700; cursor: pointer; }
+.gsopt:hover, .gsopt:focus-visible { border-color: var(--accent); }
+.gsopt small { font-weight: 400; color: var(--muted); margin-left: 4px; }
+@media (max-width: 520px) { .gc { font-size: 11.5px; min-height: 32px; } }
+.qcard.done { border-left-color: var(--gold); background: color-mix(in srgb, var(--gold) 8%, var(--bg)); }
+.qcard .pbar { height: 8px; }
+.qreward { border-left-color: var(--gold); }
+.speedbar { position: relative; height: 34px; border-radius: 10px; background: var(--empty); overflow: hidden; border: 2px solid var(--line); }
+.speedbar i { position: absolute; left: 0; top: 0; bottom: 0; width: 100%; background: color-mix(in srgb, var(--win) 70%, transparent); }
+.speedbar.low i { background: color-mix(in srgb, var(--loss) 75%, transparent); }
+.speedbar span { position: relative; display: flex; height: 100%; align-items: center; justify-content: center; gap: 5px; font-weight: 800; }
+.speedbar b { font-family: var(--display); font-weight: 400; font-size: 20px; font-variant-numeric: tabular-nums; }
+@media (prefers-reduced-motion: no-preference) { .speedbar.low:not([hidden]) { animation: spdPulse .45s ease-in-out infinite alternate; } @keyframes spdPulse { to { border-color: var(--loss); } } }
+
 /* Toast */
 .toast { border-radius: 999px; border: 2px solid var(--accent); background: var(--ink-2); padding: 10px 18px; }
 .toast b { color: #ffc93c; }
@@ -702,6 +785,7 @@ h3 { font-family: var(--display); font-weight: 400; font-size: 16px; line-height
         <button id="mDaily" aria-pressed="false">📅 Daily Draft</button>
         <button id="mDynasty" aria-pressed="false">👑 Dynasty</button>
         <button id="mDuel" aria-pressed="false">🤝 Vs Friend</button>
+        <button id="mArcade" aria-pressed="false">🎮 Arcade</button>
       </div>
       <span class="confirm" id="modeAsk" hidden>Switch modes? Your current picks will be lost. <button class="btn sm" id="modeYes">Start over</button><button class="btn sm" id="modeNo">Keep drafting</button></span>
       <div class="bests" id="bests"></div>
@@ -717,7 +801,9 @@ h3 { font-family: var(--display); font-weight: 400; font-size: 16px; line-height
 
   <section class="panel stack modepanel" id="modePanel" hidden aria-label="Game mode"></section>
 
-  <section class="panel stack" id="chPanel" aria-label="Challenges">
+  <section class="panel stack" id="chPanel" aria-label="Daily quests and challenges">
+    <div class="head"><h2>📋 Daily quests</h2><span class="label" id="qSum"></span></div>
+    <div class="chs quests" id="qList"></div>
     <div class="head"><h2>Challenges</h2><span class="label" id="chSum"></span></div>
     <div class="chs" id="chList"></div>
   </section>
@@ -738,7 +824,7 @@ h3 { font-family: var(--display); font-weight: 400; font-size: 16px; line-height
   </section>
 
   <section class="panel stack" id="drawPanel" aria-label="Current draw">
-    <div class="rulesbar">
+    <div class="rulesbar" id="rulesBar">
       <div class="head"><span class="label">Rules</span><span class="note" id="rulesNote"></span></div>
       <div class="rules" id="rules" role="group" aria-label="Rules for this draft"></div>
       <details class="rulehelp"><summary>What do the rules do?</summary><ul id="ruleHelp"></ul></details>
@@ -747,6 +833,7 @@ h3 { font-family: var(--display); font-weight: 400; font-size: 16px; line-height
       <div class="reel" id="eraReel"><div class="label">Era</div><div class="val" id="eraVal">—</div></div>
       <div class="reel" id="teamReel"><div class="label">Franchise</div><div class="val" id="teamVal">—</div></div>
     </div>
+    <div class="speedbar" id="speedBar" hidden><i id="speedFill"></i><span>⚡ <b id="speedLeftT">8.0</b> s to pick</span></div>
     <div class="row-gap">
       <button class="btn" id="rTeam">Re-draw team</button>
       <button class="btn" id="rEra">Re-draw era</button>
@@ -950,7 +1037,7 @@ h3 { font-family: var(--display); font-weight: 400; font-size: 16px; line-height
 <div class="toast" id="toast" hidden role="status"></div>
 
 <script>
-const APP_VERSION = 32;
+const APP_VERSION = 33;
 // How leaderboard points are counted. Version 1 also counted team rating; entries saved under it are re-scored when shown.
 const SCORE_V = 2;
 // Anything that goes wrong is noted (last 20, in this browser and in your private cloud save) so it can be fixed
@@ -1027,7 +1114,8 @@ function fresh() {
   const rules = mode === "free" ? (career.rules || []).filter(id => ruleUnlocked(id)) : [];
   S = { lineup: { PG: null, SG: null, SF: null, PF: null, C: null }, draw: null, teamRedraw: 1, eraRedraw: 1, spinning: false, done: false, mode, day: mode === "daily" ? dayPT() : todayKey(), drawCount: 0,
     rules, lockDec: null, lockName: null, redrawsUsed: 0, draftXp: 0 };
-  if (rules.includes("noredraw") || mode === "daily") S.teamRedraw = S.eraRedraw = 0;
+  if (rules.includes("noredraw") || mode === "daily" || mode === "speed") S.teamRedraw = S.eraRedraw = 0;
+  if (mode === "speed") { S.speedLeft = []; S.speedAt = null; }
   if (mode !== "free") $("hardmode").checked = false;
 }
 const hasRule = id => !!(S && S.rules && S.rules.includes(id));
@@ -1167,6 +1255,7 @@ function flash(slot) {
   if (el) { el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash"); }
 }
 function draft(p, slot) {
+  if (S.mode === "speed") spdPicked();
   const team = DATA[S.draw.dec][S.draw.fid].name;
   if (!picks()) {
     if (hasRule("eralock")) S.lockDec = S.draw.dec;
@@ -1176,7 +1265,9 @@ function draft(p, slot) {
   S.lineup[slot] = { ...p, dec: S.draw.dec, fid: S.draw.fid, team, fresh: isNew };
   if (isNew) collectPlayer(S.lineup[slot]);
   render(); flash(slot);
-  if (picks() < 5) newDraw(); else { S.draw = null; render(); }
+  if (isNew) questEvent("draftNew", 1);
+  if (p.ovr >= 95 && !$("hardmode").checked) questEvent("draftLegend", 1);
+  if (picks() < 5) newDraw(); else { S.draw = null; render(); if (S.mode === "speed") spdAllIn(); }
 }
 function move(from, to) {
   const a = S.lineup[from];
@@ -1324,24 +1415,30 @@ function renderInner() {
   const hard = $("hardmode").checked;
   $("hardmode").disabled = picks() > 0 || S.done || S.mode !== "free";
   $("hardmode").closest("label").hidden = S.mode !== "free";
+  spdClock();
   renderHeader();
   renderRules();
   renderSlots(hard);
   $("redrawLeft").textContent = `Re-draws left: team ${S.teamRedraw} · era ${S.eraRedraw}`;
   const full = picks() === 5;
-  $("drawPanel").hidden = full;
+  $("drawPanel").hidden = full || (S.mode === "speed" && !spdStarted());
   $("simPanel").hidden = !full || S.done;
+  $("chPanel").hidden = S.mode === "speed" && spdStarted() && !S.done;
   $("seasonPanel").hidden = !S.done;
   renderModePanel();
-  // Draft vs Friend has its own board; a finished Daily Draft and a Dynasty offseason pause the draft
-  $("lineupPanel").hidden = S.mode === "duel";
-  if (S.mode === "duel" || S.locked || S.offseason) { $("drawPanel").hidden = $("simPanel").hidden = true; $("seasonPanel").hidden = !S.done || S.mode === "duel"; return; }
+  // Draft vs Friend and the Arcade have their own screens; a finished Daily Draft and a Dynasty offseason pause the draft
+  const noDraft = S.mode === "duel" || S.mode === "arcade";
+  $("lineupPanel").hidden = noDraft;
+  if (noDraft || S.locked || S.offseason) { $("drawPanel").hidden = $("simPanel").hidden = true; $("seasonPanel").hidden = !S.done || noDraft; return; }
   if (full) { if (!S.done) renderProjection(hard); return; }
   $("pickNo").textContent = `Pick ${picks() + 1} / 5`;
   $("rTeam").disabled = S.spinning || !S.teamRedraw || !S.draw || !teamOpts().length;
   $("rEra").disabled = S.spinning || !S.eraRedraw || !S.draw || !eraOpts().length;
   $("rTeam").textContent = `Re-draw team (${S.teamRedraw})`;
   $("rEra").textContent = `Re-draw era (${S.eraRedraw})`;
+  // Rules are for free play; a Speed Draft has no re-draws, so the roster comes straight after the clock
+  $("rulesBar").hidden = S.mode !== "free";
+  $("rTeam").hidden = $("rEra").hidden = S.mode === "speed";
   renderControls(hard);
   if (S.spinning || !S.draw) { $("roster").innerHTML = ""; $("rosterNote").textContent = ""; $("note").textContent = "Spinning…"; return; }
   const team = DATA[S.draw.dec][S.draw.fid];
@@ -1831,8 +1928,9 @@ const ACH_CATS = [
   { name: "Legendary Finals", career: true }, { name: "Head-to-head", career: true }, { name: "Milestones", career: true },
   { name: "Star hunt", career: true }, { name: "Epic rings" }, { name: "Packs", career: true }, { name: "Clutch", career: true },
   { name: "Card levels", career: true }, { name: "Daily Draft", career: true }, { name: "Dynasty", career: true }, { name: "Legends Gauntlet", career: true }, { name: "Draft vs Friend", career: true },
+  { name: "Arcade", career: true }, { name: "Daily quests", career: true },
 ];
-const CAT_ORDER = [0, 1, 21, 23, 24, 25, 26, 22, 6, 2, 3, 4, 7, 8, 19, 9, 10, 11, 15, 16, 20, 12, 13, 18, 14, 5, 17];
+const CAT_ORDER = [0, 1, 21, 23, 24, 25, 26, 27, 28, 22, 6, 2, 3, 4, 7, 8, 19, 9, 10, 11, 15, 16, 20, 12, 13, 18, 14, 5, 17];
 const isCareer = a => !!ACH_CATS[a.cat].career;
 const achXp = a => a.xp ?? TIER_XP[a.tier];
 const avgOvr = r => r.players.reduce((a, p) => a + p.ovr, 0) / 5;
@@ -2500,6 +2598,7 @@ function swapChallenge(i) {
   saveCareer(); renderChallenges();
 }
 function renderChallenges() {
+  try { renderQuests(); } catch (e) { logError(e && e.message, e && e.stack); }
   $("chSum").textContent = `${career.chDone || 0} done · ${career.skips || 0} swap${career.skips === 1 ? "" : "s"} left`;
   $("chList").innerHTML = career.ch.map((c, i) => `<div class="chcard t${c.tier}"><span class="label">${CH_TIER[c.tier]} · +${CH_XP[c.tier]} XP</span><b>${esc(chText(c))}</b><button class="btn sm" data-swap="${i}"${career.skips ? "" : " disabled"} aria-label="Swap this challenge for another">Swap</button></div>`).join("");
 }
@@ -2678,6 +2777,27 @@ function buildFamilies() {
   out.push(A(26, 2, "du_sweep", "Swept", "Sweep a friend 4–0", () => (DU().sweeps || 0) >= 1, null, 60));
   out.push(A(26, 2, "du_online", "Long distance", "Play a Draft vs Friend on two phones (on the website)", () => (DU().online || 0) >= 1, null, 60));
   ladder(26, "du_wins", [[5, 2, 60], [20, 3, 150], [50, 4, 300]], v => `${v} friend wins`, v => `Win ${v} Draft vs Friend series`, () => DU().won || 0);
+  // Arcade
+  const AR = () => arcState();
+  ladder(27, "ar_hol", [[5, 1, 20], [10, 2, 50], [20, 3, 120], [30, 3, 200], [50, 4, 400]], v => `${v} in a row`, v => `Get ${v} in a row in Higher or Lower`, () => AR().hol.best);
+  ladder(27, "ar_buzz", [[10, 1, 20], [25, 2, 50], [50, 3, 120], [80, 3, 200], [120, 4, 400]], v => `${v}-point game`, v => `Score ${v} points in one Buzzer Beater game`, () => AR().buzz.best);
+  out.push(A(27, 2, "ar_fire", "Heat check", "Make 10 shots in a row in Buzzer Beater", () => AR().buzz.bestRun >= 10, () => [AR().buzz.bestRun, 10], 80));
+  out.push(A(27, 3, "ar_heave", "From way downtown", "Make a half-court heave in Buzzer Beater", () => AR().buzz.heaves >= 1, null, 150));
+  ladder(27, "ar_surv", [[5, 1, 20], [10, 2, 50], [20, 3, 120], [35, 3, 250], [50, 4, 500]], v => `Survived ${v}`, v => `Win ${v} games in one Survival run`, () => AR().surv.best);
+  ladder(27, "ar_boss", [[1, 2, 40], [5, 3, 120], [15, 4, 300]], v => v === 1 ? "Boss slayer" : `${v} bosses down`, v => v === 1 ? "Beat a boss (a legendary team) in Survival" : `Beat ${v} bosses in Survival`, () => AR().surv.bosses);
+  out.push(A(27, 1, "ar_guess", "Detective", "Solve a daily Mystery Player", () => AR().guess.wins >= 1, null, 20));
+  out.push(A(27, 3, "ar_guess1", "Mind reader", "Solve a daily Mystery Player on the first guess", () => AR().guess.dist[0] >= 1, null, 200));
+  ladder(27, "ar_gstreak", [[3, 2, 50], [7, 3, 120], [30, 4, 400]], v => `${v}-day case streak`, v => `Solve the daily Mystery Player ${v} days in a row`, () => AR().guess.bestStreak);
+  ladder(27, "ar_gwins", [[10, 2, 60], [50, 3, 200], [100, 4, 400]], v => `${v} cases closed`, v => `Solve ${v} daily Mystery Players`, () => AR().guess.wins);
+  out.push(A(27, 1, "ar_speed", "Speed demon", "Finish a Speed Draft season", () => AR().speed.played >= 1, null, 20));
+  out.push(A(27, 2, "ar_speed60", "Beat the clock", "Win 60+ games in a Speed Draft", () => AR().speed.w60 >= 1, null, 80));
+  out.push(A(27, 3, "ar_speedt", "Lightning ring", "Win the title in a Speed Draft", () => AR().speed.titles >= 1, null, 150));
+  out.push(A(27, 3, "ar_speedb", "Quick hands", "Earn a time bonus of 300+ in a Speed Draft", () => AR().speed.bestBonus >= 300, null, 120));
+  // Daily quests
+  const QS = () => questState();
+  ladder(28, "qs_done", [[1, 1, 15], [10, 1, 40], [50, 2, 100], [200, 3, 250], [500, 4, 500]], v => v === 1 ? "On a quest" : `${v} quests`, v => v === 1 ? "Finish a daily quest" : `Finish ${v} daily quests`, () => QS().total);
+  ladder(28, "qs_all", [[1, 1, 30], [7, 2, 80], [30, 3, 200], [100, 4, 500]], v => v === 1 ? "Clean sheet" : `${v} clean sheets`, v => v === 1 ? "Finish all three daily quests in one day" : `Finish all three daily quests on ${v} days`, () => QS().allDays);
+  ladder(28, "qs_streak", [[3, 2, 60], [7, 3, 150], [30, 4, 400]], v => `${v}-day quest streak`, v => `Finish all three daily quests ${v} days in a row`, () => QS().bestStreak);
   return out;
 }
 ACH.push(...buildFamilies());
@@ -2724,6 +2844,12 @@ function afterSeason(run, phase) {
   try { cardsAfter(run, phase, log); } catch (e) { logError(e && e.message, e && e.stack); }
   checkChallenges(run, log);
   checkTrophies(run, log);
+  // Daily quests this season finished show up in its XP summary too
+  try {
+    const was = questState().list.map(it => it.done);
+    questEvent("season", run, phase);
+    questState().list.forEach((it, i) => { if (it.done && !was[i] && QUESTS[it.id]) log.push([`Daily quest: ${QUESTS[it.id].text}`, QUESTS[it.id].xp]); });
+  } catch (e) { logError(e && e.message, e && e.stack); }
   saveCareer();
   if (run === curRun) { renderXpSummary(run); renderScoreCard(run); }
   renderCareer(); renderChallenges(); renderCollection(); renderH2H();
@@ -2957,7 +3083,7 @@ async function cloudSave() {
     const slim = runs.slice(-50).map(r => ({ id: r.id, date: r.date, mode: r.mode, hard: !!r.hard, w: r.w, l: r.l, po: r.po, seed: r.seed, champ: !!r.champ, reached: r.reached, pw: r.pw, pl: r.pl,
       rounds: r.rounds, players: r.players, box: r.box, ach: r.ach, pf: r.pf, pa: r.pa, home: r.home, away: r.away, streak: r.streak, off: r.off, def: r.def, feats: r.feats,
       highs: r.highs, mvp: r.mvp, dpoy: r.dpoy, seasonHigh: r.seasonHigh, news: r.news, rules: r.rules, redraws: r.redraws, allNew: r.allNew,
-      day: r.day, dyn: r.dyn, dailyTitle: r.dailyTitle, dailyTop3: r.dailyTop3 }));
+      day: r.day, dyn: r.dyn, dailyTitle: r.dailyTitle, dailyTop3: r.dailyTop3, speedBonus: r.speedBonus, speedTitle: r.speedTitle }));
     const tro = Object.fromEntries(Object.entries(trophies).map(([k, v]) => [k, (v && v.day) || ""]));
     let doc = { runs: slim, trophies: tro, career, ts: Date.now() };
     while (JSON.stringify(doc).length > 240000 && doc.runs.length) doc = { ...doc, runs: doc.runs.slice(Math.ceil(doc.runs.length / 2)) };
@@ -3606,6 +3732,7 @@ function openPack(anchor) {
     pk.daily = todayKey();
   } else pk.have[kind]--;
   pk.opened++;
+  questEvent("pack", 1);
   if (kind === "gold") pk.gold++;
   if (kind === "legend") pk.legendPacks++;
   const keys = rollPack(kind);
@@ -3922,6 +4049,7 @@ async function playH2H(opp, box) {
   let xp = 2;
   if (won) {
     h.won++; h.streak++; h.best = Math.max(h.best, h.streak);
+    questEvent("h2hWin", 1);
     if (b === 0) h.sweeps++;
     if (b === 3) h.g7++;
     if (upset) h.upsets++;
@@ -4123,7 +4251,7 @@ async function autoPost(prompt) {
    the top; the Legends Gauntlet lives in Head-to-head. Each mode keeps its state in `career` (so it rides
    along in the cloud save) and shows its status, boards and extra steps in #modePanel.
    ===================================================================================================== */
-const MODE_NAMES = { free: "Free play", daily: "Daily Draft", dynasty: "Dynasty", duel: "Draft vs Friend" };
+const MODE_NAMES = { free: "Free play", daily: "Daily Draft", dynasty: "Dynasty", duel: "Draft vs Friend", arcade: "Arcade", speed: "Speed Draft" };
 // The date in California, so everyone shares one Daily Draft whatever their time zone
 function dayPT(offsetDays = 0) {
   const d = new Date(Date.now() + offsetDays * 864e5);
@@ -4149,7 +4277,7 @@ const cloneLineup = L => Object.fromEntries(SLOTS.map(k => [k, L[k] ? { ...L[k],
    Inside Claude each is its own collection that anyone who can save scores can post to; on the website the
    server keeps them. One entry per player (per day for the Daily); a better entry replaces yours. */
 const modeBoardCache = {};
-function modeDocId(kind, day) { const id = myDocId(); return id ? (kind === "daily" ? `${day}_${id}` : id) : null; }
+function modeDocId(kind, day) { const id = myDocId(); return id ? (day ? `${day}_${id}` : id) : null; }
 function boardName() { return LB_REST || lbWay === "guest" ? String(store.get(KEY_LBNAME, "") || "").trim() : (lbMeName || "Anonymous"); }
 async function postModeBoard(kind, entry, day) {
   if (LB_REST) {
@@ -4180,13 +4308,13 @@ async function loadModeBoard(kind, day) {
   } else {
     if (!lbDb) return null;
     let q = lbDb.collection(kind);
-    if (kind === "daily") q = q.where("day", "==", day);
+    if (day) q = q.where("day", "==", day);
     const snap = await q.orderBy("score", "desc").limit(100).get();
     const mine = modeDocId(kind, day);
     list = (snap.docs || []).map(d => ({ id: d.id, ...d.data(), me: d.id === mine }));
-    const ids = list.filter(e => !e.guest).map(e => kind === "daily" ? e.id.slice(11) : e.id);
+    const ids = list.filter(e => !e.guest).map(e => day ? e.id.slice(11) : e.id);
     if (lbUser && ids.length) {
-      try { const ps = (await lbUser.profiles([...new Set(ids)])) || {}; list.forEach(e => { const p = ps[kind === "daily" ? e.id.slice(11) : e.id]; if (!e.guest && p && p.name) e.name = p.name; }); } catch (e) {}
+      try { const ps = (await lbUser.profiles([...new Set(ids)])) || {}; list.forEach(e => { const p = ps[day ? e.id.slice(11) : e.id]; if (!e.guest && p && p.name) e.name = p.name; }); } catch (e) {}
     }
   }
   modeBoardCache[kind + (day || "")] = list;
@@ -4203,7 +4331,7 @@ function modeBoardHtml(kind, list, row) {
 async function modePost(kind, entry, day) {
   try { return await postModeBoard(kind, entry, day); }
   catch (e) {
-    if (e && e.code === "need_name" && (LB_REST || lbWay === "guest")) showAutoName("Pick a name to put your Daily Draft, Gauntlet and Dynasty results on their boards.");
+    if (e && e.code === "need_name" && (LB_REST || lbWay === "guest")) showAutoName("Pick a name to put your Daily Draft, Gauntlet, Dynasty and Arcade results on their boards.");
     return null;
   }
   finally { refreshModeBoard(kind, day); }
@@ -4214,8 +4342,8 @@ function refreshModeBoard(kind, day) {
 
 /* ---------- Switching modes ---------- */
 function setModeButtons() {
-  const ids = { free: "mFree", daily: "mDaily", dynasty: "mDynasty", duel: "mDuel" };
-  for (const [m, id] of Object.entries(ids)) $(id).setAttribute("aria-pressed", mode === m);
+  const ids = { free: "mFree", daily: "mDaily", dynasty: "mDynasty", duel: "mDuel", arcade: "mArcade" };
+  for (const [m, id] of Object.entries(ids)) $(id).setAttribute("aria-pressed", mode === m || (m === "arcade" && mode === "speed"));
 }
 // What "Draft again" means in each mode, and the button for a mode's next step after a season
 function renderAfterButtons() {
@@ -4223,6 +4351,7 @@ function renderAfterButtons() {
   next.hidden = true; again.hidden = false; again.textContent = "Draft again";
   if (!S) return;
   if (S.mode === "daily") again.textContent = "Back to free play";
+  if (S.mode === "speed") { again.textContent = "⚡ Speed Draft again"; next.hidden = false; next.textContent = "🎮 Back to the Arcade"; }
   if (S.mode === "dynasty" && career.dynasty) {
     const d = career.dynasty;
     again.hidden = d.stage !== "done";
@@ -4248,7 +4377,7 @@ function dailyFinished(run) {
   if (d.day === S.day && d.runId && d.runId !== run.id) return; // already played today
   d.streak = d.last === prevDay(S.day) ? d.streak + 1 : d.last === S.day ? d.streak : 1;
   d.bestStreak = Math.max(d.bestStreak, d.streak);
-  if (d.last !== S.day) d.played++;
+  if (d.last !== S.day) { d.played++; questEvent("daily", 1); }
   d.last = S.day; d.day = S.day; d.runId = run.id;
   const pack = DAILY_STREAK_PACKS[d.streak];
   if (pack) { givePack(pack); toast(`🔥 ${d.streak}-day Daily Draft streak! A free ${PACKS[pack].name.toLowerCase()} is yours`); }
@@ -4423,6 +4552,7 @@ function wireOffseason() {
 /* ---------- One place that runs mode steps after a season and after the playoffs ---------- */
 function modeAfterSeason(run) {
   if (S.mode === "daily") dailyFinished(run);
+  if (S.mode === "speed") spdSeasonDone(run);
   const d = dynState();
   if (S.mode === "dynasty" && d && d.stage !== "done" && d.stage !== "offseason") {
     run.mode = "dynasty"; run.dyn = { id: d.id, year: d.year };
@@ -4435,6 +4565,7 @@ function modeAfterSeason(run) {
 }
 function modeAfterPlayoffs(run) {
   if (run.mode === "daily") postDaily(run);
+  if (run.mode === "speed") spdPlayoffsDone(run);
   const d = dynState();
   if (run.mode === "dynasty" && run.dyn && d && run.dyn.id === d.id && run.dyn.year === d.year) dynastySeasonDone(run);
   renderAfterButtons();
@@ -4447,9 +4578,12 @@ function renderModePanel() {
   if (!el || !S) return;
   setModeButtons();
   el.hidden = S.mode === "free";
+  if (S.mode !== "arcade" && S.mode !== "speed") delete el.dataset.view;
   if (S.mode === "daily") renderDailyPanel();
   else if (S.mode === "dynasty") renderDynastyPanel();
   else if (S.mode === "duel") renderDuel();
+  else if (S.mode === "arcade") renderArcade();
+  else if (S.mode === "speed") renderSpeedPanel();
 }
 
 /* ---------- Legends Gauntlet ----------
@@ -4504,6 +4638,7 @@ async function playGauntletSeries() {
     c.log.push([opp.key, a, b]);
     if (a === 4) {
       c.step++;
+      questEvent("gauntlet", 1);
       if (c.lost === 0) g.cleanBest = Math.max(g.cleanBest || 0, c.step);
       const xp = 15 + c.step * 5;
       gainXp(xp);
@@ -4781,6 +4916,926 @@ function wireDuelCommon() {
   on("dQuit", () => { duel = null; saveDuel(); duelShown = null; clearInterval(duelTimer); duelTimer = 0; renderDuel(); });
 }
 
+/* =====================================================================================================
+   Arcade (version 33): quick games that don't need a whole season, plus Daily quests for every mode.
+   Higher or Lower, Buzzer Beater, Survival and the Mystery Player run inside #modePanel under the 🎮 Arcade
+   tab; Speed Draft is the real draft on a clock (mode "speed"). Bests, runs and streaks live in
+   career.arcade, so the cloud save keeps them, and every game has a board like the Daily Draft's.
+   ===================================================================================================== */
+// Every team-and-decade line in the game by its collection key, with what the arcade games need
+const ROW_INDEX = {};
+for (const x of ALL_DRAWS) {
+  const t = DATA[x.dec][x.fid];
+  for (const p of t.players) { const k = collKey(x.dec, t.name, p.name); if (!ROW_INDEX[k]) ROW_INDEX[k] = { ...p, dec: x.dec, fid: x.fid, team: t.name }; }
+}
+const ARC_GAMES = [
+  { id: "hol", icon: "🔼", name: "Higher or Lower", blurb: "Two stars, one stat. Did the second one average more or less? One miss ends the run." },
+  { id: "buzz", icon: "🎯", name: "Buzzer Beater", blurb: "Stop the marker in the green. Every make moves you deeper. Three misses and you're done." },
+  { id: "surv", icon: "🧟", name: "Survival", blurb: "Draft five from quick picks, then win as many games in a row as you can. Three lives." },
+  { id: "guess", icon: "🕵️", name: "Mystery Player", blurb: "Guess today's mystery star in six tries. Everyone gets the same one." },
+  { id: "speed", icon: "⚡", name: "Speed Draft", blurb: "The real draft with eight seconds a pick. Quick picks earn bonus points." },
+];
+const ARC_DEFAULTS = {
+  hol: { best: 0, played: 0, total: 0, paid: 0 },
+  buzz: { best: 0, bestMakes: 0, played: 0, makes: 0, bestRun: 0, heaves: 0, paid: 0 },
+  surv: { best: 0, played: 0, bosses: 0, paid: 0, cur: null },
+  guess: { day: "", tries: [], done: false, won: false, xp: 0, streak: 0, bestStreak: 0, last: "", played: 0, wins: 0, dist: [0, 0, 0, 0, 0, 0], practice: 0 },
+  speed: { best: 0, played: 0, titles: 0, bestBonus: 0, w60: 0 },
+};
+// Fills in missing fields in place (never replaces an object, so a reference held elsewhere stays live)
+function arcState() {
+  const a = career.arcade = career.arcade && typeof career.arcade === "object" ? career.arcade : {};
+  for (const [k, def] of Object.entries(ARC_DEFAULTS)) {
+    if (!a[k] || typeof a[k] !== "object") a[k] = {};
+    for (const [f, v] of Object.entries(def)) if (a[k][f] === undefined) a[k][f] = Array.isArray(v) ? [...v] : v;
+  }
+  return a;
+}
+const arcSleep = ms => new Promise(r => setTimeout(r, reduce ? Math.min(ms, 60) : ms));
+const shuffled = a => { const b = [...a]; for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
+const pickW = list => { let x = Math.random() * list.reduce((s, it) => s + it.w, 0); for (const it of list) if ((x -= it.w) < 0) return it; return list[list.length - 1]; };
+// A pack the first time your best reaches each mark
+const ARC_PACKS = { hol: [[10, "normal"], [20, "gold"], [35, "legend"]], buzz: [[25, "normal"], [50, "gold"], [90, "legend"]], surv: [[10, "normal"], [25, "gold"], [50, "legend"]] };
+function arcPacks(id, value) {
+  const s = arcState()[id], got = [];
+  for (const [n, kind] of ARC_PACKS[id]) if (value >= n && (s.paid || 0) < n) { s.paid = n; givePack(kind); got.push(PACKS[kind].name.toLowerCase()); }
+  return got;
+}
+// One player as a small trading card (hide: a neutral frame, so the frame can't give the rating away)
+function arcCard(p, inner, opts = {}) {
+  return `<div class="acard ${opts.hide ? "" : rarityOf(p.ovr)[1]}${opts.cls ? " " + opts.cls : ""}"${opts.id ? ` id="${opts.id}"` : ""}><span class="ateam">${short(p.dec)} ${esc(p.team)} · ${p.pos.join("/")}</span><b class="aname">${esc(p.name)}</b>${inner}</div>`;
+}
+
+/* ---------- Boards ----------
+   Each Arcade game has a board, kept like the mode boards: a Claude collection per game, or the website's
+   server. Higher or Lower, Buzzer Beater, Survival and Speed Draft keep your best ever; the Mystery Player
+   has one board a day. A better result replaces yours; anything else leaves it alone. */
+const ARC_ROW = {
+  hol: e => `${e.streak ?? e.score ?? 0} in a row`,
+  buzz: e => `${fmtPts(e.points ?? e.score ?? 0)} pts${e.makes ? ` · ${e.makes} makes` : ""}`,
+  surv: e => { const w = e.wins ?? e.score ?? 0; return `${w} win${w === 1 ? "" : "s"}`; },
+  guess: e => `solved in ${e.tries ?? 7 - (e.score || 0)}`,
+  speed: e => `${esc(recText(e))} · ${fmtPts(e.score || 0)} pts`,
+};
+const arcDay = id => id === "guess" ? dayPT() : undefined;
+function arcBoardHtml(id) {
+  const day = arcDay(id), key = id + (day || ""), list = modeBoardCache[key];
+  if (!list && !modeBoardCache["loading:" + key]) { modeBoardCache["loading:" + key] = 1; refreshModeBoard(id, day); }
+  return modeBoardHtml(id, list, ARC_ROW[id]);
+}
+// Without a name for the board (on the website, or a guest editor in Claude) a result waits: the game's
+// result panel asks for a name and posts it then
+let arcWaiting = null; // { id, entry }
+const arcNeedsName = () => (LB_REST || lbWay === "guest") && !boardName();
+async function arcPost(id, entry) {
+  const day = arcDay(id);
+  if (arcNeedsName()) { arcWaiting = { id, entry }; return null; }
+  if (arcWaiting && arcWaiting.id === id) arcWaiting = null;
+  try { return await postModeBoard(id, entry, day); }
+  catch (e) { return null; }
+  finally { refreshModeBoard(id, day); }
+}
+function arcNameHtml(id) {
+  if (!arcWaiting || arcWaiting.id !== id || !arcNeedsName()) return "";
+  return `<div class="arcname"><span class="note">Pick a name to put this on the board:</span><div class="row-gap"><input class="lb-input" id="arcName" maxlength="24" placeholder="Your name for the boards" autocomplete="nickname" aria-label="Your name for the boards"><button class="btn primary mid" id="arcNameBtn">Save and post</button></div></div>`;
+}
+function wireArcName() {
+  const btn = $("arcNameBtn");
+  if (!btn) return;
+  const go = () => {
+    const v = ($("arcName").value || "").replace(/\s+/g, " ").trim().slice(0, 24);
+    if (!v) { $("arcName").focus(); return; }
+    store.set(KEY_LBNAME, v);
+    if ($("lbName")) $("lbName").value = v;
+    const w = arcWaiting;
+    arcWaiting = null;
+    btn.closest(".arcname").innerHTML = `<span class="note">✓ Saved. Posting as ${esc(v)}…</span>`;
+    if (w) arcPost(w.id, w.entry);
+  };
+  btn.onclick = go;
+  $("arcName").onkeydown = e => { if (e.key === "Enter") go(); };
+}
+
+/* ---------- The Arcade: a hub of game cards, and one game at a time ---------- */
+let arcView = "hub";
+function arcGo(v) {
+  if (v !== arcView) arcLeave();
+  arcView = ARC_GAMES.some(g => g.id === v && v !== "speed") ? v : "hub";
+  renderArcade(true);
+  try { $("modePanel").scrollIntoView({ block: "start", behavior: reduce ? "auto" : "smooth" }); } catch (e) {}
+}
+// Leaving a game ends a Higher or Lower or Buzzer Beater run (it still counts) and pauses Survival
+function arcLeave() {
+  if (hol && !hol.over && hol.streak) holOver(true);
+  hol = null;
+  if (bz && !bz.over && (bz.makes || bz.lives < 3)) bzOver(true);
+  bz = null;
+  svStop = true;
+}
+function renderArcade(force) {
+  const el = $("modePanel");
+  if (!el) return;
+  // A board that just loaded only redraws the board, so a game in progress isn't disturbed
+  if (!force && arcView !== "hub" && el.dataset.view === "arc:" + arcView && $("arcBoard")) { $("arcBoard").innerHTML = arcBoardHtml(arcView); return; }
+  if (arcView === "hol") renderHol();
+  else if (arcView === "buzz") renderBuzz();
+  else if (arcView === "surv") renderSurv();
+  else if (arcView === "guess") renderGuess();
+  else renderArcHub();
+}
+function arcMount(id, label, body) {
+  const g = ARC_GAMES.find(x => x.id === id), el = $("modePanel");
+  el.innerHTML = `<div class="head archead"><button class="btn sm" id="arcBack">← Arcade</button><h2>${g.icon} ${esc(g.name)}</h2><span class="label">${label}</span></div>
+    <div class="arcgame" id="arcGame">${body}</div>
+    <span class="label">${id === "guess" ? "Today's board" : "Board"}</span><div id="arcBoard">${arcBoardHtml(id)}</div>`;
+  el.dataset.view = "arc:" + id;
+  $("arcBack").onclick = () => arcGo("hub");
+  wireArcName();
+}
+function renderArcHub() {
+  const a = arcState(), g = a.guess, c = a.surv.cur, today = dayPT(), el = $("modePanel");
+  const sub = {
+    hol: a.hol.best ? `Best: ${a.hol.best} in a row` : "",
+    buzz: a.buzz.best ? `Best: ${fmtPts(a.buzz.best)} points` : "",
+    surv: c && c.phase !== "over" ? `Run in progress · ${c.wins} win${c.wins === 1 ? "" : "s"}` : a.surv.best ? `Best: ${a.surv.best} wins` : "",
+    guess: g.day === today && g.done ? (g.won ? `Today: got him in ${g.tries.length} ✓` : "Today: he got away") : `Today's case is open${gsStreak() ? ` · 🔥 ${gsStreak()}-day streak` : ""}`,
+    speed: a.speed.best ? `Best: ${fmtPts(a.speed.best)} points` : "",
+  };
+  el.innerHTML = `<div class="head"><h2>🎮 Arcade</h2><span class="label">Quick games · beat your best · climb the boards</span></div>
+    <div class="arcgrid">${ARC_GAMES.map(x => `<button type="button" class="arccard" data-arc="${x.id}"><span class="arcicon" aria-hidden="true">${x.icon}</span><b>${esc(x.name)}</b><span class="note">${esc(x.blurb)}</span><span class="arcbest${sub[x.id] ? "" : " new"}">${esc(sub[x.id] || "New · play it")}</span></button>`).join("")}</div>`;
+  el.dataset.view = "arc:hub";
+  el.querySelectorAll("[data-arc]").forEach(b => b.onclick = () => b.dataset.arc === "speed" ? askMode("speed") : arcGo(b.dataset.arc));
+}
+
+/* ---------- Daily quests ----------
+   Three a day (they change at midnight in California, like the Daily Draft), the same three for everyone:
+   one from a season, one from the Arcade and one from the rest of the game. Each pays XP; finishing all
+   three pays a gold pack. Progress counts from the moment the day's quests appear. */
+const QUESTS = {
+  // Seasons (any mode)
+  wins55: { g: 0, xp: 50, text: "Win 55+ games in a season", ev: "season", f: (r, ph) => ph === "season" && r.w >= 55, go: "draft" },
+  wins65: { g: 0, xp: 90, text: "Win 65+ games in a season", ev: "season", f: (r, ph) => ph === "season" && r.w >= 65, go: "draft" },
+  finals: { g: 0, xp: 70, text: "Reach the NBA Finals", ev: "season", f: (r, ph) => ph === "playoffs" && r.reached === 3, go: "draft" },
+  title: { g: 0, xp: 100, text: "Win a title", ev: "season", f: (r, ph) => ph === "playoffs" && r.champ, go: "draft" },
+  seasons2: { g: 0, xp: 50, text: "Finish 2 seasons", need: 2, sum: true, ev: "season", f: (r, ph) => ph === "season", go: "draft" },
+  newp3: { g: 0, xp: 50, text: "Draft 3 players who are new to your collection", need: 3, sum: true, ev: "draftNew", go: "draft" },
+  legend: { g: 0, xp: 70, text: "Draft a legend (rated 95+)", ev: "draftLegend", go: "draft" },
+  // Arcade
+  hol8: { g: 1, xp: 60, text: "Get 8 in a row in Higher or Lower", need: 8, ev: "hol", go: "hol" },
+  hol15: { g: 1, xp: 100, text: "Get 15 in a row in Higher or Lower", need: 15, ev: "hol", go: "hol" },
+  buzz15: { g: 1, xp: 60, text: "Score 15 points in one Buzzer Beater game", need: 15, ev: "buzz", go: "buzz" },
+  buzz35: { g: 1, xp: 100, text: "Score 35 points in one Buzzer Beater game", need: 35, ev: "buzz", go: "buzz" },
+  surv8: { g: 1, xp: 70, text: "Win 8 games in one Survival run", need: 8, ev: "surv", go: "surv" },
+  surv15: { g: 1, xp: 110, text: "Win 15 games in one Survival run", need: 15, ev: "surv", go: "surv" },
+  guess: { g: 1, xp: 60, text: "Solve today's Mystery Player", ev: "guess", go: "guess" },
+  guess3: { g: 1, xp: 100, text: "Solve today's Mystery Player in 3 guesses or fewer", ev: "guess", f: n => n <= 3, go: "guess" },
+  speed50: { g: 1, xp: 70, text: "Win 50+ games in a Speed Draft", ev: "speed", f: r => r.w >= 50, go: "speed" },
+  speed250: { g: 1, xp: 80, text: "Earn a time bonus of 250+ in a Speed Draft", need: 250, ev: "speedBonus", go: "speed" },
+  // Everything else
+  packs2: { g: 2, xp: 40, text: "Open 2 packs", need: 2, sum: true, ev: "pack", go: "pack" },
+  h2h: { g: 2, xp: 60, text: "Win a head-to-head series", ev: "h2hWin", go: "h2h" },
+  gaunt2: { g: 2, xp: 80, text: "Beat 2 legend teams in the Legends Gauntlet", need: 2, sum: true, ev: "gauntlet", go: "h2h" },
+  daily: { g: 2, xp: 50, text: "Play today's Daily Draft", ev: "daily", go: "daily" },
+};
+const QUEST_GROUP = ["Season", "Arcade", "Bonus"];
+function questsFor(day) {
+  const r = mulberry32(hashStr("quests:" + day)), ids = Object.keys(QUESTS);
+  return [0, 1, 2].map(g => { const opts = ids.filter(id => QUESTS[id].g === g); return opts[Math.floor(r() * opts.length)]; });
+}
+function questState() {
+  const q = career.quests = career.quests && typeof career.quests === "object" ? career.quests : {};
+  for (const [f, v] of Object.entries({ total: 0, allDays: 0, streak: 0, bestStreak: 0, lastAll: "" })) if (q[f] === undefined) q[f] = v;
+  const day = dayPT();
+  if (q.day !== day || !Array.isArray(q.list)) { q.day = day; q.list = questsFor(day).map(id => ({ id, have: 0, done: false })); q.all = false; }
+  return q;
+}
+// Something happened that a quest might count: ev names it, args are what happened (a season, a streak…)
+function questEvent(ev, ...args) {
+  let q;
+  try { q = questState(); } catch (e) { return; }
+  let changed = false;
+  for (const it of q.list) {
+    const Q = QUESTS[it.id];
+    if (!Q || it.done || Q.ev !== ev) continue;
+    let amt;
+    try { amt = Q.f ? Q.f(...args) : args[0]; } catch (e) { amt = 0; }
+    amt = amt === true ? 1 : +amt || 0;
+    if (amt <= 0) continue;
+    const have = Q.sum ? it.have + amt : Math.max(it.have, amt);
+    if (have === it.have) continue;
+    it.have = have; changed = true;
+    if (it.have >= (Q.need || 1)) {
+      it.done = true; q.total++;
+      gainXp(Q.xp);
+      toast(`📋 Quest done: <b>${esc(Q.text)}</b> +${Q.xp} XP`);
+      sfx("win");
+    }
+  }
+  if (changed && !q.all && q.list.every(it => it.done)) {
+    q.all = true; q.allDays++;
+    q.streak = q.lastAll === prevDay(q.day) ? q.streak + 1 : 1;
+    q.lastAll = q.day; q.bestStreak = Math.max(q.bestStreak, q.streak);
+    givePack("gold"); gainXp(50);
+    toast(`📋 All three daily quests done! 🎁 A gold pack and +50 XP`);
+    confetti();
+  }
+  if (changed) { saveCareer(); renderQuests(); checkCareerTrophies(); }
+}
+const questStreakNow = q => q.streak && (q.lastAll === q.day || q.lastAll === prevDay(q.day)) ? q.streak : 0;
+function renderQuests() {
+  const box = $("qList");
+  if (!box) return;
+  const q = questState(), n = q.list.filter(it => it.done).length, st = questStreakNow(q);
+  $("qSum").textContent = `${n} of 3 done · new quests in ${untilNextDaily()}${st ? ` · 🔥 ${st}-day streak` : ""}`;
+  box.innerHTML = q.list.map(it => {
+    const Q = QUESTS[it.id];
+    if (!Q) return "";
+    const need = Q.need || 1, have = Math.min(need, it.have);
+    return `<div class="chcard qcard${it.done ? " done" : ""}"><span class="label">${it.done ? "✓ Done" : `${QUEST_GROUP[Q.g]} quest · +${Q.xp} XP`}</span><b>${esc(Q.text)}</b>${need > 1 ? `<span class="pbar"><i style="width:${(have / need * 100).toFixed(1)}%"></i></span><span class="note">${fmtPts(have)} / ${fmtPts(need)}</span>` : ""}${!it.done && Q.go ? `<button class="btn sm" data-qgo="${Q.go}">Go</button>` : ""}</div>`;
+  }).join("") + `<div class="chcard qcard qreward${q.all ? " done" : ""}"><span class="label">${q.all ? "✓ Claimed" : "Finish all three"}</span><b>🎁 Gold pack + 50 XP</b><span class="note">${q.all ? "Three new quests tomorrow." : `${3 - n} to go`}</span></div>`;
+  box.querySelectorAll("[data-qgo]").forEach(b => b.onclick = () => questGo(b.dataset.qgo));
+}
+// The Go button on a quest: take you to where it's done
+function questGo(where) {
+  const to = id => { try { $(id).scrollIntoView({ block: "start", behavior: reduce ? "auto" : "smooth" }); } catch (e) {} };
+  if (where === "pack") { if (nextPack()) openPack($("qList")); else toast("No packs to open right now. Finish a season or a quest to earn one."); return; }
+  if (where === "h2h") { to("h2hPanel"); return; }
+  if (where === "draft") { if (mode === "arcade" || mode === "duel") askMode("free"); to(S && S.done ? "seasonPanel" : "lineupPanel"); return; }
+  if (where === "daily" || where === "speed") { askMode(where); to("modePanel"); return; }
+  if (mode === "arcade") { arcGo(where); return; }
+  if (arcView !== where) arcLeave();
+  arcView = where;
+  askMode("arcade");
+  to("modePanel");
+}
+
+/* ---------- Higher or Lower ----------
+   Two stars with the team and decade they played for, one stat: did the second one average more or less
+   than the first? Points most of the time, sometimes rebounds, assists or the game's rating. The longer
+   your streak, the closer the numbers get. One miss and the run is over. */
+const HOL_ROWS = Object.values(ROW_INDEX).filter(p => p.ovr >= 80);
+const HOL_CATS = [{ k: "ppg", what: "points", unit: "PPG", w: 5 }, { k: "rpg", what: "rebounds", unit: "RPG", w: 2 }, { k: "apg", what: "assists", unit: "APG", w: 2 }, { k: "ovr", what: "rating", unit: "OVR", w: 1 }];
+let hol = null; // { a, b, cat, streak, busy, shown, over, xp, newBest, packs }
+const holShow = (p, k) => k === "ovr" ? String(p.ovr) : fmt(p[k]);
+function holRound(prev, streak) {
+  for (let n = 0; n < 40; n++) {
+    const cat = pickW(HOL_CATS), k = cat.k, a = prev || HOL_ROWS[Math.floor(Math.random() * HOL_ROWS.length)];
+    // How far apart the two numbers are, as a share of the bigger one: wide early, close later
+    const [lo, hi] = streak < 3 ? [.3, 1] : streak < 8 ? [.15, .5] : streak < 15 ? [.07, .3] : [.02, .16];
+    const min = k === "ovr" ? 1 : .2; // never a tie, even rounded
+    const ok = HOL_ROWS.filter(p => {
+      if (p === a) return false;
+      const d = Math.abs(p[k] - a[k]), g = d / Math.max(p[k], a[k]);
+      return d >= min && g >= lo && g <= hi;
+    });
+    if (ok.length) return { a, b: ok[Math.floor(Math.random() * ok.length)], cat };
+  }
+  const a = prev || HOL_ROWS[0];
+  return { a, b: HOL_ROWS.find(p => p !== a && Math.abs(p.ppg - a.ppg) >= 1), cat: HOL_CATS[0] };
+}
+function holStart() {
+  hol = { streak: 0, busy: false, shown: false, over: false, ...holRound(null, 0) };
+  arcState().hol.played++;
+  saveCareer();
+}
+const holQ = (a, b, cat) => cat.k === "ovr" ? `Is <b>${esc(b.name)}</b> (${short(b.dec)} ${esc(b.team)}) rated higher or lower than ${esc(a.name)}'s ${a.ovr}?` : `Did <b>${esc(b.name)}</b> (${short(b.dec)} ${esc(b.team)}) average more or fewer <b>${cat.what}</b> than ${esc(a.name)}'s ${holShow(a, cat.k)}?`;
+function holCardHtml(p, cat, id, hide) {
+  return arcCard(p, `<span class="aval" id="${id}V">${hide ? "?" : holShow(p, cat.k)}</span><span class="aunit">${cat.unit}${cat.k === "ovr" ? "" : " with that team"}</span>`, { id, hide: hide && cat.k === "ovr" });
+}
+function renderHol() {
+  const s = arcState().hol;
+  if (!hol) holStart();
+  const h = hol, k = h.cat.k, reveal = h.shown || h.over;
+  let body = `<p class="holq">${holQ(h.a, h.b, h.cat)}</p>
+    <div class="holcards">${holCardHtml(h.a, h.cat, "holA", false)}<span class="holvs">VS</span>${holCardHtml(h.b, h.cat, "holB", !reveal)}</div>`;
+  if (!h.over) body += `<div class="row-gap holbtns"><button class="btn primary mid" id="holHi"${h.busy ? " disabled" : ""}>▲ Higher</button><button class="btn primary mid" id="holLo"${h.busy ? " disabled" : ""}>▼ Lower</button></div>`;
+  body += `<div class="holstat"><span>Streak <b id="holStreak">${h.streak}</b></span><span>Best <b>${Math.max(s.best, h.streak)}</b></span></div>`;
+  if (h.over) {
+    const more = h.b[k] > h.a[k], verb = k === "ovr" ? `is rated ${holShow(h.b, k)}` : `averaged ${holShow(h.b, k)}`;
+    body += `<div class="arcover"><b class="drec">${h.streak ? `${h.streak} in a row` : "Missed the first one"}</b>
+      <span class="note">${esc(h.b.name)} ${verb}, ${more ? "more" : "less"} than ${esc(h.a.name)}'s ${holShow(h.a, k)}.</span>
+      <span>${h.newBest ? "🎉 New best! " : ""}${h.xp ? `+${h.xp} XP` : ""}${h.packs && h.packs.length ? ` · 🎁 a free ${h.packs.join(" and a ")}` : ""}</span>
+      ${arcNameHtml("hol")}<div class="row-gap"><button class="btn primary mid" id="holAgain">Play again</button></div></div>`;
+  }
+  arcMount("hol", s.best ? `Best ${s.best} in a row` : "One miss ends it", body);
+  if ($("holB") && reveal && h.right != null) $("holB").classList.add(h.right ? "right" : "wrong");
+  if ($("holHi")) { $("holHi").onclick = () => holGuess(true); $("holLo").onclick = () => holGuess(false); }
+  if ($("holAgain")) $("holAgain").onclick = () => { holStart(); renderHol(); };
+}
+async function holGuess(up) {
+  const h = hol;
+  if (!h || h.busy || h.over) return;
+  h.busy = true; h.shown = true;
+  const { a, b, cat } = h, k = cat.k, right = up ? b[k] > a[k] : b[k] < a[k];
+  document.querySelectorAll(".holbtns button").forEach(x => { x.disabled = true; });
+  // Count the number up, then say whether you were right
+  const el = $("holBV"), target = b[k];
+  if (el && !reduce) {
+    const t0 = performance.now();
+    await new Promise(res => { const step = () => { const f = Math.min(1, (performance.now() - t0) / 600), v = target * (1 - Math.pow(1 - f, 3)); if (el.isConnected) el.textContent = k === "ovr" ? String(Math.round(v)) : v.toFixed(1); f < 1 ? requestAnimationFrame(step) : res(); }; requestAnimationFrame(step); });
+  }
+  if (hol !== h) return;
+  h.right = right;
+  if ($("holBV")) $("holBV").textContent = holShow(b, k);
+  if ($("holB")) $("holB").classList.add(right ? "right" : "wrong");
+  if (!right) { sfx("brick"); holOver(); return; }
+  h.streak++;
+  if (h.streak % 10 === 0) { sfx("cheer"); confetti(); toast(`🔥 <b>${h.streak} in a row!</b>`); } else sfx("swish");
+  if ($("holStreak")) $("holStreak").textContent = h.streak;
+  questEvent("hol", h.streak);
+  await arcSleep(800);
+  if (hol !== h || mode !== "arcade" || arcView !== "hol") return;
+  Object.assign(h, holRound(b, h.streak), { busy: false, shown: false, right: null });
+  renderHol();
+}
+function holOver(quiet) {
+  const h = hol;
+  if (!h || h.over) return;
+  h.over = true; h.busy = false;
+  const s = arcState().hol, best = h.streak > s.best;
+  s.total += h.streak;
+  if (best) s.best = h.streak;
+  h.xp = Math.min(120, h.streak * 3);
+  if (h.xp) gainXp(h.xp);
+  h.newBest = best; h.packs = best ? arcPacks("hol", h.streak) : [];
+  if (best) { if (h.streak >= 5) toast(`🔼 New Higher or Lower best: <b>${h.streak} in a row</b>`); arcPost("hol", { score: h.streak, streak: h.streak }); }
+  saveCareer(); checkCareerTrophies();
+  if (!quiet) renderHol();
+}
+
+/* ---------- Buzzer Beater ----------
+   The Game 7 shot as a game of its own. Pick a shooter from your collection (better shooters get a slower
+   marker and more green), then shoot until you've missed three times. Every make moves you further out and
+   speeds the marker up; three makes in a row and you're on fire, +1 a shot. */
+const BZ_SPOTS = [[0, "Layup", 2], [3, "Elbow jumper", 2], [6, "Corner three", 3], [10, "Three from the top", 3], [15, "Logo three", 4], [22, "Half-court heave", 5]];
+const bzSpot = lv => BZ_SPOTS.reduce((a, s) => lv >= s[0] ? s : a, BZ_SPOTS[0]);
+const bzFeel = (s, lv) => ({ green: Math.max(4, Math.min(30, 14 + (s - 70) * .2) - lv * .7), pace: (1.55 - (s - 30) * .0125) * (1 + lv * .06) });
+let bz = null, bzRaf = 0;
+// Your best shooters from your collection, one card per player
+function bzShooters() {
+  const best = new Map();
+  for (const k in career.coll) {
+    const p = ROW_INDEX[k];
+    if (!p) continue;
+    const s = shooterRating(p), cur = best.get(p.name);
+    if (!cur || s > cur.s) best.set(p.name, { k, p, s });
+  }
+  const list = [...best.values()].sort((a, b) => b.s - a.s || b.p.ovr - a.p.ovr).slice(0, 8);
+  return list.length ? list : [{ k: "", p: { name: "Walk-on", pos: ["SG"], ppg: 10, ovr: 70, dec: "2010s", team: "Pickup" }, s: 55 }];
+}
+function bzStart(w) {
+  bz = { name: w.p.name, s: w.s, lives: 3, pts: 0, makes: 0, run: 0, bestRun: 0, heaves: 0, lv: 0, live: false, over: false, msg: "", x: null, made: null };
+  store.set("hoops82.bzshooter", w.p.name);
+  bzShot();
+}
+function bzShot() {
+  const b = bz, f = bzFeel(b.s, b.lv);
+  b.green = f.green; b.pace = f.pace;
+  b.lo = 3 + Math.random() * (94 - f.green); b.hi = b.lo + f.green;
+  b.t0 = performance.now(); b.u0 = Math.random() * 200; b.x = null; b.made = null;
+  b.live = true;
+  renderBuzz();
+  bzLoop();
+}
+// Where the marker is: it bounces end to end at `pace` bar lengths a second
+const bzPos = t => { const u = ((bz.u0 + (t - bz.t0) / 1000 * bz.pace * 100) % 200 + 200) % 200; return u <= 100 ? u : 200 - u; };
+function bzLoop() {
+  if (bzRaf) return;
+  const step = () => {
+    bzRaf = 0;
+    if (!bz || !bz.live || mode !== "arcade" || arcView !== "buzz") return;
+    const m = $("bzMark");
+    if (m) m.style.left = bzPos(performance.now()) + "%";
+    bzRaf = requestAnimationFrame(step);
+  };
+  bzRaf = requestAnimationFrame(step);
+}
+// The shot counts where the marker was the moment you pressed
+function bzShoot(e) {
+  const b = bz;
+  if (!b || !b.live) return;
+  if (e && e.cancelable) e.preventDefault();
+  const now = performance.now(), ts = e && e.timeStamp;
+  const x = bzPos(ts > 0 && Math.abs(now - ts) < 500 ? ts : now);
+  const inG = x >= b.lo && x <= b.hi, near = !inG && x >= b.lo - 4 && x <= b.hi + 4;
+  const made = inG || (near && Math.random() < .25 + (b.s - 30) / 69 * .35);
+  const [, spot, val] = bzSpot(b.lv);
+  b.live = false; b.x = x; b.made = made;
+  if (made) {
+    const pts = val + (b.run >= 3 ? 1 : 0);
+    b.pts += pts; b.makes++; b.run++; b.bestRun = Math.max(b.bestRun, b.run); b.lv++;
+    if (val === 5) b.heaves++;
+    b.msg = b.run === 3 ? `SWISH! ${spot}, +${pts}. 🔥 You're on fire!` : `${pts > val ? "🔥 " : ""}SWISH! ${spot}, +${pts}`;
+    sfx(b.run === 3 ? "gold" : "swish");
+    questEvent("buzz", b.pts);
+  } else {
+    b.lives--; b.run = 0;
+    b.msg = b.lives ? `Rimmed out! ${b.lives} ${b.lives === 1 ? "life" : "lives"} left.` : "Rimmed out! That's three misses.";
+    sfx("brick");
+  }
+  renderBuzz();
+  setTimeout(() => { if (bz !== b || mode !== "arcade" || arcView !== "buzz") return; b.lives > 0 ? bzShot() : bzOver(); }, made ? 700 : 1000);
+}
+function bzOver(quiet) {
+  const b = bz;
+  if (!b || b.over) return;
+  b.over = true; b.live = false;
+  const s = arcState().buzz, best = b.pts > s.best;
+  s.played++; s.makes += b.makes; s.bestRun = Math.max(s.bestRun, b.bestRun); s.heaves += b.heaves;
+  if (best) { s.best = b.pts; s.bestMakes = b.makes; }
+  b.xp = Math.min(150, Math.round(b.pts * 1.5));
+  if (b.xp) gainXp(b.xp);
+  b.newBest = best; b.packs = best ? arcPacks("buzz", b.pts) : [];
+  if (best) { if (b.pts >= 10) toast(`🎯 New Buzzer Beater best: <b>${b.pts} points</b>`); arcPost("buzz", { score: b.pts, points: b.pts, makes: b.makes }); }
+  saveCareer(); checkCareerTrophies();
+  if (!quiet) renderBuzz();
+}
+function renderBuzz() {
+  const s = arcState().buzz, label = s.best ? `Best ${fmtPts(s.best)} points` : "Three misses and you're out";
+  if (!bz) {
+    const list = bzShooters(), last = store.get("hoops82.bzshooter", "");
+    const body = `<p class="note">The better the shooter, the slower the marker and the bigger the green. Every make moves you further out and speeds things up: layups and jumpers are 2, threes 3, the logo 4 and a half-court heave 5. Make three in a row and you're on fire (+1 a shot). Three misses and the game's over.</p>
+      <div class="clutch bzpick"><b class="ctitle">Pick your shooter</b><span class="note">${list[0].k ? "Your best shooters, from every player you've collected." : "Draft players or open packs to get real shooters."}</span>
+      <div class="shooters">${list.map((w, i) => `<button type="button" class="shooter" data-bzs="${i}" aria-pressed="${w.p.name === last}">${esc(w.p.name)} <span>${w.s}</span></button>`).join("")}</div></div>`;
+    arcMount("buzz", label, body);
+    document.querySelectorAll("[data-bzs]").forEach(x => x.onclick = () => bzStart(list[+x.dataset.bzs]));
+    return;
+  }
+  const b = bz, [, spot, val] = bzSpot(b.lv), fire = b.run >= 3;
+  const lives = [0, 1, 2].map(i => `<span class="${i < b.lives ? "on" : ""}">🏀</span>`).join("");
+  let body = `<div class="clutch bzbox${fire && !b.over ? " fire" : ""}">
+    <div class="bzhud"><span class="bzlives" aria-label="${b.lives} of 3 lives left">${lives}</span><span class="bzpts"><b>${b.pts}</b> pts</span><span class="note">${b.makes} make${b.makes === 1 ? "" : "s"}</span></div>
+    ${b.over ? `<b class="ctitle">Game over</b>` : `<b class="ctitle">${esc(spot)} · ${val + (fire ? 1 : 0)} points${fire ? " 🔥" : ""}</b>`}
+    <span class="note">${esc(b.name)} · shooter ${b.s}${fire && !b.over ? " · on fire!" : ""}</span>
+    <div class="meter" id="bzMeter" aria-hidden="true"><i class="zone" style="left:${b.lo}%;width:${b.green}%"></i><i class="mark${b.made === true ? " hit" : b.made === false ? " miss" : ""}" id="bzMark" style="left:${b.x ?? bzPos(performance.now())}%"></i></div>
+    ${b.over ? "" : `<div class="row-gap"><button class="btn primary cta" id="bzShoot"${b.live ? "" : " disabled"}>🏀 Shoot!</button><span class="note">or tap the bar, or press Space</span></div>`}
+    <p class="bzmsg" role="status">${esc(b.msg)}</p></div>`;
+  if (b.over) {
+    body += `<div class="arcover"><b class="drec">${b.pts} point${b.pts === 1 ? "" : "s"}</b><span class="note">${b.makes} make${b.makes === 1 ? "" : "s"} · longest run ${b.bestRun}</span>
+      <span>${b.newBest ? "🎉 New best! " : ""}${b.xp ? `+${b.xp} XP` : ""}${b.packs && b.packs.length ? ` · 🎁 a free ${b.packs.join(" and a ")}` : ""}</span>
+      ${arcNameHtml("buzz")}<div class="row-gap"><button class="btn primary mid" id="bzAgain">Play again</button><button class="btn mid" id="bzPickNew">Change shooter</button></div></div>`;
+  }
+  arcMount("buzz", label, body);
+  const shoot = $("bzShoot");
+  if (shoot) {
+    shoot.addEventListener("pointerdown", bzShoot);
+    shoot.addEventListener("click", bzShoot); // keyboard presses arrive as clicks
+    shoot.addEventListener("keydown", e => { if (e.key === " " || e.key === "Enter") bzShoot(e); });
+    if (b.live) shoot.focus({ preventScroll: true });
+  }
+  $("bzMeter").addEventListener("pointerdown", bzShoot);
+  if ($("bzAgain")) $("bzAgain").onclick = () => { const w = bzShooters().find(x => x.p.name === b.name) || bzShooters()[0]; bzStart(w); };
+  if ($("bzPickNew")) $("bzPickNew").onclick = () => { bz = null; renderBuzz(); };
+}
+
+/* ---------- Survival ----------
+   Draft five from quick picks (four cards a round), then play one game after another against tougher and
+   tougher teams. You have three lives and every loss costs one. Every 5 wins you can sign a reinforcement,
+   and every 10th game is a boss: a legendary team. Beat it and you win a life back. The run is saved, so
+   you can leave and pick it up later. */
+const SV_POOL = { legend: [], star: [], good: [], solid: [] };
+for (const [k, p] of Object.entries(ROW_INDEX)) {
+  const t = p.ovr >= 95 ? "legend" : p.ovr >= 89 ? "star" : p.ovr >= 83 ? "good" : p.ovr >= 76 ? "solid" : null;
+  if (t) SV_POOL[t].push(k);
+}
+// Cards from the given tiers, never two of the same player, and nobody already on your team
+function svDeal(tiers, names) {
+  const seen = new Set(names), out = [];
+  for (const t of tiers) {
+    let k, n = 0;
+    do k = SV_POOL[t][Math.floor(Math.random() * SV_POOL[t].length)]; while (seen.has(ROW_INDEX[k].name) && ++n < 40);
+    seen.add(ROW_INDEX[k].name);
+    out.push(k);
+  }
+  return shuffled(out);
+}
+const svDraftTiers = () => [Math.random() < .15 ? "legend" : "star", Math.random() < .5 ? "star" : "good", "good", "good"];
+const svOfferTiers = w => w < 10 ? ["good", "star", Math.random() < .4 ? "star" : "good"] : w < 25 ? ["star", "star", Math.random() < .35 ? "legend" : "star"] : ["star", "legend", "legend"];
+const svL = c => Object.fromEntries(SLOTS.map(k => [k, c.team[k] ? ROW_INDEX[c.team[k]] : null]));
+const svNames = c => SLOTS.filter(k => c.team[k]).map(k => ROW_INDEX[c.team[k]].name);
+// The next opponent: a little stronger every game, and a legendary team every 10th game
+function svOpp(c) {
+  const n = c.games, base = 75 + n * .35;
+  if ((n + 1) % 10 === 0) { const t = LEGENDS[Math.floor(Math.random() * LEGENDS.length)]; return { label: t.label, q: Math.max(t.q, base + 1.5), boss: 1, stars: t.stars.slice(0, 3) }; }
+  return { label: TEAM_LABELS[Math.floor(Math.random() * TEAM_LABELS.length)], q: base + gauss() * 1.2 };
+}
+let svBusy = false, svStop = false;
+function svNew() {
+  const s = arcState().surv;
+  s.cur = { phase: "draft", round: 0, cards: svDeal(svDraftTiers(), []), team: {}, wins: 0, losses: 0, lives: 3, games: 0, bosses: 0, log: [], next: null, offer: null, msg: "" };
+  saveCareer();
+  renderSurv();
+}
+function svPick(key, slot) {
+  const c = arcState().surv.cur;
+  if (!c || c.phase !== "draft" || !SLOTS.includes(slot) || c.team[slot] || !c.cards.includes(key)) return;
+  c.team[slot] = key; c.round++;
+  sfx("flip");
+  if (c.round >= 5) { c.phase = "play"; c.cards = null; c.next = svOpp(c); c.msg = "Your five are set. Tip off when you're ready."; }
+  else c.cards = svDeal(svDraftTiers(), svNames(c));
+  saveCareer();
+  renderSurv();
+}
+// Games roll one after another until a loss, a boss, a reinforcement or the end of the run
+async function svPlay() {
+  const s = arcState().surv, c = s.cur;
+  if (!c || c.phase !== "play" || svBusy) return;
+  svBusy = true; svStop = false;
+  try {
+    const rA = h2hRating(svL(c));
+    for (;;) {
+      const o = c.next || svOpp(c), home = c.games % 2 === 0;
+      const x = playGame(rA, o.q + gauss() * 1.5, o.q + gauss() * 1.5, home, 106);
+      c.games++;
+      c.log.push([x.us, x.them, o.label, x.won ? 1 : 0, o.boss ? 1 : 0]);
+      if (c.log.length > 15) c.log.shift();
+      let stop = false;
+      if (x.won) {
+        c.wins++;
+        c.msg = `W ${x.us}–${x.them} vs the ${o.label}${x.ot ? " (OT)" : ""}`;
+        if (o.boss) {
+          c.bosses++; s.bosses++; stop = true;
+          if (c.lives < 3) { c.lives++; c.msg = `👑 You beat the ${o.label}, ${x.us}–${x.them}! A life back.`; }
+          else { gainXp(25); c.msg = `👑 You beat the ${o.label}, ${x.us}–${x.them}! +25 XP`; }
+          sfx("cheer"); confetti();
+        } else sfx("win");
+        questEvent("surv", c.wins);
+      } else {
+        c.losses++; c.lives--; stop = true;
+        c.msg = `${o.boss ? "👑 " : ""}Lost to the ${o.label}, ${x.them}–${x.us}${x.ot ? " in overtime" : ""}. ${c.lives ? `${c.lives} ${c.lives === 1 ? "life" : "lives"} left.` : "Out of lives."}`;
+        sfx("brick");
+      }
+      if (c.lives <= 0) { svOver(); break; }
+      c.next = svOpp(c);
+      if (x.won && c.wins % 5 === 0) {
+        c.phase = "sign"; stop = true;
+        c.offer = svDeal(svOfferTiers(c.wins), svNames(c));
+        c.msg += ` · ${c.wins} wins: sign a reinforcement!`;
+      }
+      if (c.next.boss) { c.msg += ` · Next up, a boss: the ${c.next.label}!`; stop = true; }
+      saveCareer();
+      if (mode === "arcade" && arcView === "surv") renderSurv();
+      if (stop || svStop || mode !== "arcade" || arcView !== "surv") break;
+      await arcSleep(420);
+    }
+  } finally {
+    svBusy = false;
+    saveCareer();
+    if (mode === "arcade" && arcView === "surv") renderSurv();
+  }
+}
+function svSign(key, slot) {
+  const c = arcState().surv.cur;
+  if (!c || c.phase !== "sign") return;
+  if (key && SLOTS.includes(slot) && c.offer.includes(key)) {
+    const old = ROW_INDEX[c.team[slot]];
+    c.team[slot] = key;
+    c.msg = `Signed ${ROW_INDEX[key].name}, who replaces ${old.name} at ${slot}.`;
+    sfx("gold");
+  } else c.msg = "No signing this time.";
+  c.phase = "play"; c.offer = null;
+  saveCareer();
+  renderSurv();
+}
+function svOver(gaveUp) {
+  const s = arcState().surv, c = s.cur;
+  if (!c || c.phase === "over") return;
+  c.phase = "over"; c.gaveUp = !!gaveUp;
+  s.played++;
+  const best = c.wins > s.best;
+  if (best) s.best = c.wins;
+  c.xp = Math.min(200, c.wins * 4);
+  if (c.xp) gainXp(c.xp);
+  c.newBest = best; c.packs = best ? arcPacks("surv", c.wins) : [];
+  if (best) { if (c.wins >= 5) toast(`🧟 New Survival best: <b>${c.wins} wins</b>`); arcPost("surv", { score: c.wins, wins: c.wins, losses: c.losses, players: slimPlayers(svL(c)) }); }
+  saveCareer(); checkCareerTrophies();
+}
+function svTeamHtml(c) {
+  const L = svL(c), full = SLOTS.every(k => L[k]);
+  return `<div class="svteam">${SLOTS.map(k => { const p = L[k]; return `<div class="dslot${p ? " filled " + rarityOf(p.ovr)[1] : ""}"><span class="chip open">${k}</span>${p ? `<b>${esc(p.name)}</b><span class="note">${short(p.dec)} ${esc(p.team)} · ${p.ovr}${penalty(p, k) ? ` (−${penalty(p, k)})` : ""}</span>` : `<span class="note">Open</span>`}</div>`; }).join("")}${full ? `<span class="label">Team rating ${h2hRating(L).team.toFixed(1)}</span>` : ""}</div>`;
+}
+const svLine = p => `<span class="aline">${p.ovr} OVR · ${fmt(p.ppg)} pts · ${fmt(p.rpg)} reb · ${fmt(p.apg)} ast</span>`;
+function renderSurv() {
+  const s = arcState().surv, c = s.cur, label = s.best ? `Best ${s.best} wins` : "Three lives";
+  let body;
+  if (!c) {
+    body = `<p class="note">Draft five players from quick picks (four cards a round), then win as many games in a row as you can. Every game is against a tougher team. You have three lives; every loss costs one. Every 5 wins you can sign a reinforcement, and every 10th game is a boss, a legendary team: beat it to win a life back.</p>
+      <div class="row-gap"><button class="btn primary cta" id="svStart">🧟 Start a run</button></div>`;
+  } else if (c.phase === "draft") {
+    const open = SLOTS.filter(k => !c.team[k]);
+    body = `<span class="label">Quick draft · pick ${c.round + 1} of 5</span>${svTeamHtml(c)}
+      <div class="svcards">${c.cards.map((key, i) => {
+        const p = ROW_INDEX[key], nat = open.filter(k => p.pos.includes(k)), other = open.filter(k => !p.pos.includes(k));
+        const put = nat.map(k => `<button class="btn sm" data-svp="${i}" data-slot="${k}">${k}</button>`).join("") + (other.length ? `<select data-svs="${i}" aria-label="Draft ${esc(p.name)} out of position"><option value="">${nat.length ? "Other…" : "Play at…"}</option>${other.map(k => `<option value="${k}">${k} (−${penalty(p, k)})</option>`).join("")}</select>` : "");
+        return arcCard(p, `${svLine(p)}<div class="svput">${put}</div>`);
+      }).join("")}</div>`;
+  } else if (c.phase === "over") {
+    body = `${svBoardHtml(c, s)}<div class="arcover"><b class="drec">${c.wins} win${c.wins === 1 ? "" : "s"}</b><span class="note">${c.gaveUp ? "You ended the run" : "Out of lives"} after ${c.games} game${c.games === 1 ? "" : "s"}${c.bosses ? ` · ${c.bosses} boss${c.bosses === 1 ? "" : "es"} beaten` : ""}.</span>
+      <span>${c.newBest ? "🎉 New best! " : ""}${c.xp ? `+${c.xp} XP` : ""}${c.packs && c.packs.length ? ` · 🎁 a free ${c.packs.join(" and a ")}` : ""}</span>
+      ${arcNameHtml("surv")}<div class="row-gap"><button class="btn primary mid" id="svStart">🧟 New run</button></div></div>${svTeamHtml(c)}`;
+  } else if (c.phase === "sign") {
+    const L = svL(c);
+    body = `${svBoardHtml(c, s)}<span class="label">Reinforcement · sign one to replace a starter, or skip</span>
+      <div class="svcards">${c.offer.map((key, i) => { const p = ROW_INDEX[key]; return arcCard(p, `${svLine(p)}<div class="svput"><select data-svo="${i}" aria-label="Sign ${esc(p.name)} to replace"><option value="">Sign for…</option>${SLOTS.map(k => `<option value="${k}">${k}: ${esc(L[k].name)} (${L[k].ovr})${penalty(p, k) ? ` −${penalty(p, k)}` : ""}</option>`).join("")}</select></div>`); }).join("")}</div>
+      <div class="row-gap"><button class="btn mid" id="svSkip">Skip, keep my five</button></div>${svTeamHtml(c)}`;
+  } else {
+    body = `${svBoardHtml(c, s)}<div class="row-gap"><button class="btn primary cta" id="svGo"${svBusy ? " disabled" : ""}>${svBusy ? "Playing…" : c.next && c.next.boss ? "👑 Play the boss" : c.games ? "▶ Keep going" : "▶ Tip off"}</button><button class="btn sm" id="svQuit"${svBusy ? " disabled" : ""}>End the run</button></div>${svTeamHtml(c)}`;
+  }
+  arcMount("surv", label, body);
+  const on = (id, f) => { if ($(id)) $(id).onclick = f; };
+  on("svStart", svNew);
+  on("svGo", svPlay);
+  on("svSkip", () => svSign(null));
+  on("svQuit", () => { if (!svBusy) { svOver(true); renderSurv(); } });
+  if (c && c.phase === "draft") {
+    document.querySelectorAll("[data-svp]").forEach(b => b.onclick = () => svPick(c.cards[+b.dataset.svp], b.dataset.slot));
+    document.querySelectorAll("[data-svs]").forEach(x => x.onchange = () => x.value && svPick(c.cards[+x.dataset.svs], x.value));
+  }
+  if (c && c.phase === "sign") document.querySelectorAll("[data-svo]").forEach(x => x.onchange = () => x.value && svSign(c.offer[+x.dataset.svo], x.value));
+}
+// The run's scoreboard: wins, lives, the next opponent and the last few games
+function svBoardHtml(c, s) {
+  const o = c.next, rA = h2hRating(svL(c)).team;
+  const hearts = [0, 1, 2].map(i => `<span class="${i < c.lives ? "on" : ""}">❤️</span>`).join("");
+  return `<div class="svboard">
+    <div class="bzhud"><span class="bzlives" aria-label="${c.lives} of 3 lives left">${hearts}</span><span class="bzpts"><b>${c.wins}</b> win${c.wins === 1 ? "" : "s"}</span><span class="note">Team ${rA.toFixed(1)}${s.best ? ` · best ${s.best}` : ""}</span></div>
+    ${o && c.phase !== "over" ? `<div class="svnext${o.boss ? " boss" : ""}"><span class="label">${o.boss ? "👑 Next up: a boss" : `Next up · game ${c.games + 1}`}</span><b>${esc(o.label)}</b><span class="note">rated ${o.q.toFixed(1)}${o.boss && o.stars ? ` · ${o.stars.map(esc).join(", ")}` : ""}</span></div>` : ""}
+    ${c.log.length ? `<div class="series svlog">${c.log.map(([us, them, opp, won, boss]) => `<div class="g ${won ? "w" : "l"}${boss ? " clutch" : ""}" title="${won ? "W" : "L"} ${us}–${them} vs the ${esc(opp)}">${won ? "W" : "L"}</div>`).join("")}</div>` : ""}
+    ${c.msg ? `<p class="bzmsg" role="status">${esc(c.msg)}</p>` : ""}</div>`;
+}
+
+/* ---------- Mystery Player ----------
+   Guess the day's mystery star (rated 88 or better at his peak) in six tries. Each guess shows how close it
+   is: his era (the decade of his best years), his main team, his position, his peak rating and his career
+   points a game. Everyone gets the same player each day (midnight in California). Practice has endless
+   random ones. Anyone rated 75+ at his peak can be guessed. */
+const fold = s => String(s).normalize("NFD").replace(/\p{M}+/gu, "").toLowerCase();
+let GS = null;
+function gsDb() {
+  if (GS) return GS;
+  const by = new Map();
+  for (const x of ALL_DRAWS) {
+    const t = DATA[x.dec][x.fid];
+    for (const p of t.players) {
+      let e = by.get(p.id);
+      if (!e) by.set(p.id, e = { id: p.id, name: p.name, rows: [] });
+      e.rows.push({ dec: x.dec, team: t.name, pos: p.pos, ovr: p.ovr, g: p.g || 0 });
+    }
+  }
+  const all = [];
+  for (const e of by.values()) {
+    const peak = e.rows.reduce((a, r) => r.ovr > a.ovr || (r.ovr === a.ovr && r.g > a.g) ? r : a);
+    if (peak.ovr < 75) continue;
+    const games = {};
+    for (const r of e.rows) games[r.team] = (games[r.team] || 0) + r.g;
+    const teams = Object.keys(games).sort((a, b) => games[b] - games[a]), c = CAREER[e.id];
+    all.push({ id: e.id, name: e.name, era: peak.dec, decs: [...new Set(e.rows.map(r => r.dec))], team: teams[0], teams, pos: peak.pos, ovr: peak.ovr, ppg: c ? c[1] : 0 });
+  }
+  // Two players can share a name (there are two Eddie Johnsons): tell them apart by their main team
+  const count = {};
+  for (const p of all) count[p.name] = (count[p.name] || 0) + 1;
+  for (const p of all) {
+    p.label = count[p.name] > 1 ? `${p.name} (${p.team})` : p.name;
+    p.words = fold(p.label).split(/[^a-z0-9]+/).filter(Boolean);
+    p.flat = p.words.join("");
+  }
+  all.sort((a, b) => a.label.localeCompare(b.label));
+  // The mystery pool: stars rated 88+ at their peak, in a fixed shuffled order, so nobody repeats for months
+  const pool = all.filter(p => p.ovr >= 88).sort((a, b) => hashStr("mystery:" + a.id) - hashStr("mystery:" + b.id));
+  return GS = { all, pool, byId: new Map(all.map(p => [p.id, p])) };
+}
+const GS_EPOCH = Date.UTC(2026, 9, 5);
+function gsMysteryFor(day) {
+  const { pool } = gsDb(), [y, m, d] = day.split("-").map(Number);
+  const n = Math.round((Date.UTC(y, m - 1, d) - GS_EPOCH) / 864e5);
+  return pool[((n % pool.length) + pool.length) % pool.length];
+}
+let gsMode = "daily", gsPrac = null;
+function gsDaily() {
+  const g = arcState().guess, day = dayPT();
+  if (g.day !== day) { g.day = day; g.tries = []; g.done = false; g.won = false; g.xp = 0; }
+  return g;
+}
+// The game on screen: today's (kept in your career) or a practice one (kept until you leave)
+function gsCur() {
+  if (gsMode === "practice") {
+    if (!gsPrac) { const { pool } = gsDb(); gsPrac = { m: pool[Math.floor(Math.random() * pool.length)].id, tries: [], done: false, won: false, xp: 0 }; }
+    return { st: gsPrac, m: gsDb().byId.get(gsPrac.m), daily: false };
+  }
+  const g = gsDaily();
+  return { st: g, m: gsMysteryFor(g.day), daily: true };
+}
+const gsStreak = () => { const g = arcState().guess, today = dayPT(); return g.streak && (g.last === today || g.last === prevDay(today)) ? g.streak : 0; };
+// How close a guess is, one cell per clue: hit (a match), near (close) or miss, with an arrow which way to go
+function gsCells(g, m) {
+  const di = d => DECS.indexOf(d), arrow = up => up ? " ▲" : " ▼";
+  const dp = Math.abs(g.ppg - m.ppg);
+  return [
+    g.era === m.era ? { c: "hit", t: short(g.era) } : { c: m.decs.includes(g.era) ? "near" : "miss", t: short(g.era) + arrow(di(m.era) > di(g.era)) },
+    { c: g.team === m.team ? "hit" : m.teams.includes(g.team) ? "near" : "miss", t: g.team },
+    { c: g.pos.length === m.pos.length && g.pos.every(x => m.pos.includes(x)) ? "hit" : g.pos.some(x => m.pos.includes(x)) ? "near" : "miss", t: g.pos.join("/") },
+    g.ovr === m.ovr ? { c: "hit", t: String(g.ovr) } : { c: Math.abs(g.ovr - m.ovr) <= 2 ? "near" : "miss", t: g.ovr + arrow(m.ovr > g.ovr) },
+    dp <= .5 ? { c: "hit", t: fmt(g.ppg) } : { c: dp <= 3 ? "near" : "miss", t: fmt(g.ppg) + arrow(m.ppg > g.ppg) },
+  ];
+}
+function gsMatches(q, taken) {
+  const f = fold(q).split(/[^a-z0-9]+/).filter(Boolean);
+  if (!f.length || f.join("").length < 2) return [];
+  const flat = f.join(""), first = [], rest = [];
+  for (const p of gsDb().all) {
+    if (taken.has(p.id)) continue;
+    // every typed word starts a word of the name ("lebron", "le ja"), or the letters run together ("oneal")
+    if (f.every(w => p.words.some(x => x.startsWith(w)))) first.push(p);
+    else if (p.flat.includes(flat)) rest.push(p);
+  }
+  return [...first, ...rest].slice(0, 8);
+}
+function gsGuess(id) {
+  const { st, m, daily } = gsCur(), db = gsDb();
+  if (st.done || st.tries.includes(id) || !db.byId.has(id)) return;
+  st.tries.push(id);
+  const won = id === m.id;
+  if (won || st.tries.length >= 6) {
+    st.done = true; st.won = won;
+    const n = st.tries.length;
+    if (daily) {
+      const g = arcState().guess;
+      g.played++;
+      if (won) {
+        g.wins++; g.dist[n - 1]++;
+        g.streak = g.last === prevDay(g.day) ? g.streak + 1 : 1;
+        g.last = g.day; g.bestStreak = Math.max(g.bestStreak, g.streak);
+        st.xp = [80, 70, 60, 50, 40, 30][n - 1];
+        gainXp(st.xp);
+        questEvent("guess", n);
+        arcPost("guess", { score: 7 - n, tries: n });
+      } else g.streak = 0;
+    } else if (won) { arcState().guess.practice++; st.xp = 10; gainXp(10); }
+    saveCareer(); checkCareerTrophies();
+    if (won) { sfx("cheer"); confetti(); } else sfx("brick");
+  } else { sfx("flip"); if (daily) saveCareer(); }
+  renderGuess();
+  const inp = $("gsIn");
+  if (inp) inp.focus({ preventScroll: true });
+}
+function gsShareText() {
+  const { st, m, daily } = gsCur(), db = gsDb();
+  const rows = st.tries.map(id => gsCells(db.byId.get(id), m).map(c => c.c === "hit" ? "🟩" : c.c === "near" ? "🟨" : "⬜").join(""));
+  return `🕵️ 82–0 Hoops Draft · Mystery Player${daily ? ` ${dayLabel(st.day)}` : ""}\n${rows.join("\n")}\n${st.won ? `Got him in ${st.tries.length}/6` : "X/6: he got away"}${daily ? ". Can you get him?" : ""}`;
+}
+const gsHint = (m, n) => n >= 5 ? `Hint: his name starts with “${m.name[0]}” and he played for ${m.teams.length} franchise${m.teams.length === 1 ? "" : "s"}.` : n >= 3 ? `Hint: his name starts with “${m.name[0]}”.` : "";
+let gsList = [];
+function gsSuggest() {
+  const inp = $("gsIn"), box = $("gsSug");
+  if (!inp || !box) return;
+  const { st } = gsCur(), typed = inp.value;
+  gsList = gsMatches(typed, new Set(st.tries));
+  box.innerHTML = gsList.map((p, i) => `<button type="button" class="gsopt" data-gso="${i}">${esc(p.label)} <small>${short(p.era)} ${esc(p.team)}</small></button>`).join("")
+    || (fold(typed).replace(/[^a-z0-9]/g, "").length >= 2 ? `<span class="note">Nobody by that name. Only players rated 75+ at their peak can be guessed.</span>` : "");
+  box.querySelectorAll("[data-gso]").forEach(b => b.onclick = () => gsGuess(gsList[+b.dataset.gso].id));
+}
+function renderGuess() {
+  const { st, m, daily } = gsCur(), db = gsDb(), g = arcState().guess;
+  const streak = gsStreak();
+  const rows = st.tries.map(id => { const p = db.byId.get(id); return `<div class="gsrow${id === m.id ? " got" : ""}"><b>${esc(p.label)}</b><div class="gscells">${gsCells(p, m).map(x => `<span class="gc ${x.c}">${esc(x.t)}</span>`).join("")}</div></div>`; }).join("");
+  let body = `<div class="seg gsmode" role="group" aria-label="Which mystery"><button data-gs="daily" aria-pressed="${daily}">Today's player</button><button data-gs="practice" aria-pressed="${!daily}">Practice</button></div>
+    <p class="note">${daily ? "Everyone gets the same mystery star today, someone rated 88+ at his peak." : "A random mystery star. Play as many as you like."} After each guess: <span class="gc hit sm">green</span> is a match, <span class="gc near sm">yellow</span> is close, and ▲▼ say which way to go (later or earlier, higher or lower).</p>
+    <div class="gsgrid"><div class="gscells gshead"><span>Era</span><span>Team</span><span>Pos</span><span>OVR</span><span>PPG</span></div>${rows}</div>
+    <p class="note gskey">Era: the decade of his best years · Team: his main team (yellow: he played there too) · OVR: his peak rating · PPG: career points a game</p>`;
+  if (!st.done) {
+    const hint = gsHint(m, st.tries.length);
+    body += `${hint ? `<p class="gshint">${esc(hint)}</p>` : ""}<div class="gsin"><input class="lb-input" id="gsIn" placeholder="Guess ${st.tries.length + 1} of 6: type a player's name" autocomplete="off" autocapitalize="words" spellcheck="false" aria-label="Type a player's name"><div class="gssug" id="gsSug"></div></div>`;
+  } else {
+    const n = st.tries.length;
+    body += `<div class="arcover gsreveal"><span class="label">${st.won ? `🎉 Got him in ${n}!` : "He got away. It was…"}</span><b class="drec">${esc(m.label)}</b>
+      <span class="note">${short(m.era)} · ${esc(m.teams.join(", "))} · ${m.pos.join("/")} · peak ${m.ovr} · ${fmt(m.ppg)} career PPG</span>
+      <span>${st.xp ? `+${st.xp} XP` : ""}${daily && st.won && streak > 1 ? ` · 🔥 ${streak}-day streak` : ""}</span>
+      ${daily ? arcNameHtml("guess") : ""}
+      <div class="row-gap"><button class="btn primary mid" id="gsShare">📤 Share</button>${daily ? `<button class="btn mid" data-gs="practice">Practice more</button><span class="note">Next mystery in ${untilNextDaily()}.</span>` : `<button class="btn primary mid" id="gsNext">Next mystery</button>`}</div></div>`;
+  }
+  if (daily && g.played) body += `<p class="note">Your record: ${g.wins} of ${g.played} solved${g.bestStreak > 1 ? ` · best streak ${g.bestStreak} days` : ""}${g.dist[0] ? ` · ${g.dist[0]} on the first guess` : ""}</p>`;
+  arcMount("guess", daily ? `${dayLabel(g.day)}${streak ? ` · 🔥 ${streak}-day streak` : ""}` : "Practice", body);
+  document.querySelectorAll("[data-gs]").forEach(b => b.onclick = () => { gsMode = b.dataset.gs; renderGuess(); });
+  const inp = $("gsIn");
+  if (inp) {
+    inp.oninput = gsSuggest;
+    inp.onkeydown = e => { if (e.key === "Enter" && gsList.length) { e.preventDefault(); gsGuess(gsList[0].id); } };
+  }
+  if ($("gsNext")) $("gsNext").onclick = () => { gsPrac = null; renderGuess(); };
+  if ($("gsShare")) $("gsShare").onclick = () => {
+    const text = gsShareText(), btn = $("gsShare");
+    if (navigator.share) { navigator.share({ text }).catch(() => {}); return; }
+    if (!legacyCopy(text)) try { navigator.clipboard.writeText(text); } catch (e) {}
+    btn.textContent = "Copied ✓"; setTimeout(() => { if (btn.isConnected) btn.textContent = "📤 Share"; }, 1800);
+  };
+}
+
+/* ---------- Speed Draft ----------
+   The real draft on a clock: eight seconds a pick and no re-draws. Run out of time and the GM grabs someone
+   at random. Every second left over is worth 10 bonus points, and the season tips off as soon as your fifth
+   pick is in. It's a real season (it counts for everything else too); its board adds the time bonus to the
+   season's leaderboard points. */
+const SPD_SECS = 8;
+let spdRaf = 0, spdAuto = false;
+const spdBonus = left => Math.round((left || []).reduce((a, b) => a + b, 0) * 10);
+const spdLeft = () => S && S.speedAt ? Math.max(0, SPD_SECS - (Date.now() - S.speedAt.t) / 1000) : SPD_SECS;
+// Runs on every render: shows the clock and starts it when a roll lands (the clock lives in S, so a reload keeps it)
+function spdClock() {
+  const bar = $("speedBar");
+  if (!bar) return;
+  const on = !!S && S.mode === "speed" && !S.done && picks() < 5;
+  bar.hidden = !on;
+  if (!on) return;
+  if (S.spinning || !S.draw) { $("speedFill").style.width = "100%"; $("speedLeftT").textContent = SPD_SECS.toFixed(1); bar.classList.remove("low"); return; }
+  if (!S.speedAt || S.speedAt.k !== picks()) S.speedAt = { k: picks(), t: Date.now() };
+  if (!spdRaf) spdRaf = requestAnimationFrame(spdFrame);
+}
+function spdFrame() {
+  spdRaf = 0;
+  if (!S || S.mode !== "speed" || S.done || picks() >= 5 || S.spinning || !S.draw || !S.speedAt || S.speedAt.k !== picks()) return;
+  const left = spdLeft();
+  $("speedFill").style.width = (left / SPD_SECS * 100).toFixed(2) + "%";
+  $("speedLeftT").textContent = left.toFixed(1);
+  $("speedBar").classList.toggle("low", left < 3);
+  if (left <= 0) { spdAutoPick(); return; }
+  spdRaf = requestAnimationFrame(spdFrame);
+}
+// Time's up: a random player from this roster, at a position he plays if one is open
+function spdAutoPick() {
+  if (!S || !S.draw || S.spinning || S.done) return;
+  const can = DATA[S.draw.dec][S.draw.fid].players.filter(pickable);
+  if (!can.length) return;
+  const p = can[Math.floor(Math.random() * can.length)], open = openSlots(), nat = open.filter(k => p.pos.includes(k));
+  const slot = nat.length ? nat[Math.floor(Math.random() * nat.length)] : open.reduce((a, k) => penalty(p, k) < penalty(p, a) ? k : a);
+  spdAuto = true;
+  sfx("buzzer");
+  toast(`⏱️ Time! The GM grabbed <b>${esc(p.name)}</b> for you`);
+  draft(p, slot);
+}
+// Called by draft() for every pick in a Speed Draft: bank the time left
+function spdPicked() {
+  S.speedLeft = [...(S.speedLeft || []), spdAuto ? 0 : Math.round(spdLeft() * 10) / 10];
+  spdAuto = false;
+}
+function spdAllIn() {
+  toast(`⚡ All five in · time bonus <b>+${spdBonus(S.speedLeft)}</b> · tip-off!`);
+  setTimeout(() => { if (S && S.mode === "speed" && picks() === 5 && !S.done && !simRunning) simulate(); }, 900);
+}
+function spdSeasonDone(run) {
+  run.mode = "speed"; run.speedBonus = spdBonus(S.speedLeft);
+  const a = arcState().speed;
+  a.played++; a.bestBonus = Math.max(a.bestBonus, run.speedBonus);
+  if (run.w >= 60) a.w60++;
+  questEvent("speed", run);
+  questEvent("speedBonus", run.speedBonus);
+  spdPost(run);
+}
+function spdPlayoffsDone(run) {
+  if (run.champ && !run.speedTitle) { run.speedTitle = true; arcState().speed.titles++; }
+  spdPost(run);
+}
+function spdPost(run) {
+  const a = arcState().speed, total = lbScore(run) + (run.speedBonus || 0);
+  a.best = Math.max(a.best, total);
+  saveCareer(); checkCareerTrophies();
+  arcPost("speed", { score: total, sv: SCORE_V, w: run.w, l: run.l, champ: !!run.champ, pw: run.pw || 0, pl: run.pl || 0, reached: run.reached || 0, pf: run.pf || 0, pa: run.pa || 0, bonus: run.speedBonus || 0,
+    players: run.players.map(p => ({ slot: p.slot, name: p.name, dec: p.dec, team: p.team, ovr: p.ovr })) });
+  if (S && S.mode === "speed") renderModePanel();
+}
+// Not started yet: the first roll waits for the Start button, so reading the rules costs no time
+const spdStarted = () => !!(S && (S.draw || S.spinning || picks() > 0 || S.done));
+function spdGo() {
+  if (!S || S.mode !== "speed" || spdStarted()) return;
+  newDraw();
+  try { $("drawPanel").scrollIntoView({ block: "start", behavior: reduce ? "auto" : "smooth" }); } catch (e) {}
+}
+function renderSpeedPanel() {
+  const a = arcState().speed, el = $("modePanel"), run = S.done && curRun && curRun.mode === "speed" ? curRun : null;
+  let html = `<div class="head archead"><button class="btn sm" id="spdBack">← Arcade</button><h2>⚡ Speed Draft</h2><span class="label">${a.best ? `Best ${fmtPts(a.best)} pts` : `${SPD_SECS} seconds a pick`}</span></div>`;
+  if (!spdStarted()) {
+    html += `<p class="note">The real draft on a clock: <b>${SPD_SECS} seconds a pick</b> and no re-draws. Run out of time and the GM grabs someone at random. Every second you have left is worth 10 bonus points, and the season tips off the moment your fifth pick is in.</p>
+      <div class="row-gap"><button class="btn primary cta" id="spdGo">⚡ Start the clock</button></div>`;
+  } else if (!S.done) {
+    // Drafting: one line, so the roster sits right under it
+    el.innerHTML = `<div class="head archead"><button class="btn sm" id="spdBack">← Arcade</button><h2>⚡ Speed Draft</h2><span class="label">Pick ${Math.min(5, picks() + 1)} of 5 · time bonus <b>+${spdBonus(S.speedLeft)}</b></span></div>`;
+    el.dataset.view = "speed";
+    $("spdBack").onclick = () => askMode("arcade");
+    return;
+  } else if (S.done && !run) {
+    html += `<p class="note">⚡ Tip-off! Your time bonus of <b>+${spdBonus(S.speedLeft)}</b> is banked. Now let's see how the season goes.</p>`;
+  } else if (run) {
+    const total = lbScore(run) + (run.speedBonus || 0);
+    html += `<div class="dailydone"><span class="label">This Speed Draft</span><b class="drec">${esc(recText(run))}</b><span>${fmtPts(lbScore(run))} pts + ⚡ ${fmtPts(run.speedBonus || 0)} time bonus = <b>${fmtPts(total)}</b>${run.po === "pending" ? " · play the playoffs for more" : ""}</span>${a.best && total >= a.best ? `<span class="note">🎉 Your best Speed Draft yet.</span>` : ""}${arcNameHtml("speed")}</div>`;
+  } else {
+  }
+  html += `<span class="label">Speed Draft board</span><div id="arcBoard">${arcBoardHtml("speed")}</div>`;
+  el.innerHTML = html;
+  el.dataset.view = "speed";
+  $("spdBack").onclick = () => askMode("arcade");
+  if ($("spdGo")) $("spdGo").onclick = spdGo;
+  wireArcName();
+}
+
 /* ---------- Confetti ---------- */
 function confetti() {
   if (reduce) return;
@@ -4837,9 +5892,9 @@ function saveRuns() {
 }
 function saveCur() {
   if (!S) return;
-  if (S.done || S.locked || S.offseason || S.mode === "duel") { store.del(KEY_CUR); return; }
+  if (S.done || S.locked || S.offseason || S.mode === "duel" || S.mode === "arcade") { store.del(KEY_CUR); return; }
   store.set(KEY_CUR, { lineup: S.lineup, draw: S.spinning ? null : S.draw, teamRedraw: S.teamRedraw, eraRedraw: S.eraRedraw, hard: $("hardmode").checked, mode: S.mode, day: S.day, drawCount: S.drawCount,
-    rules: S.rules, lockDec: S.lockDec, lockName: S.lockName, redrawsUsed: S.redrawsUsed, draftXp: S.draftXp });
+    rules: S.rules, lockDec: S.lockDec, lockName: S.lockName, redrawsUsed: S.redrawsUsed, draftXp: S.draftXp, speedLeft: S.speedLeft, speedAt: S.speedAt });
 }
 function poText(r) {
   if (r.po === "missed") return "Missed playoffs";
@@ -4878,7 +5933,7 @@ function renderBook() {
     const tag = bestTag(r);
     b.className = "brow" + (tag ? " top" : "");
     const ppgSuffix = r.pf != null ? `<span class="brow-ppg"> · ${(r.pf/82).toFixed(1)} / ${(r.pa/82).toFixed(1)} a game</span>` : "";
-    b.innerHTML = `<span>${i + 1}</span><span class="rec">${r.w}–${r.l}</span><span class="po">${esc(poText(r))}${r.hard ? `<span class="mini">Hard</span>` : ""}${r.mode === "daily" ? `<span class="mini">Daily</span>` : r.mode === "dynasty" && r.dyn ? `<span class="mini">Dynasty Y${r.dyn.year}</span>` : ""}${(r.rules || []).map(id => `<span class="mini">${esc(ruleName(id))}</span>`).join("")}${tag ? `<span class="mini">${tag}</span>` : ""}<span class="mini pts">${fmtPts(lbScore(r))} pts</span></span><span class="date">${esc(r.date)}</span>
+    b.innerHTML = `<span>${i + 1}</span><span class="rec">${r.w}–${r.l}</span><span class="po">${esc(poText(r))}${r.hard ? `<span class="mini">Hard</span>` : ""}${r.mode === "daily" ? `<span class="mini">Daily</span>` : r.mode === "dynasty" && r.dyn ? `<span class="mini">Dynasty Y${r.dyn.year}</span>` : r.mode === "speed" ? `<span class="mini">⚡ Speed</span>` : ""}${(r.rules || []).map(id => `<span class="mini">${esc(ruleName(id))}</span>`).join("")}${tag ? `<span class="mini">${tag}</span>` : ""}<span class="mini pts">${fmtPts(lbScore(r))} pts</span></span><span class="date">${esc(r.date)}</span>
       <span class="lu">${r.players.map(p => `${p.slot} ${esc(p.name)} ${short(p.dec)}`).join(" · ")}${ppgSuffix}</span>`;
     b.setAttribute("aria-label", `Open season ${r.w}–${r.l}, ${poText(r)}, ${fmtPts(lbScore(r))} leaderboard points`);
     b.onclick = () => openRun(r, b);
@@ -5097,6 +6152,7 @@ function startOver() {
     }
   }
   if (mode === "duel") { render(); duelPollOn(); return; }
+  if (mode === "arcade" || mode === "speed") { render(); return; }
   newDraw();
 }
 $("again").onclick = () => {
@@ -5104,19 +6160,24 @@ $("again").onclick = () => {
   if (mode === "dynasty" && dynState() && dynState().stage === "done") startDynasty();
   startOver();
 };
-$("modeNext").onclick = () => { try { $("modePanel").scrollIntoView({ block: "start", behavior: reduce ? "auto" : "smooth" }); } catch (e) {} };
+$("modeNext").onclick = () => {
+  if (mode === "speed") { askMode("arcade"); return; }
+  try { $("modePanel").scrollIntoView({ block: "start", behavior: reduce ? "auto" : "smooth" }); } catch (e) {}
+};
 let pendingMode = null;
 function askMode(m) {
   if (m === mode || poRunning || simRunning || duelBusy || gBusy) return;
   // A Dynasty keeps its team between visits, so only a draft in progress can be lost
-  const losing = picks() > 0 && !S.done && !S.locked && !S.offseason && S.mode !== "duel" && !(S.mode === "dynasty" && dynState() && dynState().stage === "season");
+  const losing = picks() > 0 && !S.done && !S.locked && !S.offseason && S.mode !== "duel" && S.mode !== "arcade" && !(S.mode === "dynasty" && dynState() && dynState().stage === "season");
   if (losing) { pendingMode = m; $("modeAsk").hidden = false; return; }
+  if (mode === "arcade") arcLeave();
   mode = m; store.set(KEY_MODE, mode); startOver();
 }
 $("mFree").onclick = () => askMode("free");
 $("mDaily").onclick = () => askMode("daily");
 $("mDynasty").onclick = () => askMode("dynasty");
 $("mDuel").onclick = () => askMode("duel");
+$("mArcade").onclick = () => { if (mode === "arcade") arcGo("hub"); else askMode("arcade"); };
 $("modeYes").onclick = () => { $("modeAsk").hidden = true; if (pendingMode) { mode = pendingMode; store.set(KEY_MODE, mode); pendingMode = null; startOver(); } };
 $("modeNo").onclick = () => { $("modeAsk").hidden = true; pendingMode = null; };
 $("copy").onclick = () => {
@@ -5144,8 +6205,9 @@ function boot() {
     S.teamRedraw = sv.teamRedraw ?? 1; S.eraRedraw = sv.eraRedraw ?? 1;
     S.rules = Array.isArray(sv.rules) ? sv.rules : []; S.lockDec = sv.lockDec || null; S.lockName = sv.lockName || null;
     S.redrawsUsed = sv.redrawsUsed || 0; S.draftXp = sv.draftXp || 0;
+    if (mode === "speed") { S.speedLeft = Array.isArray(sv.speedLeft) ? sv.speedLeft.slice(0, 5) : []; S.speedAt = sv.speedAt && typeof sv.speedAt.t === "number" ? sv.speedAt : null; }
     $("hardmode").checked = mode === "free" && !!sv.hard;
-    if (mode === "daily") S.teamRedraw = S.eraRedraw = 0;
+    if (mode === "daily" || mode === "speed") S.teamRedraw = S.eraRedraw = 0;
     if (picks() < 5 && (!S.draw || !hasPickable(S.draw.dec, S.draw.fid))) newDraw(); else render();
   } else { mode = MODE_NAMES[lastMode] ? lastMode : "free"; startOver(); }
   // This version added a lot of trophies: check the whole record book against them once, quietly
@@ -5170,9 +6232,11 @@ function boot() {
   // Version 29 changed how leaderboard points count: say so once, with your best season under the new count
   const top = lbBestForMode("normal") || lbBest();
   if (pointsNews && top) toast(`🏀 Leaderboard points now count your playoff record, not team rating, so a better season always scores more. Your best: <b>${esc(recText(top))}</b>, ${fmtPts(lbScore(top))} pts.`);
-  // Version 32: say what's new once
-  if (seeded === null && !career.seen32 && runs.length) toast(`New: <b>Daily Draft, Dynasty and Vs Friend</b> at the top, the <b>Legends Gauntlet</b> in Head-to-head, and <b>card levels</b> in your collection`);
-  career.seen32 = 1;
+  // Versions 32 and 33: say what's new once
+  if (seeded === null && !career.seen33 && runs.length) toast(`New: the <b>🎮 Arcade</b> (Higher or Lower, Buzzer Beater, Survival, Mystery Player and Speed Draft) and <b>📋 Daily quests</b>${career.seen32 ? "" : `, plus the <b>Daily Draft, Dynasty, Vs Friend</b>, the <b>Legends Gauntlet</b> and <b>card levels</b>`}`);
+  career.seen32 = career.seen33 = 1;
+  // The quests change at midnight in California; keep their countdown fresh
+  setInterval(() => { try { renderQuests(); } catch (e) {} }, 60000);
   checkCareerTrophies();
   saveCareer();
 }

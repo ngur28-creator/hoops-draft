@@ -7,6 +7,12 @@
 //   board=daily&day=YYYY-MM-DD   the Daily Draft (POST { board, day, token, name, entry }: a season, like run)
 //   board=gauntlet               Legends Gauntlet runs (entry: { beat, lost, team, players })
 //   board=dynasty                five-season dynasties (entry: { years: [5 seasons], players })
+// and so do the Arcade games:
+//   board=hol                    Higher or Lower: best streak (entry: { streak })
+//   board=buzz                   Buzzer Beater: best game (entry: { points, makes })
+//   board=surv                   Survival: most wins in a run (entry: { wins, losses, players })
+//   board=guess&day=YYYY-MM-DD   the day's Mystery Player: fewest guesses (entry: { tries })
+//   board=speed                  Speed Draft: a season plus its time bonus (entry: a season, like run, and bonus)
 //
 // Anyone can submit. Each browser keeps a secret token; your player id is a hash of it, so only you can
 // replace your own entry. One entry per player per board, and a lower score never replaces a higher one
@@ -24,7 +30,9 @@ import VALID from "./valid.mjs";
 
 const SLOTS = ["PG", "SG", "SF", "PF", "C"];
 const BOARDS = new Set(["normal", "hard"]);
-const KINDS = new Set(["normal", "hard", "daily", "gauntlet", "dynasty"]);
+const KINDS = new Set(["normal", "hard", "daily", "gauntlet", "dynasty", "hol", "buzz", "surv", "guess", "speed"]);
+// Boards kept one per day (California time)
+const DAILY = new Set(["daily", "guess"]);
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
 
 // The date in California: the Daily Draft day, the same as the game uses
@@ -33,11 +41,11 @@ export function dayPT(offsetDays = 0) {
   const p = Object.fromEntries(new Intl.DateTimeFormat("en-US", { timeZone: "America/Los_Angeles", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(d).map(x => [x.type, x.value]));
   return `${p.year}-${p.month}-${p.day}`;
 }
-// Where a board's entries live: the season boards by name, the Daily Draft one per day
+// Where a board's entries live: most boards by name, the Daily Draft and the Mystery Player one per day
 function boardKey(kind, day) {
   if (!KINDS.has(kind)) return null;
-  if (kind !== "daily") return kind;
-  return typeof day === "string" && DAY.test(day) ? `daily-${day}` : null;
+  if (!DAILY.has(kind)) return kind;
+  return typeof day === "string" && DAY.test(day) ? `${kind}-${day}` : null;
 }
 const SHOWN = 500;
 
@@ -68,7 +76,7 @@ function reply(body, status = 200) {
 
 async function readBoard(url, store) {
   const kind = url.searchParams.get("board"), key = boardKey(kind, url.searchParams.get("day"));
-  if (!key) return reply({ error: kind === "daily" ? "Which day? Use day=YYYY-MM-DD." : "Unknown board" }, 400);
+  if (!key) return reply({ error: DAILY.has(kind) ? "Which day? Use day=YYYY-MM-DD." : "Unknown board" }, 400);
   const id = url.searchParams.get("id");
   if (id !== null) {
     if (!/^[0-9a-f]{20}$/.test(id)) return reply({ error: "Bad player id" }, 400);
@@ -105,6 +113,10 @@ function parseIndexKey(k, kind) {
   const base = { id: p[0], name, score: +p[1], ts: parseInt(p[5], 36) };
   if (kind === "gauntlet") return { ...base, beat: +p[2], lost: +p[3] };
   if (kind === "dynasty") return { ...base, titles: +p[2], wins: +p[3] };
+  if (kind === "hol") return { ...base, streak: +p[2] };
+  if (kind === "buzz") return { ...base, points: +p[2], makes: +p[3] };
+  if (kind === "surv") return { ...base, wins: +p[2], losses: +p[3] };
+  if (kind === "guess") return { ...base, tries: +p[2] };
   return { ...base, w: +p[2], l: +p[3], champ: p[4] === "1", hard: kind === "hard" };
 }
 
@@ -120,8 +132,8 @@ async function submit(req, store) {
   try { body = JSON.parse(text); } catch { return reply({ error: "Bad request" }, 400); }
   const { board: kind, token } = body || {};
   if (!KINDS.has(kind)) return reply({ error: "Unknown board" }, 400);
-  // A Daily Draft entry is for today (in California), or the day either side of it
-  if (kind === "daily" && ![dayPT(-1), dayPT(0), dayPT(1)].includes(body.day)) return reply({ error: "That Daily Draft is over." }, 400);
+  // A Daily Draft or Mystery Player entry is for today (in California), or the day either side of it
+  if (DAILY.has(kind) && ![dayPT(-1), dayPT(0), dayPT(1)].includes(body.day)) return reply({ error: kind === "guess" ? "That Mystery Player is over." : "That Daily Draft is over." }, 400);
   const board = boardKey(kind, body.day);
   if (typeof token !== "string" || !/^[0-9a-f]{32}$/.test(token)) return reply({ error: "Bad player token. Reload the page and try again." }, 400);
   const id = createHash("sha256").update(token).digest("hex").slice(0, 20);
@@ -136,15 +148,20 @@ async function submit(req, store) {
   try {
     if (kind === "gauntlet") rec = checkGauntlet(body.entry);
     else if (kind === "dynasty") rec = checkDynasty(body.entry);
+    else if (ARCADE.has(kind)) rec = checkArcade(kind, body.entry);
     else {
-      const run = checkRun(kind === "daily" ? { ...(body.entry || body.run), hard: false } : body.run);
-      if (kind !== "daily" && run.hard !== (kind === "hard")) {
+      const daily = kind === "daily" || kind === "speed";
+      const run = checkRun(daily ? { ...(body.entry || body.run), hard: false } : body.run);
+      if (!daily && run.hard !== (kind === "hard")) {
         return reply({ error: kind === "hard" ? "Only hard mode (blind picks) seasons go on the Hard Mode board." : "Hard mode seasons go on the Hard Mode board." }, 400);
       }
       const sum = run.players.reduce((a, p) => a + p.ovr, 0);
+      // A Speed Draft adds its time bonus: up to 10 points for each of 8 seconds left on each of 5 picks
+      const bonus = kind === "speed" ? (body.entry && body.entry.bonus) : 0;
+      if (kind === "speed" && !(Number.isInteger(bonus) && bonus >= 0 && bonus <= 400)) throw "That time bonus isn't possible.";
       rec = {
-        score: scoreOf(run), row: [run.w, run.l, run.champ ? 1 : 0],
-        data: { ...run, avgOvr: Math.round(sum / 5), ppg: run.pf ? Math.round(run.pf / 82 * 10) / 10 : null, papg: run.pa ? Math.round(run.pa / 82 * 10) / 10 : null },
+        score: scoreOf(run) + bonus, row: [run.w, run.l, run.champ ? 1 : 0],
+        data: { ...run, ...(kind === "speed" ? { bonus } : {}), avgOvr: Math.round(sum / 5), ppg: run.pf ? Math.round(run.pf / 82 * 10) / 10 : null, papg: run.pa ? Math.round(run.pa / 82 * 10) / 10 : null },
       };
     }
   } catch (msg) { return reply({ error: typeof msg === "string" ? msg : "That couldn't be read." }, 400); }
@@ -217,6 +234,30 @@ function checkGauntlet(e) {
   if (!Number.isInteger(lost) || lost < 0 || lost > beat * 3 + 4) throw "That run has an impossible result.";
   const players = checkPlayers(e.players, "That run");
   return { score: beat * 100 + Math.max(0, 99 - lost), row: [beat, lost, beat === 24 ? 1 : 0], data: { beat, lost, team: String(e.team ?? "").slice(0, 120), players } };
+}
+
+// The Arcade's quick games are played in the page, so all the server can do is check the numbers are possible
+const ARCADE = new Set(["hol", "buzz", "surv", "guess"]);
+function checkArcade(kind, e) {
+  if (!e || typeof e !== "object") throw "That result couldn't be read.";
+  const int = (v, lo, hi) => Number.isInteger(v) && v >= lo && v <= hi;
+  if (kind === "hol") {
+    if (!int(e.streak, 1, 1000)) throw "That streak isn't possible.";
+    return { score: e.streak, row: [e.streak, 0, 0], data: { streak: e.streak } };
+  }
+  if (kind === "buzz") {
+    // Every make is worth 2 to 5, plus 1 when you're on fire
+    if (!int(e.makes, 1, 1000) || !int(e.points, 2, 6000) || e.points < e.makes * 2 || e.points > e.makes * 6) throw "That game isn't possible.";
+    return { score: e.points, row: [e.points, e.makes, 0], data: { points: e.points, makes: e.makes } };
+  }
+  if (kind === "surv") {
+    // Three lives, and a boss win (one game in ten) can win one back
+    if (!int(e.wins, 1, 2000) || !int(e.losses, 0, 2000) || e.losses > 3 + Math.floor((e.wins + e.losses) / 10)) throw "That run isn't possible.";
+    const players = checkPlayers(e.players, "That team");
+    return { score: e.wins, row: [e.wins, e.losses, 0], data: { wins: e.wins, losses: e.losses, players } };
+  }
+  if (!int(e.tries, 1, 6)) throw "That isn't a possible number of guesses.";
+  return { score: 7 - e.tries, row: [e.tries, 0, 0], data: { tries: e.tries } };
 }
 
 // A dynasty: five seasons with one team; titles and wins are counted here, not taken from the page
