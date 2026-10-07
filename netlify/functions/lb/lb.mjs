@@ -4,7 +4,9 @@
 //   GET  /api/lb?board=normal|hard&id=<id>   one entry with its full team and season stats
 //   POST /api/lb  { board, token, name, run, replace? } submit your best season for that board
 // The game modes have boards too:
-//   board=daily&day=YYYY-MM-DD   the Daily Draft (POST { board, day, token, name, entry }: a season, like run)
+//   board=monthly&month=YYYY-MM  the Monthly Draft: your best try of the month (POST { board, day: "YYYY-MM", token, name,
+//                                entry }: a season, like run; GET and POST take day= or month=)
+//   board=daily&day=YYYY-MM-DD   the old Daily Draft, which the Monthly Draft replaced (kept for pages that haven't reloaded)
 //   board=gauntlet               Legends Gauntlet runs (entry: { beat, lost, team, players })
 //   board=dynasty                five-season dynasties (entry: { years: [5 seasons], players })
 // and so do the Arcade games:
@@ -13,7 +15,6 @@
 //   board=surv                   Survival: most wins in a run (entry: { wins, losses, players })
 //   board=guess&day=YYYY-MM-DD   the day's Mystery Player: fewest guesses (entry: { tries })
 //   board=speed                  Speed Draft: a season plus its time bonus (entry: a season, like run, and bonus)
-//   GET board=monthly&month=YYYY-MM   the Daily Draft's month: every day's points added up, per player
 //
 // Anyone can submit. Each browser keeps a secret token; your player id is a hash of it, so only you can
 // replace your own entry. One entry per player per board, and a lower score never replaces a higher one
@@ -31,20 +32,22 @@ import VALID from "./valid.mjs";
 
 const SLOTS = ["PG", "SG", "SF", "PF", "C"];
 const BOARDS = new Set(["normal", "hard"]);
-const KINDS = new Set(["normal", "hard", "daily", "gauntlet", "dynasty", "hol", "buzz", "surv", "guess", "speed"]);
-// Boards kept one per day (California time)
+const KINDS = new Set(["normal", "hard", "monthly", "daily", "gauntlet", "dynasty", "hol", "buzz", "surv", "guess", "speed"]);
+// Boards kept one per day (California time), and the Monthly Draft's one per month
 const DAILY = new Set(["daily", "guess"]);
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
+const MONTH = /^\d{4}-(0[1-9]|1[0-2])$/;
 
-// The date in California: the Daily Draft day, the same as the game uses
+// The date in California, the same as the game uses (the Monthly Draft's new month starts at midnight there)
 export function dayPT(offsetDays = 0) {
   const d = new Date(Date.now() + offsetDays * 864e5);
   const p = Object.fromEntries(new Intl.DateTimeFormat("en-US", { timeZone: "America/Los_Angeles", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(d).map(x => [x.type, x.value]));
   return `${p.year}-${p.month}-${p.day}`;
 }
-// Where a board's entries live: most boards by name, the Daily Draft and the Mystery Player one per day
+// Where a board's entries live: most boards by name, the Mystery Player one per day, the Monthly Draft one per month
 function boardKey(kind, day) {
   if (!KINDS.has(kind)) return null;
+  if (kind === "monthly") return typeof day === "string" && MONTH.test(day) ? `monthly-${day}` : null;
   if (!DAILY.has(kind)) return kind;
   return typeof day === "string" && DAY.test(day) ? `${kind}-${day}` : null;
 }
@@ -76,14 +79,9 @@ function reply(body, status = 200) {
 }
 
 async function readBoard(url, store) {
-  const kind = url.searchParams.get("board");
-  if (kind === "monthly") {
-    const month = url.searchParams.get("month");
-    if (!MONTH.test(month || "")) return reply({ error: "Which month? Use month=YYYY-MM." }, 400);
-    return reply({ entries: await monthBoard(store, month) });
-  }
-  const key = boardKey(kind, url.searchParams.get("day"));
-  if (!key) return reply({ error: DAILY.has(kind) ? "Which day? Use day=YYYY-MM-DD." : "Unknown board" }, 400);
+  const kind = url.searchParams.get("board"), q = url.searchParams;
+  const key = boardKey(kind, kind === "monthly" ? q.get("month") ?? q.get("day") : q.get("day"));
+  if (!key) return reply({ error: kind === "monthly" ? "Which month? Use month=YYYY-MM." : DAILY.has(kind) ? "Which day? Use day=YYYY-MM-DD." : "Unknown board" }, 400);
   const id = url.searchParams.get("id");
   if (id !== null) {
     if (!/^[0-9a-f]{20}$/.test(id)) return reply({ error: "Bad player id" }, 400);
@@ -105,30 +103,6 @@ async function listBoard(store, board, kind = board) {
   }
   // Higher score first; on a tie, whoever got there first
   return [...best.values()].sort((a, b) => b.score - a.score || a.ts - b.ts).map(({ ts, ...e }) => e);
-}
-
-// The Daily Draft's month: each player's best entry on each day of the month, added up. One listing reads the
-// whole month, because every day's board shares the prefix i/daily-YYYY-MM-.
-const MONTH = /^\d{4}-(0[1-9]|1[0-2])$/;
-async function monthBoard(store, month) {
-  const { blobs } = await store.list({ prefix: `i/daily-${month}-` });
-  const perDay = new Map(); // "day|id" -> that day's entry
-  for (const { key } of blobs) {
-    const rest = key.slice(2), slash = rest.indexOf("/"), day = rest.slice(6, slash);
-    const e = slash > 0 && DAY.test(day) ? parseIndexKey(rest.slice(slash + 1), "daily") : null;
-    if (!e) continue;
-    const cur = perDay.get(`${day}|${e.id}`);
-    if (!cur || e.score > cur.score) perDay.set(`${day}|${e.id}`, e);
-  }
-  const by = new Map();
-  for (const e of perDay.values()) {
-    const cur = by.get(e.id) || { id: e.id, name: e.name, score: 0, days: 0, best: 0, ts: -1 };
-    cur.score += e.score; cur.days++; cur.best = Math.max(cur.best, e.score);
-    if (e.ts >= cur.ts) { cur.ts = e.ts; cur.name = e.name; }
-    by.set(e.id, cur);
-  }
-  // Most points first; on a tie, more days played, then whoever got there first
-  return [...by.values()].sort((a, b) => b.score - a.score || b.days - a.days || a.ts - b.ts).map(({ ts, ...e }) => e).slice(0, SHOWN);
 }
 
 // The index marker carries what a board row shows: for seasons the record, for the Gauntlet the legends
@@ -163,9 +137,12 @@ async function submit(req, store) {
   try { body = JSON.parse(text); } catch { return reply({ error: "Bad request" }, 400); }
   const { board: kind, token } = body || {};
   if (!KINDS.has(kind)) return reply({ error: "Unknown board" }, 400);
-  // A Daily Draft or Mystery Player entry is for today (in California), or the day either side of it
+  // A Daily Draft or Mystery Player entry is for today (in California), or the day either side of it; a Monthly
+  // Draft entry for this month, or the month either side of it (a try finished just after midnight on the 1st)
   if (DAILY.has(kind) && ![dayPT(-1), dayPT(0), dayPT(1)].includes(body.day)) return reply({ error: kind === "guess" ? "That Mystery Player is over." : "That Daily Draft is over." }, 400);
-  const board = boardKey(kind, body.day);
+  const month = kind === "monthly" ? body.month ?? body.day : null;
+  if (kind === "monthly" && !(typeof month === "string" && MONTH.test(month) && [dayPT(-1), dayPT(0), dayPT(1)].some(d => d.slice(0, 7) === month))) return reply({ error: "That Monthly Draft is over." }, 400);
+  const board = boardKey(kind, kind === "monthly" ? month : body.day);
   if (typeof token !== "string" || !/^[0-9a-f]{32}$/.test(token)) return reply({ error: "Bad player token. Reload the page and try again." }, 400);
   const id = createHash("sha256").update(token).digest("hex").slice(0, 20);
 
@@ -181,7 +158,8 @@ async function submit(req, store) {
     else if (kind === "dynasty") rec = checkDynasty(body.entry);
     else if (ARCADE.has(kind)) rec = checkArcade(kind, body.entry);
     else {
-      const daily = kind === "daily" || kind === "speed";
+      // Monthly, Daily and Speed Draft seasons are always normal mode
+      const daily = kind === "monthly" || kind === "daily" || kind === "speed";
       const run = checkRun(daily ? { ...(body.entry || body.run), hard: false } : body.run);
       if (!daily && run.hard !== (kind === "hard")) {
         return reply({ error: kind === "hard" ? "Only hard mode (blind picks) seasons go on the Hard Mode board." : "Hard mode seasons go on the Hard Mode board." }, 400);

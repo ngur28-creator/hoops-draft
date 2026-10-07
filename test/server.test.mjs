@@ -199,26 +199,50 @@ await t("Speed Draft: the season's points plus the time bonus, which can't be mo
   const b = await call("GET", "?board=speed");
   assert.deepEqual(b.body.entries.map(e => [e.name, e.score, e.w, e.l, e.champ]), [["Gus", 1595, 79, 3, true], ["Hal", 1350, 79, 3, true]]);
 });
-await t("Daily Draft month: each player's days add up, and a day only counts once", async () => {
+await t("Monthly Draft: this month's board takes a season and keeps your best try; other months are refused", async () => {
   const { dayPT } = await import("../netlify/functions/lb/lb.mjs");
-  const today = dayPT(), yday = dayPT(-1), month = today.slice(0, 7), sameMonth = yday.startsWith(month);
-  // Gus already has 1,390 today (from the Daily Draft test); now yesterday too, and Hal yesterday as well
-  let r = await call("POST", "", { board: "daily", day: yday, token: tok("1"), name: "Gus", entry: { ...bobNormal, w: 70, l: 12, champ: false, reached: 2, pw: 9, pl: 6 } });
-  assert.equal(r.status, 200, JSON.stringify(r.body)); assert.equal(r.body.score, 790);
-  r = await call("POST", "", { board: "daily", day: yday, token: tok("2"), name: "Hal", entry: { ...bobNormal, w: 50, l: 32, champ: false, reached: 0, pw: 1, pl: 4 } });
-  assert.equal(r.status, 200, JSON.stringify(r.body)); assert.equal(r.body.score, 510);
-  // a worse try the same day doesn't add anything
-  await call("POST", "", { board: "daily", day: today, token: tok("1"), name: "Gus", entry: { ...bobNormal, w: 40, l: 42, champ: false, reached: 0, pw: 0, pl: 0 } });
-  const b = await call("GET", `?board=monthly&month=${month}`);
-  assert.equal(b.status, 200, JSON.stringify(b.body));
-  const row = n => b.body.entries.find(e => e.name === n);
-  assert.deepEqual([row("Gus").score, row("Gus").days, row("Gus").best], sameMonth ? [2180, 2, 1390] : [1390, 1, 1390]);
-  assert.deepEqual([row("Hal").score, row("Hal").days], sameMonth ? [1860, 2] : [1350, 1]);
-  assert.equal(b.body.entries[0].name, "Gus");
-  // yesterday's month (when today is the 1st) has yesterday's entries
-  if (!sameMonth) { const p = await call("GET", `?board=monthly&month=${yday.slice(0, 7)}`); assert.deepEqual(p.body.entries.map(e => [e.name, e.score]), [["Gus", 790], ["Hal", 510]]); }
-  for (const q of ["?board=monthly", "?board=monthly&month=2026-13", "?board=monthly&month=26-10"]) assert.equal((await call("GET", q)).status, 400, q);
+  const month = dayPT().slice(0, 7);
+  let r = await call("POST", "", { board: "monthly", day: month, token: tok("1"), name: "Gus", entry: { ...bobNormal, w: 70, l: 12, champ: false, reached: 2, pw: 9, pl: 6 } });
+  assert.equal(r.status, 200, JSON.stringify(r.body)); assert.equal(r.body.score, 790); assert.equal(r.body.rank, 1);
+  // a better try later in the month replaces it, and a worse one is kept out
+  r = await call("POST", "", { board: "monthly", day: month, token: tok("1"), name: "Gus", entry: { ...bobNormal, pl: 2 } });
+  assert.equal(r.status, 200, JSON.stringify(r.body)); assert.equal(r.body.score, 1390); assert.equal(r.body.kept, undefined);
+  r = await call("POST", "", { board: "monthly", day: month, token: tok("1"), name: "Gus", entry: { ...bobNormal, w: 40, l: 42, champ: false, reached: 0, pw: 0, pl: 0 } });
+  assert.equal(r.body.kept, true); assert.equal(r.body.score, 1390);
+  // month= works as well as day=, and a hard mode flag doesn't add 200
+  r = await call("POST", "", { board: "monthly", month, token: tok("2"), name: "Hal", entry: { ...bobHard } });
+  assert.equal(r.status, 200, JSON.stringify(r.body)); assert.equal(r.body.score, 1350); assert.equal(r.body.rank, 2);
+  for (const bad of ["2020-01", "2026-13", dayPT(), "", undefined, 202610]) {
+    r = await call("POST", "", { board: "monthly", day: bad, token: tok("2"), name: "Hal", entry: bobNormal });
+    assert.equal(r.status, 400, String(bad)); assert.match(r.body.error, /Monthly Draft is over/);
+  }
+  for (const q of [`?board=monthly&month=${month}`, `?board=monthly&day=${month}`]) {
+    const b = await call("GET", q);
+    assert.equal(b.status, 200, q);
+    assert.deepEqual(b.body.entries.map(e => [e.name, e.score, e.w, e.l, e.champ]), [["Gus", 1390, 79, 3, true], ["Hal", 1350, 79, 3, true]], q);
+  }
+  // the detail view has the team, with the game's own ratings
+  const id = (await call("GET", `?board=monthly&month=${month}`)).body.entries[0].id;
+  const d = await call("GET", `?board=monthly&month=${month}&id=${id}`);
+  assert.equal(d.status, 200); assert.equal(d.body.players[0].name, "Damian Lillard"); assert.equal(d.body.players[0].ovr, 97);
+  for (const q of ["?board=monthly", "?board=monthly&month=2026-13", "?board=monthly&month=26-10", `?board=monthly&day=${dayPT()}`]) assert.equal((await call("GET", q)).status, 400, q);
   assert.deepEqual((await call("GET", "?board=monthly&month=2001-01")).body.entries, []);
+  // its own board, apart from the old Daily Draft's
+  assert.equal([...store._m.keys()].filter(k => k.startsWith(`i/monthly-${month}/`)).length, 2);
+});
+await t("Monthly Draft: just after midnight on the 1st last month's try still counts, and two weeks later it doesn't", async () => {
+  const real = Date.now;
+  try {
+    Date.now = () => Date.parse("2026-12-01T09:00:00Z"); // 1am on December 1 in California
+    let r = await call("POST", "", { board: "monthly", day: "2026-11", token: tok("9"), name: "Ivy", entry: bobNormal });
+    assert.equal(r.status, 200, JSON.stringify(r.body)); assert.equal(r.body.score, 1380);
+    r = await call("POST", "", { board: "monthly", day: "2026-12", token: tok("9"), name: "Ivy", entry: bobNormal });
+    assert.equal(r.status, 200, JSON.stringify(r.body));
+    assert.equal((await call("POST", "", { board: "monthly", day: "2026-10", token: tok("9"), name: "Ivy", entry: bobNormal })).status, 400);
+    Date.now = () => Date.parse("2026-12-15T20:00:00Z");
+    assert.equal((await call("POST", "", { board: "monthly", day: "2026-11", token: tok("9"), name: "Ivy", entry: bobNormal })).status, 400);
+    assert.deepEqual((await call("GET", "?board=monthly&month=2026-11")).body.entries.map(e => [e.name, e.score]), [["Ivy", 1380]]);
+  } finally { Date.now = real; }
 });
 console.log(results.join("\n"));
 process.exitCode = results.some(r => r.startsWith("FAIL")) ? 1 : 0;
