@@ -199,6 +199,50 @@ await t("Speed Draft: the season's points plus the time bonus, which can't be mo
   const b = await call("GET", "?board=speed");
   assert.deepEqual(b.body.entries.map(e => [e.name, e.score, e.w, e.l, e.champ]), [["Gus", 1595, 79, 3, true], ["Hal", 1350, 79, 3, true]]);
 });
+await t("Trivia Blitz: best score on the board, correct count travels with it, silly ones refused", async () => {
+  let r = await call("POST", "", { board: "quiz", token: tok("1"), name: "Gus", entry: { score: 8, correct: 8 } });
+  assert.equal(r.status, 200, JSON.stringify(r.body)); assert.equal(r.body.score, 8);
+  r = await call("POST", "", { board: "quiz", token: tok("1"), name: "Gus", entry: { score: 3, correct: 3 } });
+  assert.equal(r.body.kept, true); assert.equal(r.body.score, 8);
+  for (const bad of [{ score: -1, correct: 0 }, { score: 1.5, correct: 1 }, { score: 5, correct: 5000 }, {}]) assert.equal((await call("POST", "", { board: "quiz", token: tok("2"), name: "Hal", entry: bad })).status, 400, JSON.stringify(bad));
+  const b = await call("GET", "?board=quiz");
+  assert.deepEqual(b.body.entries.map(e => [e.name, e.score, e.correct]), [["Gus", 8, 8]]);
+});
+await t("Trade Up: best streak on the board, silly ones refused", async () => {
+  let r = await call("POST", "", { board: "trade", token: tok("1"), name: "Gus", entry: { streak: 6 } });
+  assert.equal(r.status, 200, JSON.stringify(r.body)); assert.equal(r.body.score, 6);
+  for (const bad of [{ streak: 0 }, { streak: 1.5 }, { streak: 5000 }, {}]) assert.equal((await call("POST", "", { board: "trade", token: tok("2"), name: "Hal", entry: bad })).status, 400, JSON.stringify(bad));
+  const b = await call("GET", "?board=trade");
+  assert.deepEqual(b.body.entries.map(e => [e.name, e.streak]), [["Gus", 6]]);
+});
+await t("Memory Match: best score, with moves and seconds coming along; silly ones refused", async () => {
+  let r = await call("POST", "", { board: "memory", token: tok("1"), name: "Gus", entry: { score: 340, moves: 11, seconds: 28 } });
+  assert.equal(r.status, 200, JSON.stringify(r.body)); assert.equal(r.body.score, 340);
+  for (const bad of [{ score: 0, moves: 11, seconds: 28 }, { score: 300, moves: 3, seconds: 28 }, { score: 300, moves: 11, seconds: -1 }, {}]) assert.equal((await call("POST", "", { board: "memory", token: tok("2"), name: "Hal", entry: bad })).status, 400, JSON.stringify(bad));
+  const b = await call("GET", "?board=memory");
+  assert.deepEqual(b.body.entries.map(e => [e.name, e.score, e.moves, e.seconds]), [["Gus", 340, 11, 28]]);
+});
+await t("Bracket Predictor: best score, correct count and a perfect champ call travel with it; silly ones refused", async () => {
+  let r = await call("POST", "", { board: "bracket", token: tok("1"), name: "Gus", entry: { score: 60, correct: 7, champ: true } });
+  assert.equal(r.status, 200, JSON.stringify(r.body)); assert.equal(r.body.score, 60);
+  for (const bad of [{ score: -1, correct: 7 }, { score: 60, correct: 8 }, {}]) assert.equal((await call("POST", "", { board: "bracket", token: tok("2"), name: "Hal", entry: bad })).status, 400, JSON.stringify(bad));
+  const b = await call("GET", "?board=bracket");
+  assert.deepEqual(b.body.entries.map(e => [e.name, e.score, e.correct, e.champ]), [["Gus", 60, 7, true]]);
+});
+await t("Stat Line Showdown: best streak on the board, silly ones refused", async () => {
+  let r = await call("POST", "", { board: "statline", token: tok("1"), name: "Gus", entry: { streak: 9 } });
+  assert.equal(r.status, 200, JSON.stringify(r.body)); assert.equal(r.body.score, 9);
+  for (const bad of [{ streak: 0 }, { streak: 1.5 }, {}]) assert.equal((await call("POST", "", { board: "statline", token: tok("2"), name: "Hal", entry: bad })).status, 400, JSON.stringify(bad));
+  const b = await call("GET", "?board=statline");
+  assert.deepEqual(b.body.entries.map(e => [e.name, e.streak]), [["Gus", 9]]);
+});
+await t("Hot Hand: best streak on the board, silly ones refused", async () => {
+  let r = await call("POST", "", { board: "hothand", token: tok("1"), name: "Gus", entry: { streak: 12 } });
+  assert.equal(r.status, 200, JSON.stringify(r.body)); assert.equal(r.body.score, 12);
+  for (const bad of [{ streak: 0 }, { streak: 1.5 }, {}]) assert.equal((await call("POST", "", { board: "hothand", token: tok("2"), name: "Hal", entry: bad })).status, 400, JSON.stringify(bad));
+  const b = await call("GET", "?board=hothand");
+  assert.deepEqual(b.body.entries.map(e => [e.name, e.streak]), [["Gus", 12]]);
+});
 await t("Monthly Draft: this month's board takes a season and keeps your best try; other months are refused", async () => {
   const { dayPT } = await import("../netlify/functions/lb/lb.mjs");
   const month = dayPT().slice(0, 7);

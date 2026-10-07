@@ -697,6 +697,31 @@ h3 { font-family: var(--display); font-weight: 400; font-size: 16px; line-height
 .arcover { display: grid; gap: 6px; padding: 12px; border-radius: 12px; border: 2px solid var(--gold); background: color-mix(in srgb, var(--gold) 10%, var(--bg)); }
 .arcover .drec { font-family: var(--display); font-weight: 400; font-size: 26px; line-height: 1.1; }
 .arcname { display: grid; gap: 6px; }
+.arccard.right { border-color: var(--win); background: color-mix(in srgb, var(--win) 12%, var(--bg)); }
+.arccard.wrong { border-color: var(--loss); opacity: .65; }
+.optgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+.optbtn { display: grid; gap: 2px; text-align: left; padding: 12px 14px; border-radius: 12px; border: 2px solid var(--line); background: var(--bg); color: var(--ink); font: inherit; font-weight: 700; cursor: pointer; min-width: 0; }
+.optbtn .note { font-weight: 500; }
+.optbtn.right { border-color: var(--win); background: color-mix(in srgb, var(--win) 12%, var(--bg)); }
+.optbtn.wrong { border-color: var(--loss); opacity: .65; }
+.optbtn:disabled { cursor: default; }
+.memgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.memcard { aspect-ratio: 1; border-radius: 10px; border: 2px solid var(--line); background: var(--bg); color: var(--ink); font: inherit; display: grid; place-items: center; text-align: center; padding: 4px; cursor: pointer; min-width: 0; }
+.memcard b { font-size: 11px; line-height: 1.15; overflow-wrap: anywhere; }
+.memcard .note { font-size: 9px; }
+.memcard.up { background: color-mix(in srgb, var(--accent) 12%, var(--bg)); border-color: var(--accent); }
+.memcard.matched { background: color-mix(in srgb, var(--win) 18%, var(--bg)); border-color: var(--win); opacity: .75; }
+.memcard:disabled { cursor: default; }
+.bracketrow { display: grid; gap: 10px; }
+.bmatch { display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; align-items: center; }
+.bteam { display: grid; gap: 2px; text-align: left; padding: 10px 12px; border-radius: 10px; border: 2px solid var(--line); background: var(--bg); color: var(--ink); font: inherit; font-weight: 700; cursor: pointer; min-width: 0; }
+.bteam .note { font-weight: 500; }
+.bteam.picked { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, var(--bg)); }
+.bteam.won { border-color: var(--win); background: color-mix(in srgb, var(--win) 14%, var(--bg)); }
+.bteam.lost { opacity: .5; }
+.bteam:disabled { cursor: default; }
+.bvs { font-family: var(--display); color: var(--board-dim); text-align: center; font-size: 13px; }
+@media (max-width: 520px) { .bmatch { grid-template-columns: 1fr; } .bvs { display: none; } }
 .acard { display: grid; gap: 3px; align-content: start; padding: 10px 12px; border-radius: 14px; border: 3px solid transparent; min-width: 0;
   background: linear-gradient(var(--panel), var(--panel)) padding-box, linear-gradient(var(--line), var(--line)) border-box; }
 .acard.rare { background: linear-gradient(var(--panel), var(--panel)) padding-box, linear-gradient(135deg, var(--navy), color-mix(in srgb, var(--navy) 40%, var(--panel))) border-box; }
@@ -1052,7 +1077,7 @@ h3 { font-family: var(--display); font-weight: 400; font-size: 16px; line-height
 <div class="toast" id="toast" hidden role="status"></div>
 
 <script>
-const APP_VERSION = 38;
+const APP_VERSION = 39;
 // How leaderboard points are counted. Version 1 also counted team rating; entries saved under it are re-scored when shown.
 const SCORE_V = 2;
 // Anything that goes wrong is noted (last 20, in this browser and in your private cloud save) so it can be fixed
@@ -2821,6 +2846,13 @@ function buildFamilies() {
   out.push(A(27, 2, "ar_speed60", "Beat the clock", "Win 60+ games in a Speed Draft", () => AR().speed.w60 >= 1, null, 80));
   out.push(A(27, 3, "ar_speedt", "Lightning ring", "Win the title in a Speed Draft", () => AR().speed.titles >= 1, null, 150));
   out.push(A(27, 3, "ar_speedb", "Quick hands", "Earn a time bonus of 300+ in a Speed Draft", () => AR().speed.bestBonus >= 300, null, 120));
+  ladder(27, "ar_quiz", [[5, 1, 20], [10, 2, 60], [20, 3, 150]], v => `${v} correct`, v => `Get ${v} correct in a row in Trivia Blitz`, () => AR().quiz.best);
+  ladder(27, "ar_trade", [[5, 1, 20], [10, 2, 60], [20, 3, 150]], v => `${v} good trades`, v => `Pick ${v} right in a row in Trade Up`, () => AR().trade.best);
+  out.push(A(27, 2, "ar_memory", "Sharp memory", "Match all eight pairs in Memory Match in 20 moves or fewer", () => AR().memory.bestMoves > 0 && AR().memory.bestMoves <= 20, null, 100));
+  ladder(27, "ar_bracket", [[50, 1, 30], [80, 2, 80], [110, 3, 250]], v => `${v}-point bracket`, v => `Score ${v}+ points in Bracket Predictor`, () => AR().bracket.best);
+  out.push(A(27, 3, "ar_bracketperfect", "Bracketologist", "Call every winner of a Bracket Predictor", () => (AR().bracket.perfect || 0) >= 1, null, 250));
+  ladder(27, "ar_statline", [[5, 1, 20], [10, 2, 60], [20, 3, 150]], v => `${v} in a row`, v => `Get ${v} Stat Line Showdowns right in a row`, () => AR().statline.best);
+  ladder(27, "ar_hothand", [[5, 1, 20], [10, 2, 60], [20, 3, 150]], v => `${v} calls`, v => `Call ${v} Hot Hand shots right in a row`, () => AR().hothand.best);
   // Daily quests
   const QS = () => questState();
   ladder(28, "qs_done", [[1, 1, 15], [10, 1, 40], [50, 2, 100], [200, 3, 250], [500, 4, 500]], v => v === 1 ? "On a quest" : `${v} quests`, v => v === 1 ? "Finish a daily quest" : `Finish ${v} daily quests`, () => QS().total);
@@ -5030,6 +5062,12 @@ const ARC_GAMES = [
   { id: "buzz", icon: "🎯", name: "Buzzer Beater", blurb: "Stop the marker in the green. Every make moves you deeper. Three misses and you're done." },
   { id: "surv", icon: "🧟", name: "Survival", blurb: "Draft five from quick picks, then win as many games in a row as you can. Three lives." },
   { id: "guess", icon: "🕵️", name: "Mystery Player", blurb: "Guess today's mystery star in six tries. Everyone gets the same one." },
+  { id: "quiz", icon: "🧠", name: "Trivia Blitz", blurb: "Quick questions about the dataset: teams, decades, who's rated higher. Three lives." },
+  { id: "trade", icon: "🔁", name: "Trade Up", blurb: "One open roster spot, three real candidates. Pick whoever raises the team rating most." },
+  { id: "memory", icon: "🧩", name: "Memory Match", blurb: "Sixteen cards, eight pairs of players. Match them all in as few moves as you can." },
+  { id: "bracket", icon: "🏆", name: "Bracket Predictor", blurb: "Eight legend teams, three rounds. Call every winner, then watch it play out." },
+  { id: "statline", icon: "📊", name: "Stat Line Showdown", blurb: "One box score, four names. Whose line is it? Three lives." },
+  { id: "hothand", icon: "🔥", name: "Hot Hand", blurb: "Call his next shot before it happens. Three wrong calls and you're done." },
   { id: "speed", icon: "⚡", name: "Speed Draft", blurb: "The real draft with eight seconds a pick. Quick picks earn bonus points." },
 ];
 const ARC_DEFAULTS = {
@@ -5038,6 +5076,12 @@ const ARC_DEFAULTS = {
   surv: { best: 0, played: 0, bosses: 0, paid: 0, cur: null },
   guess: { day: "", tries: [], done: false, won: false, xp: 0, streak: 0, bestStreak: 0, last: "", played: 0, wins: 0, dist: [0, 0, 0, 0, 0, 0], practice: 0 },
   speed: { best: 0, played: 0, titles: 0, bestBonus: 0, w60: 0 },
+  quiz: { best: 0, played: 0, totalCorrect: 0 },
+  trade: { best: 0, played: 0 },
+  memory: { best: 0, played: 0, bestMoves: 0, bestTime: 0 },
+  bracket: { best: 0, played: 0, perfect: 0 },
+  statline: { best: 0, played: 0 },
+  hothand: { best: 0, played: 0 },
 };
 // Fills in missing fields in place (never replaces an object, so a reference held elsewhere stays live)
 function arcState() {
@@ -5052,7 +5096,11 @@ const arcSleep = ms => new Promise(r => setTimeout(r, reduce ? Math.min(ms, 60) 
 const shuffled = a => { const b = [...a]; for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
 const pickW = list => { let x = Math.random() * list.reduce((s, it) => s + it.w, 0); for (const it of list) if ((x -= it.w) < 0) return it; return list[list.length - 1]; };
 // A pack the first time your best reaches each mark
-const ARC_PACKS = { hol: [[10, "normal"], [20, "gold"], [35, "legend"]], buzz: [[25, "normal"], [50, "gold"], [90, "legend"]], surv: [[10, "normal"], [25, "gold"], [50, "legend"]] };
+const ARC_PACKS = {
+  hol: [[10, "normal"], [20, "gold"], [35, "legend"]], buzz: [[25, "normal"], [50, "gold"], [90, "legend"]], surv: [[10, "normal"], [25, "gold"], [50, "legend"]],
+  quiz: [[5, "normal"], [10, "gold"], [20, "legend"]], trade: [[5, "normal"], [10, "gold"], [20, "legend"]], memory: [[150, "normal"], [220, "gold"], [270, "legend"]],
+  bracket: [[50, "normal"], [80, "gold"], [110, "legend"]], statline: [[5, "normal"], [10, "gold"], [20, "legend"]], hothand: [[5, "normal"], [10, "gold"], [20, "legend"]],
+};
 function arcPacks(id, value) {
   const s = arcState()[id], got = [];
   for (const [n, kind] of ARC_PACKS[id]) if (value >= n && (s.paid || 0) < n) { s.paid = n; givePack(kind); got.push(PACKS[kind].name.toLowerCase()); }
@@ -5073,6 +5121,12 @@ const ARC_ROW = {
   surv: e => { const w = e.wins ?? e.score ?? 0; return `${w} win${w === 1 ? "" : "s"}`; },
   guess: e => `solved in ${e.tries ?? 7 - (e.score || 0)}`,
   speed: e => `${esc(boardRec(e))} · ${fmtPts(e.score || 0)} pts`,
+  quiz: e => `${e.correct ?? e.score ?? 0} correct`,
+  trade: e => `${e.streak ?? e.score ?? 0} in a row`,
+  memory: e => `${e.moves ?? "?"} moves${e.seconds != null ? ` · ${e.seconds}s` : ""}`,
+  bracket: e => `${e.score ?? 0} pts${e.correct != null ? ` · ${e.correct}/7` : ""}${e.champ ? " 🏆" : ""}`,
+  statline: e => `${e.streak ?? e.score ?? 0} in a row`,
+  hothand: e => `${e.streak ?? e.score ?? 0} in a row`,
 };
 const arcDay = id => id === "guess" ? dayPT() : undefined;
 function arcBoardHtml(id) {
@@ -5128,6 +5182,7 @@ function arcLeave() {
   if (bz && !bz.over && (bz.makes || bz.lives < 3)) bzOver(true);
   bz = null;
   svStop = true;
+  quiz = null; trade = null; memory = null; bracket = null; statline = null; hothand = null;
 }
 function renderArcade(force) {
   const el = $("modePanel");
@@ -5138,6 +5193,12 @@ function renderArcade(force) {
   else if (arcView === "buzz") renderBuzz();
   else if (arcView === "surv") renderSurv();
   else if (arcView === "guess") renderGuess();
+  else if (arcView === "quiz") renderQuiz();
+  else if (arcView === "trade") renderTrade();
+  else if (arcView === "memory") renderMemory();
+  else if (arcView === "bracket") renderBracket();
+  else if (arcView === "statline") renderStatline();
+  else if (arcView === "hothand") renderHothand();
   else renderArcHub();
 }
 function arcMount(id, label, body) {
@@ -5157,6 +5218,12 @@ function renderArcHub() {
     surv: c && c.phase !== "over" ? `Run in progress · ${c.wins} win${c.wins === 1 ? "" : "s"}` : a.surv.best ? `Best: ${a.surv.best} wins` : "",
     guess: g.day === today && g.done ? (g.won ? `Today: got him in ${g.tries.length} ✓` : "Today: he got away") : `Today's case is open${gsStreak() ? ` · 🔥 ${gsStreak()}-day streak` : ""}`,
     speed: a.speed.best ? `Best: ${fmtPts(a.speed.best)} points` : "",
+    quiz: a.quiz.best ? `Best: ${a.quiz.best} correct` : "",
+    trade: a.trade.best ? `Best streak: ${a.trade.best}` : "",
+    memory: a.memory.bestMoves ? `Best: ${a.memory.bestMoves} moves` : "",
+    bracket: a.bracket.best ? `Best: ${a.bracket.best} pts` : "",
+    statline: a.statline.best ? `Best streak: ${a.statline.best}` : "",
+    hothand: a.hothand.best ? `Best streak: ${a.hothand.best}` : "",
   };
   el.innerHTML = `<div class="head"><h2>🎮 Arcade</h2><span class="label">Quick games · beat your best · climb the boards</span></div>
     <div class="arcgrid">${ARC_GAMES.map(x => `<button type="button" class="arccard" data-arc="${x.id}"><span class="arcicon" aria-hidden="true">${x.icon}</span><b>${esc(x.name)}</b><span class="note">${esc(x.blurb)}</span><span class="arcbest${sub[x.id] ? "" : " new"}">${esc(sub[x.id] || "New · play it")}</span></button>`).join("")}</div>`;
@@ -5933,6 +6000,362 @@ function renderSpeedPanel() {
   wireArcName();
 }
 
+/* =====================================================================================================
+   More Arcade (version 39): six quick games alongside Higher or Lower, Buzzer Beater, Survival, the
+   Mystery Player and Speed Draft. Same deal: no whole season needed, bests live in career.arcade, and
+   every game has a board like the others.
+   ===================================================================================================== */
+const QUIZ_ROWS = Object.values(ROW_INDEX);
+
+/* ---------- Trivia Blitz ----------
+   Three lives, questions about the dataset: whose team, which decade, who's rated higher. */
+function quizTeamQ() {
+  const p = QUIZ_ROWS[Math.floor(Math.random() * QUIZ_ROWS.length)], correct = `${short(p.dec)} ${p.team}`;
+  const decoys = new Set();
+  for (let n = 0; n < 60 && decoys.size < 3; n++) { const d = TEAM_LABELS[Math.floor(Math.random() * TEAM_LABELS.length)]; if (d !== correct) decoys.add(d); }
+  return { prompt: `Which team did <b>${esc(p.name)}</b> play for in this game?`, options: shuffled([correct, ...decoys]), correct };
+}
+function quizDecQ() {
+  const p = QUIZ_ROWS[Math.floor(Math.random() * QUIZ_ROWS.length)], correct = short(p.dec);
+  const decoys = new Set();
+  for (let n = 0; n < 60 && decoys.size < 3; n++) { const d = short(DECS[Math.floor(Math.random() * DECS.length)]); if (d !== correct) decoys.add(d); }
+  return { prompt: `Which decade is <b>${esc(p.name)}</b> (${esc(p.team)}) from?`, options: shuffled([correct, ...decoys]), correct };
+}
+function quizRateQ() {
+  const seen = new Set(), four = [];
+  for (let n = 0; n < 200 && four.length < 4; n++) { const p = QUIZ_ROWS[Math.floor(Math.random() * QUIZ_ROWS.length)]; if (!seen.has(p.name)) { seen.add(p.name); four.push(p); } }
+  const top = four.reduce((a, p) => p.ovr > a.ovr ? p : a, four[0]);
+  const label = p => `${p.name} (${short(p.dec)} ${p.team})`;
+  return { prompt: "Who's rated highest?", options: shuffled(four.map(label)), correct: label(top) };
+}
+function quizNext() { Object.assign(quiz, (() => { const r = Math.random(); return r < .35 ? quizTeamQ() : r < .7 ? quizDecQ() : quizRateQ(); })(), { picked: null }); }
+let quiz = null; // { prompt, options, correct, picked, score, lives, busy, over }
+function quizStart() { quiz = { score: 0, lives: 3, busy: false, over: false }; quizNext(); arcState().quiz.played++; saveCareer(); }
+function renderQuiz() {
+  if (!quiz) quizStart();
+  const q = quiz, s = arcState().quiz;
+  let body = `<p class="holq">${q.prompt}</p>
+    <div class="optgrid">${q.options.map((o, i) => `<button type="button" class="optbtn${q.picked ? (o === q.correct ? " right" : o === q.picked ? " wrong" : "") : ""}" data-qz="${i}"${q.picked ? " disabled" : ""}>${esc(o)}</button>`).join("")}</div>
+    <div class="holstat"><span>Score <b>${q.score}</b></span><span>Lives ${"🏀".repeat(q.lives)}</span><span>Best <b>${s.best}</b></span></div>`;
+  if (q.over) body += `<div class="arcover"><b class="drec">${q.score} correct</b><span>${q.newBest ? "🎉 New best! " : ""}${q.xp ? `+${q.xp} XP` : ""}${q.packs && q.packs.length ? ` · 🎁 a free ${q.packs.join(" and a ")}` : ""}</span>
+    ${arcNameHtml("quiz")}<div class="row-gap"><button class="btn primary mid" id="quizAgain">Play again</button></div></div>`;
+  arcMount("quiz", s.best ? `Best ${s.best} correct` : "Three lives, no clock", body);
+  if (!q.picked) document.querySelectorAll("[data-qz]").forEach(b => b.onclick = () => quizAnswer(q.options[+b.dataset.qz]));
+  if ($("quizAgain")) $("quizAgain").onclick = () => { quizStart(); renderQuiz(); };
+}
+function quizAnswer(opt) {
+  const q = quiz;
+  if (!q || q.busy || q.over || q.picked) return;
+  q.busy = true; q.picked = opt;
+  const right = opt === q.correct;
+  renderQuiz();
+  if (right) { q.score++; sfx("swish"); } else { q.lives--; sfx("brick"); }
+  setTimeout(() => { q.busy = false; if (q.lives <= 0) quizOver(); else { quizNext(); renderQuiz(); } }, 900);
+}
+function quizOver() {
+  const q = quiz;
+  if (!q || q.over) return;
+  q.over = true;
+  const s = arcState().quiz, best = q.score > s.best;
+  s.totalCorrect += q.score;
+  if (best) s.best = q.score;
+  q.xp = Math.min(120, q.score * 6);
+  if (q.xp) gainXp(q.xp);
+  q.newBest = best; q.packs = best ? arcPacks("quiz", q.score) : [];
+  if (best) { if (q.score >= 5) toast(`🧠 New Trivia Blitz best: <b>${q.score} correct</b>`); arcPost("quiz", { score: q.score, correct: q.score }); }
+  saveCareer(); checkCareerTrophies();
+  renderQuiz();
+}
+
+/* ---------- Trade Up ----------
+   Four of your five starters are locked in; one slot is open with three real candidates for it. Pick
+   whoever actually raises the team rating most. Three lives. */
+function tradeLockedLineup(openSlot) {
+  const used = new Set(), L = {};
+  for (const k of SLOTS) {
+    if (k === openSlot) continue;
+    let p = null;
+    for (let n = 0; n < 60 && !p; n++) { const c = QUIZ_ROWS[Math.floor(Math.random() * QUIZ_ROWS.length)]; if (!used.has(c.name) && dist(c, k) <= 1) p = c; }
+    if (!p) p = QUIZ_ROWS.find(c => !used.has(c.name)) || QUIZ_ROWS[0];
+    used.add(p.name); L[k] = p;
+  }
+  return { L, used };
+}
+function tradeCandidates(openSlot, used) {
+  const opts = new Set();
+  for (let n = 0; n < 200 && opts.size < 3; n++) { const c = QUIZ_ROWS[Math.floor(Math.random() * QUIZ_ROWS.length)]; if (!used.has(c.name) && dist(c, openSlot) <= 1) opts.add(c); }
+  return [...opts];
+}
+function tradeRound() {
+  const slot = SLOTS[Math.floor(Math.random() * 5)], { L, used } = tradeLockedLineup(slot), cands = tradeCandidates(slot, used);
+  const ratings = cands.map(p => teamRatings({ ...L, [slot]: p }).team);
+  const best = cands[ratings.indexOf(Math.max(...ratings))];
+  return { L, slot, cands, best, picked: null };
+}
+let trade = null; // { L, slot, cands, best, picked, streak, lives, busy, over }
+function tradeStart() { trade = { streak: 0, lives: 3, busy: false, over: false, ...tradeRound() }; arcState().trade.played++; saveCareer(); }
+function renderTrade() {
+  if (!trade) tradeStart();
+  const t = trade, s = arcState().trade, mates = SLOTS.filter(k => k !== t.slot).map(k => esc(t.L[k].name)).join(", ");
+  let body = `<p class="holq">Who fits best at <b>${t.slot}</b>, next to ${mates}?</p>
+    <div class="arcgrid">${t.cands.map((p, i) => `<button type="button" class="arccard${t.picked ? (p === t.best ? " right" : p === t.picked ? " wrong" : "") : ""}" data-tr="${i}"${t.picked ? " disabled" : ""}><b>${esc(p.name)}</b><span class="note">${short(p.dec)} ${esc(p.team)} · ${p.pos.join("/")}</span><span class="note">${p.ovr} OVR · ${fmt(p.ppg)} PPG · ${fmt(p.rpg)} RPG · ${fmt(p.apg)} APG</span></button>`).join("")}</div>
+    <div class="holstat"><span>Streak <b>${t.streak}</b></span><span>Lives ${"🏀".repeat(t.lives)}</span><span>Best <b>${s.best}</b></span></div>`;
+  if (t.over) body += `<div class="arcover"><b class="drec">${t.streak ? `${t.streak} in a row` : "Missed the first one"}</b><span>${t.newBest ? "🎉 New best! " : ""}${t.xp ? `+${t.xp} XP` : ""}${t.packs && t.packs.length ? ` · 🎁 a free ${t.packs.join(" and a ")}` : ""}</span>
+    ${arcNameHtml("trade")}<div class="row-gap"><button class="btn primary mid" id="tradeAgain">Play again</button></div></div>`;
+  arcMount("trade", s.best ? `Best streak ${s.best}` : "Pick the signing that helps most", body);
+  if (!t.picked) document.querySelectorAll("[data-tr]").forEach(b => b.onclick = () => tradePick(t.cands[+b.dataset.tr]));
+  if ($("tradeAgain")) $("tradeAgain").onclick = () => { tradeStart(); renderTrade(); };
+}
+function tradePick(p) {
+  const t = trade;
+  if (!t || t.busy || t.over || t.picked) return;
+  t.busy = true; t.picked = p;
+  const right = p === t.best;
+  renderTrade();
+  if (right) { t.streak++; sfx("swish"); } else { t.lives--; sfx("brick"); }
+  setTimeout(() => { t.busy = false; if (t.lives <= 0) tradeOver(); else { Object.assign(t, tradeRound()); renderTrade(); } }, 1000);
+}
+function tradeOver() {
+  const t = trade;
+  if (!t || t.over) return;
+  t.over = true;
+  const s = arcState().trade, best = t.streak > s.best;
+  if (best) s.best = t.streak;
+  t.xp = Math.min(120, t.streak * 5);
+  if (t.xp) gainXp(t.xp);
+  t.newBest = best; t.packs = best ? arcPacks("trade", t.streak) : [];
+  if (best) { if (t.streak >= 5) toast(`🔁 New Trade Up best: <b>${t.streak} in a row</b>`); arcPost("trade", { score: t.streak, streak: t.streak }); }
+  saveCareer(); checkCareerTrophies();
+  renderTrade();
+}
+
+/* ---------- Memory Match ----------
+   Sixteen face-down cards, eight pairs of players. Flip two at a time; a match stays face up. Fewer moves
+   and less time make a better score. */
+function memoryDeal() {
+  const pool = shuffled(QUIZ_ROWS).slice(0, 8);
+  const base = pool.map((p, pairId) => ({ name: p.name, team: `${short(p.dec)} ${p.team}`, pairId }));
+  return shuffled([...base, ...base.map(c => ({ ...c }))]);
+}
+let memory = null; // { cards, flipped, moves, matches, busy, over, t0 }
+function memoryStart() { memory = { cards: memoryDeal(), flipped: [], moves: 0, matches: 0, busy: false, over: false, t0: performance.now() }; arcState().memory.played++; saveCareer(); }
+function renderMemory() {
+  if (!memory) memoryStart();
+  const m = memory, s = arcState().memory;
+  const grid = m.cards.map((c, i) => {
+    const up = c.matched || m.flipped.includes(i);
+    return `<button type="button" class="memcard${up ? " up" : ""}${c.matched ? " matched" : ""}" data-mi="${i}"${up || m.over ? " disabled" : ""}>${up ? `<b>${esc(c.name)}</b><span class="note">${esc(c.team)}</span>` : "?"}</button>`;
+  }).join("");
+  let body = `<div class="memgrid">${grid}</div><div class="holstat"><span>Moves <b>${m.moves}</b></span><span>Matched <b>${m.matches}</b>/8</span><span>Best <b>${s.bestMoves || 0}</b> moves</span></div>`;
+  if (m.over) body += `<div class="arcover"><b class="drec">${m.moves} moves · ${m.seconds}s</b><span>${m.newBest ? "🎉 New best! " : ""}${m.xp ? `+${m.xp} XP` : ""}${m.packs && m.packs.length ? ` · 🎁 a free ${m.packs.join(" and a ")}` : ""}</span>
+    ${arcNameHtml("memory")}<div class="row-gap"><button class="btn primary mid" id="memAgain">Play again</button></div></div>`;
+  arcMount("memory", s.bestMoves ? `Best ${s.bestMoves} moves` : "Match all eight pairs", body);
+  if (!m.over) document.querySelectorAll("[data-mi]").forEach(b => b.onclick = () => memoryFlip(+b.dataset.mi));
+  if ($("memAgain")) $("memAgain").onclick = () => { memoryStart(); renderMemory(); };
+}
+function memoryFlip(i) {
+  const m = memory;
+  if (!m || m.busy || m.over) return;
+  const c = m.cards[i];
+  if (c.matched || m.flipped.includes(i)) return;
+  m.flipped.push(i);
+  if (m.flipped.length === 1) { renderMemory(); return; }
+  m.moves++; m.busy = true;
+  renderMemory();
+  const [a, b] = m.flipped, match = m.cards[a].pairId === m.cards[b].pairId;
+  setTimeout(() => {
+    if (match) { m.cards[a].matched = m.cards[b].matched = true; m.matches++; sfx("swish"); } else sfx("brick");
+    m.flipped = []; m.busy = false;
+    if (m.matches >= 8) memoryOver(); else renderMemory();
+  }, match ? 500 : 900);
+}
+function memoryOver() {
+  const m = memory;
+  if (!m || m.over) return;
+  m.over = true;
+  m.seconds = Math.max(0, Math.round((performance.now() - m.t0) / 1000));
+  const score = Math.max(20, 400 - m.moves * 6 - m.seconds * 2);
+  const s = arcState().memory, best = score > s.best;
+  if (best) { s.best = score; s.bestMoves = m.moves; s.bestTime = m.seconds; }
+  m.xp = Math.min(120, Math.round(score / 3));
+  if (m.xp) gainXp(m.xp);
+  m.newBest = best; m.packs = best ? arcPacks("memory", score) : [];
+  if (best) { toast(`🧩 New Memory Match best: <b>${m.moves} moves, ${m.seconds}s</b>`); arcPost("memory", { score, moves: m.moves, seconds: m.seconds }); }
+  saveCareer(); checkCareerTrophies();
+  renderMemory();
+}
+
+/* ---------- Bracket Predictor ----------
+   Eight legend teams, a three-round bracket. Pick the winner of every matchup, then watch it play out —
+   one game each, so upsets happen. Correct picks score more in the later rounds. */
+function bracketTeams() { return shuffled(LEGENDS).slice(0, 8).sort((a, b) => b.q - a.q); }
+function bracketPairs(teams) {
+  const order = [0, 7, 3, 4, 2, 5, 1, 6], seeded = order.map(i => teams[i]), pairs = [];
+  for (let i = 0; i < seeded.length; i += 2) pairs.push({ a: seeded[i], b: seeded[i + 1], pick: null, winner: null });
+  return pairs;
+}
+function bracketPlayGame(a, b) { return playGame({ off: a.q, def: a.q }, b.q + gauss(), b.q + gauss(), Math.random() < .5, 106); }
+let bracket = null; // { round, matches, score, correct, over, champ }
+function bracketStart() { const teams = bracketTeams(); bracket = { round: "qf", matches: bracketPairs(teams), score: 0, correct: 0, over: false }; arcState().bracket.played++; saveCareer(); }
+function bracketCanSim() { return bracket && bracket.matches.every(m => m.pick && !m.winner); }
+function bracketPick(i, who) { const b = bracket; if (!b || b.over || b.matches[i].winner) return; b.matches[i].pick = who; renderBracket(); }
+function bracketSim() {
+  const b = bracket;
+  if (!bracketCanSim()) return;
+  const weight = b.round === "qf" ? 10 : b.round === "sf" ? 20 : 30;
+  let roundRight = 0;
+  b.matches.forEach(m => {
+    const x = bracketPlayGame(m.a, m.b);
+    m.winner = x.won ? m.a : m.b; m.score = [x.us, x.them];
+    if (m.winner === m.pick) { roundRight++; b.correct++; b.score += weight; }
+  });
+  sfx(roundRight === b.matches.length ? "cheer" : roundRight ? "win" : "brick");
+  renderBracket();
+  setTimeout(bracketAdvance, 1700);
+}
+function bracketAdvance() {
+  const b = bracket;
+  if (!b || b.over) return;
+  const w = b.matches.map(m => m.winner);
+  if (b.round === "qf") { b.round = "sf"; b.matches = [{ a: w[0], b: w[1], pick: null, winner: null }, { a: w[2], b: w[3], pick: null, winner: null }]; renderBracket(); }
+  else if (b.round === "sf") { b.round = "final"; b.matches = [{ a: w[0], b: w[1], pick: null, winner: null }]; renderBracket(); }
+  else bracketOver(w[0]);
+}
+function bracketOver(champ) {
+  const b = bracket;
+  if (!b || b.over) return;
+  b.over = true; b.champ = champ;
+  const s = arcState().bracket, best = b.score > s.best;
+  if (best) s.best = b.score;
+  if (b.correct === 7) s.perfect = (s.perfect || 0) + 1;
+  b.xp = Math.min(150, b.score);
+  if (b.xp) gainXp(b.xp);
+  b.newBest = best; b.packs = best ? arcPacks("bracket", b.score) : [];
+  if (best) { toast(`🏆 New Bracket Predictor best: <b>${b.score} pts</b>`); arcPost("bracket", { score: b.score, correct: b.correct, champ: b.correct === 7 }); }
+  saveCareer(); checkCareerTrophies();
+  renderBracket();
+}
+function renderBracket() {
+  if (!bracket) bracketStart();
+  const b = bracket, s = arcState().bracket, roundName = { qf: "Quarterfinals", sf: "Semifinals", final: "Final" }[b.round] || "Champion";
+  let body = `<p class="holq">${b.over ? `Champion: <b>${esc(b.champ.label)}</b>` : `${roundName} · pick every winner, then simulate`}</p>
+    <div class="bracketrow">${b.matches.map((m, i) => `<div class="bmatch">
+      <button type="button" class="bteam${m.pick === m.a ? " picked" : ""}${m.winner ? (m.winner === m.a ? " won" : " lost") : ""}" data-bp="${i}:a"${m.winner ? " disabled" : ""}>${esc(m.a.label)}<span class="note">${m.a.q.toFixed(1)} rating</span></button>
+      <span class="bvs">${m.score ? `${m.score[0]}–${m.score[1]}` : "vs"}</span>
+      <button type="button" class="bteam${m.pick === m.b ? " picked" : ""}${m.winner ? (m.winner === m.b ? " won" : " lost") : ""}" data-bp="${i}:b"${m.winner ? " disabled" : ""}>${esc(m.b.label)}<span class="note">${m.b.q.toFixed(1)} rating</span></button>
+    </div>`).join("")}</div>
+    <div class="holstat"><span>Score <b>${b.score}</b></span><span>Correct <b>${b.correct}</b>/7</span><span>Best <b>${s.best}</b></span></div>`;
+  if (!b.over) body += `<div class="row-gap"><button class="btn primary mid" id="bracketSim"${bracketCanSim() ? "" : " disabled"}>Simulate the ${roundName}</button></div>`;
+  if (b.over) body += `<div class="arcover"><b class="drec">${b.score} points · ${b.correct}/7 correct</b><span>${b.newBest ? "🎉 New best! " : ""}${b.xp ? `+${b.xp} XP` : ""}${b.packs && b.packs.length ? ` · 🎁 a free ${b.packs.join(" and a ")}` : ""}</span>
+    ${arcNameHtml("bracket")}<div class="row-gap"><button class="btn primary mid" id="bracketAgain">Play again</button></div></div>`;
+  arcMount("bracket", s.best ? `Best ${s.best} pts` : "Predict the bracket", body);
+  document.querySelectorAll("[data-bp]").forEach(btn => { const [i, side] = btn.dataset.bp.split(":"); btn.onclick = () => bracketPick(+i, side === "a" ? b.matches[+i].a : b.matches[+i].b); });
+  if ($("bracketSim")) $("bracketSim").onclick = bracketSim;
+  if ($("bracketAgain")) $("bracketAgain").onclick = () => { bracketStart(); renderBracket(); };
+}
+
+/* ---------- Stat Line Showdown ----------
+   A single game's stat line, built from a real player's averages with some game-night variance. Four
+   names, one of them is really his. Three lives. */
+function statlineGame(p) {
+  const jit = base => Math.max(0, Math.round(base * (0.55 + Math.random() * 0.9)));
+  return { pts: jit(p.ppg ?? 10), reb: jit(p.rpg ?? 4), ast: jit(p.apg ?? 2) };
+}
+function statlineRound() {
+  const p = QUIZ_ROWS[Math.floor(Math.random() * QUIZ_ROWS.length)], line = statlineGame(p), decoys = new Set();
+  for (let n = 0; n < 150 && decoys.size < 3; n++) { const d = QUIZ_ROWS[Math.floor(Math.random() * QUIZ_ROWS.length)]; if (d.name !== p.name && Math.abs(d.ovr - p.ovr) <= 10) decoys.add(d); }
+  while (decoys.size < 3) { const d = QUIZ_ROWS[Math.floor(Math.random() * QUIZ_ROWS.length)]; if (d.name !== p.name) decoys.add(d); }
+  return { p, line, options: shuffled([p, ...decoys]), picked: null };
+}
+let statline = null; // { p, line, options, picked, streak, lives, busy, over }
+function statlineStart() { statline = { streak: 0, lives: 3, busy: false, over: false, ...statlineRound() }; arcState().statline.played++; saveCareer(); }
+function renderStatline() {
+  if (!statline) statlineStart();
+  const g = statline, s = arcState().statline;
+  let body = `<p class="holq">${g.line.pts} pts, ${g.line.reb} reb, ${g.line.ast} ast — whose line is it?</p>
+    <div class="optgrid">${g.options.map((o, i) => `<button type="button" class="optbtn${g.picked ? (o === g.p ? " right" : o === g.picked ? " wrong" : "") : ""}" data-sl="${i}"${g.picked ? " disabled" : ""}>${esc(o.name)}<span class="note">${short(o.dec)} ${esc(o.team)}</span></button>`).join("")}</div>
+    <div class="holstat"><span>Streak <b>${g.streak}</b></span><span>Lives ${"🏀".repeat(g.lives)}</span><span>Best <b>${s.best}</b></span></div>`;
+  if (g.over) body += `<div class="arcover"><b class="drec">${g.streak ? `${g.streak} in a row` : "Missed the first one"}</b><span>${g.newBest ? "🎉 New best! " : ""}${g.xp ? `+${g.xp} XP` : ""}${g.packs && g.packs.length ? ` · 🎁 a free ${g.packs.join(" and a ")}` : ""}</span>
+    ${arcNameHtml("statline")}<div class="row-gap"><button class="btn primary mid" id="slAgain">Play again</button></div></div>`;
+  arcMount("statline", s.best ? `Best ${s.best} in a row` : "Three lives", body);
+  if (!g.picked) document.querySelectorAll("[data-sl]").forEach(b => b.onclick = () => statlinePick(g.options[+b.dataset.sl]));
+  if ($("slAgain")) $("slAgain").onclick = () => { statlineStart(); renderStatline(); };
+}
+function statlinePick(o) {
+  const g = statline;
+  if (!g || g.busy || g.over || g.picked) return;
+  g.busy = true; g.picked = o;
+  const right = o === g.p;
+  renderStatline();
+  if (right) { g.streak++; sfx("swish"); } else { g.lives--; sfx("brick"); }
+  setTimeout(() => { g.busy = false; if (g.lives <= 0) statlineOver(); else { Object.assign(g, statlineRound()); renderStatline(); } }, 1000);
+}
+function statlineOver() {
+  const g = statline;
+  if (!g || g.over) return;
+  g.over = true;
+  const s = arcState().statline, best = g.streak > s.best;
+  if (best) s.best = g.streak;
+  g.xp = Math.min(120, g.streak * 5);
+  if (g.xp) gainXp(g.xp);
+  g.newBest = best; g.packs = best ? arcPacks("statline", g.streak) : [];
+  if (best) { if (g.streak >= 5) toast(`📊 New Stat Line Showdown best: <b>${g.streak} in a row</b>`); arcPost("statline", { streak: g.streak }); }
+  saveCareer(); checkCareerTrophies();
+  renderStatline();
+}
+
+/* ---------- Hot Hand ----------
+   Pick a shooter, then call his next shot before it happens. A make nudges him hotter, a miss nudges him
+   colder. Three wrong calls and the game's over. */
+function hhChance(hh) { return Math.max(0.12, Math.min(0.85, 0.35 + (hh.s - 50) / 200 + hh.heat * 0.12)); }
+let hothand = null; // { name, s, hist, heat, streak, lives, busy, over }
+function hhStart(w) { hothand = { name: w.p.name, s: w.s, hist: [], heat: 0, streak: 0, lives: 3, busy: false, over: false }; store.set("hoops82.hhshooter", w.p.name); arcState().hothand.played++; saveCareer(); }
+function renderHothand() {
+  if (!hothand) {
+    const list = bzShooters(), last = store.get("hoops82.hhshooter", "");
+    const body = `<p class="note">Pick a shooter, then call his next shot before it happens. A make nudges him hotter, a miss colder. Three wrong calls and the game's over.</p>
+      <div class="shooters">${list.map((w, i) => `<button type="button" class="shooter" data-hhs="${i}" aria-pressed="${w.p.name === last}">${esc(w.p.name)} <span>${w.s}</span></button>`).join("")}</div>`;
+    arcMount("hothand", arcState().hothand.best ? `Best ${arcState().hothand.best} in a row` : "Call the next shot", body);
+    document.querySelectorAll("[data-hhs]").forEach(x => x.onclick = () => { hhStart(list[+x.dataset.hhs]); renderHothand(); });
+    return;
+  }
+  const hh = hothand, s = arcState().hothand;
+  const histHtml = hh.hist.slice(-6).map(made => `<div class="g ${made ? "w" : "l"}">${made ? "M" : "X"}</div>`).join("");
+  let body = `<p class="holq">${esc(hh.name)}'s next shot — make or miss?</p><div class="games" style="grid-template-columns:repeat(6,28px)">${histHtml || '<span class="note">No shots yet.</span>'}</div>`;
+  if (!hh.over) body += `<div class="row-gap holbtns"><button class="btn primary mid" id="hhMake"${hh.busy ? " disabled" : ""}>🏀 Make</button><button class="btn primary mid" id="hhMiss"${hh.busy ? " disabled" : ""}>✗ Miss</button></div>`;
+  body += `<div class="holstat"><span>Streak <b>${hh.streak}</b></span><span>Lives ${"🏀".repeat(hh.lives)}</span><span>Best <b>${s.best}</b></span></div>`;
+  if (hh.over) body += `<div class="arcover"><b class="drec">${hh.streak ? `${hh.streak} in a row` : "Missed the first call"}</b><span>${hh.newBest ? "🎉 New best! " : ""}${hh.xp ? `+${hh.xp} XP` : ""}${hh.packs && hh.packs.length ? ` · 🎁 a free ${hh.packs.join(" and a ")}` : ""}</span>
+    ${arcNameHtml("hothand")}<div class="row-gap"><button class="btn primary mid" id="hhAgain">Play again</button><button class="btn mid" id="hhPickNew">Change shooter</button></div></div>`;
+  arcMount("hothand", s.best ? `Best ${s.best} in a row` : "Call the next shot", body);
+  if ($("hhMake")) { $("hhMake").onclick = () => hhCall(true); $("hhMiss").onclick = () => hhCall(false); }
+  if ($("hhAgain")) $("hhAgain").onclick = () => { const w = bzShooters().find(x => x.p.name === hh.name) || bzShooters()[0]; hhStart(w); renderHothand(); };
+  if ($("hhPickNew")) $("hhPickNew").onclick = () => { hothand = null; renderHothand(); };
+}
+function hhCall(predictMake) {
+  const hh = hothand;
+  if (!hh || hh.busy || hh.over) return;
+  hh.busy = true;
+  const made = Math.random() < hhChance(hh), right = predictMake === made;
+  hh.hist.push(made);
+  hh.heat = made ? Math.min(2, hh.heat + 1) : Math.max(-2, hh.heat - 1);
+  renderHothand();
+  if (right) { hh.streak++; sfx(made ? "swish" : "win"); } else { hh.lives--; sfx("brick"); }
+  setTimeout(() => { hh.busy = false; if (hh.lives <= 0) hhOver(); else renderHothand(); }, 750);
+}
+function hhOver() {
+  const hh = hothand;
+  if (!hh || hh.over) return;
+  hh.over = true;
+  const s = arcState().hothand, best = hh.streak > s.best;
+  if (best) s.best = hh.streak;
+  hh.xp = Math.min(120, hh.streak * 5);
+  if (hh.xp) gainXp(hh.xp);
+  hh.newBest = best; hh.packs = best ? arcPacks("hothand", hh.streak) : [];
+  if (best) { if (hh.streak >= 5) toast(`🔥 New Hot Hand best: <b>${hh.streak} in a row</b>`); arcPost("hothand", { streak: hh.streak }); }
+  saveCareer(); checkCareerTrophies();
+  renderHothand();
+}
+
 /* ---------- The game's website ----------
    The same game lives at claudba.netlify.app, where anyone can post scores without an invite. Inside Claude a
    box links there and packs your whole save (seasons, level, collection, trophies, Arcade) into a code; on the
@@ -6503,6 +6926,9 @@ function boot() {
     toast(`🗓️ The Daily Draft is now the <b>Monthly Draft</b>: the same five rolls for everyone all month, one try a day, and your best try is your spot on the month's board.${st > 1 && monthlyState().last >= prevDay(dayPT()) ? ` Your ${st}-day streak came with it.` : ""}`);
   }
   career.seen37 = 1;
+  // Version 39: six more Arcade games
+  if (seeded === null && runs.length && !career.seen39) toast(`🎮 Six new Arcade games: <b>Trivia Blitz, Trade Up, Memory Match, Bracket Predictor, Stat Line Showdown</b> and <b>Hot Hand</b>.`);
+  career.seen39 = 1;
   if (!LB_REST && seeded === null && runs.length && !career.seen34) toast(`🌐 The game has its own website now, where anyone can post scores: <b>claudba.netlify.app</b>. Your save can move there too (in the leaderboard section).`);
   career.seen34 = 1;
   // The quests change at midnight in California; keep their countdown fresh

@@ -15,6 +15,12 @@
 //   board=surv                   Survival: most wins in a run (entry: { wins, losses, players })
 //   board=guess&day=YYYY-MM-DD   the day's Mystery Player: fewest guesses (entry: { tries })
 //   board=speed                  Speed Draft: a season plus its time bonus (entry: a season, like run, and bonus)
+//   board=quiz                   Trivia Blitz: best score (entry: { score, correct })
+//   board=trade                  Trade Up: best streak (entry: { streak })
+//   board=memory                 Memory Match: best score (entry: { score, moves, seconds })
+//   board=bracket                Bracket Predictor: best score (entry: { score, correct, champ })
+//   board=statline               Stat Line Showdown: best streak (entry: { streak })
+//   board=hothand                Hot Hand: best streak (entry: { streak })
 //
 // Anyone can submit. Each browser keeps a secret token; your player id is a hash of it, so only you can
 // replace your own entry. One entry per player per board, and a lower score never replaces a higher one
@@ -32,7 +38,7 @@ import VALID from "./valid.mjs";
 
 const SLOTS = ["PG", "SG", "SF", "PF", "C"];
 const BOARDS = new Set(["normal", "hard"]);
-const KINDS = new Set(["normal", "hard", "monthly", "daily", "gauntlet", "dynasty", "hol", "buzz", "surv", "guess", "speed"]);
+const KINDS = new Set(["normal", "hard", "monthly", "daily", "gauntlet", "dynasty", "hol", "buzz", "surv", "guess", "speed", "quiz", "trade", "memory", "bracket", "statline", "hothand"]);
 // Boards kept one per day (California time), and the Monthly Draft's one per month
 const DAILY = new Set(["daily", "guess"]);
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
@@ -122,6 +128,10 @@ function parseIndexKey(k, kind) {
   if (kind === "buzz") return { ...base, points: +p[2], makes: +p[3] };
   if (kind === "surv") return { ...base, wins: +p[2], losses: +p[3] };
   if (kind === "guess") return { ...base, tries: +p[2] };
+  if (kind === "quiz") return { ...base, correct: +p[2] };
+  if (kind === "trade" || kind === "statline" || kind === "hothand") return { ...base, streak: +p[2] };
+  if (kind === "memory") return { ...base, moves: +p[2], seconds: +p[3] };
+  if (kind === "bracket") return { ...base, correct: +p[2], champ: p[3] === "1" };
   return { ...base, w: +p[2], l: +p[3], champ: p[4] === "1", hard: kind === "hard" };
 }
 
@@ -246,7 +256,7 @@ function checkGauntlet(e) {
 }
 
 // The Arcade's quick games are played in the page, so all the server can do is check the numbers are possible
-const ARCADE = new Set(["hol", "buzz", "surv", "guess"]);
+const ARCADE = new Set(["hol", "buzz", "surv", "guess", "quiz", "trade", "memory", "bracket", "statline", "hothand"]);
 function checkArcade(kind, e) {
   if (!e || typeof e !== "object") throw "That result couldn't be read.";
   const int = (v, lo, hi) => Number.isInteger(v) && v >= lo && v <= hi;
@@ -265,8 +275,25 @@ function checkArcade(kind, e) {
     const players = checkPlayers(e.players, "That team");
     return { score: e.wins, row: [e.wins, e.losses, 0], data: { wins: e.wins, losses: e.losses, players } };
   }
-  if (!int(e.tries, 1, 6)) throw "That isn't a possible number of guesses.";
-  return { score: 7 - e.tries, row: [e.tries, 0, 0], data: { tries: e.tries } };
+  if (kind === "guess") {
+    if (!int(e.tries, 1, 6)) throw "That isn't a possible number of guesses.";
+    return { score: 7 - e.tries, row: [e.tries, 0, 0], data: { tries: e.tries } };
+  }
+  if (kind === "quiz") {
+    if (!int(e.correct, 0, 500) || !int(e.score, 0, 500)) throw "That score isn't possible.";
+    return { score: e.score, row: [e.correct, 0, 0], data: { correct: e.correct } };
+  }
+  if (kind === "trade" || kind === "statline" || kind === "hothand") {
+    if (!int(e.streak, 1, 1000)) throw "That streak isn't possible.";
+    return { score: e.streak, row: [e.streak, 0, 0], data: { streak: e.streak } };
+  }
+  if (kind === "memory") {
+    if (!int(e.score, 1, 400) || !int(e.moves, 8, 500) || !int(e.seconds, 0, 6000)) throw "That result isn't possible.";
+    return { score: e.score, row: [e.moves, e.seconds, 0], data: { moves: e.moves, seconds: e.seconds } };
+  }
+  // bracket
+  if (!int(e.score, 0, 150) || !int(e.correct, 0, 7)) throw "That bracket isn't possible.";
+  return { score: e.score, row: [e.correct, e.champ ? 1 : 0, 0], data: { correct: e.correct, champ: !!e.champ } };
 }
 
 // A dynasty: five seasons with one team; titles and wins are counted here, not taken from the page
