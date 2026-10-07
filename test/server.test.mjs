@@ -243,6 +243,27 @@ await t("Hot Hand: best streak on the board, silly ones refused", async () => {
   const b = await call("GET", "?board=hothand");
   assert.deepEqual(b.body.entries.map(e => [e.name, e.streak]), [["Gus", 12]]);
 });
+await t("The Arcade's hundred: x_<id> boards take a whole score up to the game's cap; unknown games are refused", async () => {
+  const { default: XG } = await import("../netlify/functions/lb/xgames.mjs");
+  assert.equal(Object.keys(XG).length, 95);
+  let r = await call("POST", "", { board: "x_arc", token: tok("1"), name: "Gus", entry: { score: 31 } });
+  assert.equal(r.status, 200, JSON.stringify(r.body)); assert.equal(r.body.score, 31); assert.equal(r.body.rank, 1);
+  r = await call("POST", "", { board: "x_arc", token: tok("1"), name: "Gus", entry: { score: 12 } });
+  assert.equal(r.body.kept, true); assert.equal(r.body.score, 31);
+  r = await call("POST", "", { board: "x_arc", token: tok("2"), name: "Hal", entry: { score: 44 } });
+  assert.equal(r.body.rank, 1);
+  for (const bad of [{ score: 0 }, { score: 2.5 }, { score: XG.arc + 1 }, { score: "9" }, {}]) assert.equal((await call("POST", "", { board: "x_arc", token: tok("2"), name: "Hal", entry: bad })).status, 400, JSON.stringify(bad));
+  // the cap is each game's own: 30 is the most a 3-Point Contest can score
+  assert.equal((await call("POST", "", { board: "x_threecontest", token: tok("2"), name: "Hal", entry: { score: 31 } })).status, 400);
+  assert.equal((await call("POST", "", { board: "x_threecontest", token: tok("2"), name: "Hal", entry: { score: 30 } })).status, 200);
+  for (const board of ["x_nope", "x_", "x_arc/../normal", "x_constructor", "x___proto__"]) {
+    assert.equal((await call("POST", "", { board, token: tok("2"), name: "Hal", entry: { score: 5 } })).status, 400, board);
+    assert.equal((await call("GET", `?board=${encodeURIComponent(board)}`)).status, 400, board);
+  }
+  const b = await call("GET", "?board=x_arc");
+  assert.deepEqual(b.body.entries.map(e => [e.name, e.score]), [["Hal", 44], ["Gus", 31]]);
+  assert.deepEqual((await call("GET", "?board=x_pinball")).body.entries, []);
+});
 await t("Monthly Draft: this month's board takes a season and keeps your best try; other months are refused", async () => {
   const { dayPT } = await import("../netlify/functions/lb/lb.mjs");
   const month = dayPT().slice(0, 7);

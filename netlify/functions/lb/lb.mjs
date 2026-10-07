@@ -21,6 +21,8 @@
 //   board=bracket                Bracket Predictor: best score (entry: { score, correct, champ })
 //   board=statline               Stat Line Showdown: best streak (entry: { streak })
 //   board=hothand                Hot Hand: best streak (entry: { streak })
+//   (those six were replaced in version 40; their boards stay readable and still take entries from old pages)
+//   board=x_<id>                 the Arcade's 95 canvas games, listed in xgames.mjs: best score (entry: { score })
 //
 // Anyone can submit. Each browser keeps a secret token; your player id is a hash of it, so only you can
 // replace your own entry. One entry per player per board, and a lower score never replaces a higher one
@@ -35,6 +37,7 @@
 import { getStore, getDeployStore } from "@netlify/blobs";
 import { createHash } from "node:crypto";
 import VALID from "./valid.mjs";
+import XGAMES from "./xgames.mjs";
 
 const SLOTS = ["PG", "SG", "SF", "PF", "C"];
 const BOARDS = new Set(["normal", "hard"]);
@@ -50,8 +53,11 @@ export function dayPT(offsetDays = 0) {
   const p = Object.fromEntries(new Intl.DateTimeFormat("en-US", { timeZone: "America/Los_Angeles", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(d).map(x => [x.type, x.value]));
   return `${p.year}-${p.month}-${p.day}`;
 }
+// One of the Arcade's hundred: x_<id>. Gives the highest score its board takes, or 0 for anything else
+export const xCap = kind => typeof kind === "string" && kind.startsWith("x_") && Object.hasOwn(XGAMES, kind.slice(2)) ? XGAMES[kind.slice(2)] : 0;
 // Where a board's entries live: most boards by name, the Mystery Player one per day, the Monthly Draft one per month
 function boardKey(kind, day) {
+  if (xCap(kind)) return kind;
   if (!KINDS.has(kind)) return null;
   if (kind === "monthly") return typeof day === "string" && MONTH.test(day) ? `monthly-${day}` : null;
   if (!DAILY.has(kind)) return kind;
@@ -132,6 +138,7 @@ function parseIndexKey(k, kind) {
   if (kind === "trade" || kind === "statline" || kind === "hothand") return { ...base, streak: +p[2] };
   if (kind === "memory") return { ...base, moves: +p[2], seconds: +p[3] };
   if (kind === "bracket") return { ...base, correct: +p[2], champ: p[3] === "1" };
+  if (xCap(kind)) return base;
   return { ...base, w: +p[2], l: +p[3], champ: p[4] === "1", hard: kind === "hard" };
 }
 
@@ -146,7 +153,7 @@ async function submit(req, store) {
   let body;
   try { body = JSON.parse(text); } catch { return reply({ error: "Bad request" }, 400); }
   const { board: kind, token } = body || {};
-  if (!KINDS.has(kind)) return reply({ error: "Unknown board" }, 400);
+  if (!KINDS.has(kind) && !xCap(kind)) return reply({ error: "Unknown board" }, 400);
   // A Daily Draft or Mystery Player entry is for today (in California), or the day either side of it; a Monthly
   // Draft entry for this month, or the month either side of it (a try finished just after midnight on the 1st)
   if (DAILY.has(kind) && ![dayPT(-1), dayPT(0), dayPT(1)].includes(body.day)) return reply({ error: kind === "guess" ? "That Mystery Player is over." : "That Daily Draft is over." }, 400);
@@ -167,6 +174,7 @@ async function submit(req, store) {
     if (kind === "gauntlet") rec = checkGauntlet(body.entry);
     else if (kind === "dynasty") rec = checkDynasty(body.entry);
     else if (ARCADE.has(kind)) rec = checkArcade(kind, body.entry);
+    else if (xCap(kind)) rec = checkX(kind, body.entry);
     else {
       // Monthly, Daily and Speed Draft seasons are always normal mode
       const daily = kind === "monthly" || kind === "daily" || kind === "speed";
@@ -294,6 +302,13 @@ function checkArcade(kind, e) {
   // bracket
   if (!int(e.score, 0, 150) || !int(e.correct, 0, 7)) throw "That bracket isn't possible.";
   return { score: e.score, row: [e.correct, e.champ ? 1 : 0, 0], data: { correct: e.correct, champ: !!e.champ } };
+}
+
+// One of the hundred: a whole-number score from 1 up to what that game can reach
+function checkX(kind, e) {
+  if (!e || typeof e !== "object") throw "That result couldn't be read.";
+  if (!Number.isInteger(e.score) || e.score < 1 || e.score > xCap(kind)) throw "That score isn't possible.";
+  return { score: e.score, row: [e.score, 0, 0], data: {} };
 }
 
 // A dynasty: five seasons with one team; titles and wins are counted here, not taken from the page
