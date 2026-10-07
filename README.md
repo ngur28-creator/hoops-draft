@@ -3,8 +3,8 @@
 Roll a random era and franchise, draft five players, and chase an 82–0 season and a 16–0 title run. Or play the
 Monthly Draft (the same five rolls for everyone all month, one try a day, your best try counts), a five-year
 Dynasty, a Draft vs Friend, the Legends Gauntlet, and the Arcade: 100 games (the five classics, Higher or Lower,
-Buzzer Beater, Survival, the daily Mystery Player and Speed Draft, plus 95 quick canvas games: shooting, action,
-reflex, retro, puzzle and card games). Every Arcade game has three stars to earn and pays tickets for the Prize
+Buzzer Beater, Survival, the daily Mystery Player and Speed Draft, plus 95 quick canvas games: shooting, arcade-hall
+machines like Pop-A-Shot, Skee-Ball and a claw machine, action, reflex, retro, puzzle, brain and card games). Every Arcade game has three stars to earn and pays tickets for the Prize
 Counter; the Prize Wheel spins free once a day. Three daily quests change every day.
 
 - `site/index.html` is the whole game (player data included).

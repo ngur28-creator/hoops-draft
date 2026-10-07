@@ -245,7 +245,7 @@ await t("Hot Hand: best streak on the board, silly ones refused", async () => {
 });
 await t("The Arcade's hundred: x_<id> boards take a whole score up to the game's cap; unknown games are refused", async () => {
   const { default: XG } = await import("../netlify/functions/lb/xgames.mjs");
-  assert.equal(Object.keys(XG).length, 95);
+  assert.ok(Object.keys(XG).length >= 95); assert.equal(XG.popashot, 1000); assert.equal(XG.movinghoop, 2000, "retired games keep their boards");
   let r = await call("POST", "", { board: "x_arc", token: tok("1"), name: "Gus", entry: { score: 31 } });
   assert.equal(r.status, 200, JSON.stringify(r.body)); assert.equal(r.body.score, 31); assert.equal(r.body.rank, 1);
   r = await call("POST", "", { board: "x_arc", token: tok("1"), name: "Gus", entry: { score: 12 } });
