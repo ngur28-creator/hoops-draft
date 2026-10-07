@@ -186,6 +186,10 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
 .board .g { background: color-mix(in srgb, var(--board-fg) 12%, transparent); }
 .g.w, .board .g.w { background: var(--win); color: #fff; }
 .g.l, .board .g.l { background: var(--loss); color: #fff; }
+/* Each result game pops in on its own, so a run of them reads as one after another even when a few land close together */
+.games .g.w, .games .g.l { animation: gpop .24s cubic-bezier(.2, .8, .2, 1); }
+@keyframes gpop { from { transform: scale(.35); opacity: .3; } to { transform: scale(1); opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .games .g.w, .games .g.l { animation: none; } }
 .awards { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; }
 .award { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; background: var(--bg); display: grid; gap: 2px; min-width: 0; }
 .award b { font-weight: 700; overflow-wrap: anywhere; }
@@ -1048,7 +1052,7 @@ h3 { font-family: var(--display); font-weight: 400; font-size: 16px; line-height
 <div class="toast" id="toast" hidden role="status"></div>
 
 <script>
-const APP_VERSION = 37;
+const APP_VERSION = 38;
 // How leaderboard points are counted. Version 1 also counted team rating; entries saved under it are re-scored when shown.
 const SCORE_V = 2;
 // Anything that goes wrong is noted (last 20, in this browser and in your private cloud save) so it can be fixed
@@ -1687,7 +1691,15 @@ function animateSeason(res) {
   };
   const delay = speed === "fast" ? 6 : 30;
   if (reduce || speed === "instant") { while (i < 82) paint(); finishSeason(w, l, res); }
-  else { const step = () => { const pause = paint(); if (i < 82) setTimeout(step, delay + pause + (w + l > 70 && l <= 1 ? 60 : 0)); else { sfx("buzzer"); finishSeason(w, l, res); } }; step(); }
+  else {
+    // Paced to the screen's own refresh (one game at a time, never a backlog that lands all at once if a frame is slow)
+    let nextAt = 0;
+    const frame = now => {
+      if (now >= nextAt) { const pause = paint(); nextAt = now + delay + pause + (w + l > 70 && l <= 1 ? 60 : 0); }
+      if (i < 82) requestAnimationFrame(frame); else { sfx("buzzer"); finishSeason(w, l, res); }
+    };
+    requestAnimationFrame(frame);
+  }
 }
 
 // One season's saved record (shared by the game and the achievement tests)
