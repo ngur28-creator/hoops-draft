@@ -400,6 +400,16 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
 .round.boss { border-color: var(--gold); }
 .round .legend { font-size: 12px; color: var(--muted); }
 .chip.new { border-color: var(--win); color: var(--win); }
+/* Smooth sims: the shimmering pack bar, the glowing button and the season board each paint on a layer of their own */
+.packbar, .btn.cta { will-change: transform; }
+.packbar { contain: paint; }
+#seasonPanel > .board { contain: layout paint; will-change: transform; }
+.games .g.w, .games .g.l { animation: none; }
+.games .g.now { box-shadow: 0 0 0 2px #fff, 0 0 10px #fff; animation: gflash .3s ease-out; }
+@keyframes gflash { from { background: #fff; color: #111; } }
+@media (prefers-reduced-motion: reduce) { .games .g.now { animation: none; } }
+/* The long panels further down skip their layout and painting while they're off screen */
+#bookPanel, #trophyPanel, #collPanel, #h2hPanel, #lbPanel { content-visibility: auto; contain-intrinsic-size: auto 900px; }
 /* Card levels: tier colors (text, border, fill) for light and dark */
 .lvchip i { font-style: normal; font-weight: 900; opacity: .9; } .lvboost { color: var(--win); }
 .lvchip, .lvcard { --tc: var(--muted); --tb: var(--line); --tf: none; }
@@ -1179,7 +1189,7 @@ body.xplaying .toast { pointer-events: none; opacity: .88; }
 <div class="toast" id="toast" hidden role="status"></div>
 
 <script>
-const APP_VERSION = 42;
+const APP_VERSION = 43;
 // How leaderboard points are counted. Version 1 also counted team rating; entries saved under it are re-scored when shown.
 const SCORE_V = 2;
 // Anything that goes wrong is noted (last 20, in this browser and in your private cloud save) so it can be fixed
@@ -1788,7 +1798,8 @@ function animateSeason(res) {
   let w = 0, l = 0, i = 0, streak = 0;
   const paint = () => {
     const x = games[i];
-    cells[i].classList.add(x.won ? "w" : "l");
+    if (i) cells[i - 1].classList.remove("now");
+    cells[i].classList.add(x.won ? "w" : "l", "now");
     cells[i].textContent = x.won ? "W" : "L";
     x.won ? (w++, streak = streak > 0 ? streak + 1 : 1) : (l++, streak = streak < 0 ? streak - 1 : -1);
     big.textContent = `${w}–${l}`;
@@ -1823,7 +1834,7 @@ function animateSeason(res) {
     let nextAt = 0;
     const frame = now => {
       if (now >= nextAt) { const pause = paint(); nextAt = now + delay + pause + (w + l > 70 && l <= 1 ? 60 : 0); }
-      if (i < 82) requestAnimationFrame(frame); else { sfx("buzzer"); finishSeason(w, l, res); }
+      if (i < 82) requestAnimationFrame(frame); else { cells[81].classList.remove("now"); sfx("buzzer"); finishSeason(w, l, res); }
     };
     requestAnimationFrame(frame);
   }
