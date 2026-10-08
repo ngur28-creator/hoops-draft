@@ -401,6 +401,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
 .round .legend { font-size: 12px; color: var(--muted); }
 .chip.new { border-color: var(--win); color: var(--win); }
 /* Card levels: tier colors (text, border, fill) for light and dark */
+.lvchip i { font-style: normal; font-weight: 900; opacity: .9; } .lvboost { color: var(--win); }
 .lvchip, .lvcard { --tc: var(--muted); --tb: var(--line); --tf: none; }
 .bronze { --tc: #a35a1f; --tb: #c98a4f; --tf: linear-gradient(color-mix(in srgb, #c98a4f 14%, transparent), color-mix(in srgb, #c98a4f 14%, transparent)); }
 .silver { --tc: #5b6a80; --tb: #9fb0c4; --tf: linear-gradient(color-mix(in srgb, #9fb0c4 18%, transparent), color-mix(in srgb, #9fb0c4 18%, transparent)); }
@@ -1178,7 +1179,7 @@ body.xplaying .toast { pointer-events: none; opacity: .88; }
 <div class="toast" id="toast" hidden role="status"></div>
 
 <script>
-const APP_VERSION = 41;
+const APP_VERSION = 42;
 // How leaderboard points are counted. Version 1 also counted team rating; entries saved under it are re-scored when shown.
 const SCORE_V = 2;
 // Anything that goes wrong is noted (last 20, in this browser and in your private cloud save) so it can be fixed
@@ -1297,7 +1298,7 @@ function filled(p) {
 function playerRatings(p, slot) {
   const raw = filled(p), e = ERA_STAT[p.dec] || { p: 1, r: 1 };
   const s = { ...raw, ppg: raw.ppg * e.p, rpg: raw.rpg * e.r };
-  const adj = (ERA_ADJ[p.dec] || 0) - penalty(p, slot);
+  const adj = (ERA_ADJ[p.dec] || 0) - penalty(p, slot) + (p.cb || 0);
   const offStat = 60 + (s.ppg + 1.5 * s.apg) * 0.9;
   const defStat = 62 + (s.rpg + 2.5 * s.spg + 2.5 * s.bpg) * 1.4;
   return { off: 0.3 * p.ovr + 0.7 * Math.min(99, offStat) + adj, def: 0.3 * p.ovr + 0.7 * Math.min(99, defStat) + adj, s };
@@ -1536,7 +1537,7 @@ function renderRoster(hard) {
   $("rosterNote").textContent = `${team.players.length} players suited up for the ${short(S.draw.dec)} ${team.name}.` + (view === "career" ? " Showing career averages; the sim uses their stats with this team." : "");
 }
 function renderProjection(hard) {
-  const r = teamRatings(S.lineup);
+  const r = teamRatings(withCards(S.lineup, S.mode));
   $("projGrades").innerHTML = [["Offense", r.off], ["Defense", r.def], ["Team", r.team]].map(([k, v]) =>
     `<div class="grade"><span class="label">${k}</span><b>${hard ? "?" : letter(v)}</b><span class="foot">${hard ? "hidden" : v.toFixed(1)}</span></div>`).join("");
   $("chem").innerHTML = hard ? "" : r.notes.map(([c, t]) => `<span class="tag ${c}">${t}</span>`).join("");
@@ -1674,7 +1675,7 @@ function simulate() {
   S.done = true; render(); resetPlayoffs();
   $("afterPanel").hidden = true;
   const prevR = R; R = seasonRng();
-  const result = seasonSim({ ...S.lineup });
+  const result = seasonSim({ ...withCards(S.lineup, S.mode) });
   R = prevR;
   animateSeason(result);
 }
@@ -2005,7 +2006,7 @@ async function playoffsInner() {
   $("poBtn").hidden = $("poBtn2").hidden = true; $("poWrap").hidden = false;
   try { $("poWrap").scrollIntoView({ block: "start", behavior: reduce ? "auto" : "smooth" }); } catch (e) {}
   $("poSeed").textContent = `#${curRun.seed} seed`;
-  const r = curRes ? curRes.r : teamRatings(S.lineup), rounds = [];
+  const r = curRes ? curRes.r : teamRatings(withCards(S.lineup, S.mode)), rounds = [];
   // In the Monthly Draft the playoffs are seeded too (the same team on the same day gets the same bracket); only your Game 7 shots differ
   const poR = curRun.mode === "monthly" ? mulberry32(hashStr(`${curRun.day}:po:${SLOTS.map(k => S.lineup[k].id + S.lineup[k].dec).join("|")}`)) : null;
   const withR = f => { if (!poR) return f(); const prev = R; R = poR; try { return f(); } finally { R = prev; } };
@@ -2499,9 +2500,20 @@ function renderCollection() {
 /* ---------- Card levels ----------
    Every player card earns XP from the seasons you play with him: some for each season and its wins, more for
    playoff wins, a title or being the team MVP. Ten levels: Bronze (1–3), Silver (4–6), Gold (7–9) and Diamond (10).
-   Leveled cards add bonus XP to every season you play with them. Ratings never change, so the leaderboard stays fair. */
+   Leveled cards add bonus XP to every season you play with them, and they play better: +0.3 to the player's
+   offense and defense in the sim for each level above 1, and +3 for a Diamond card. The Monthly Draft and Draft vs
+   Friend leave card levels out, so everyone there starts even. */
 const CARD_LV = [0, 30, 70, 120, 180, 260, 360, 480, 630, 800]; // XP to reach level 1, 2, … 10
 const CARD_TIERS = [[10, "diamond", "Diamond"], [7, "gold", "Gold"], [4, "silver", "Silver"], [1, "bronze", "Bronze"]];
+const cardBoostAt = L => L >= 10 ? 3 : Math.round((L - 1) * 3) / 10;
+const cardBoost = p => cardBoostAt(cardInfo(cardKeyOf(p)).L);
+// Your lineup with each card's boost attached (a copy; the Monthly Draft stays level for everyone)
+function withCards(L, mode) {
+  if (!L || mode === "monthly" || !career.cards) return L;
+  const o = {};
+  for (const k of SLOTS) o[k] = L[k] ? { ...L[k], cb: cardBoost(L[k]) } : L[k];
+  return o;
+}
 function cardLevel(xp) { let L = 1; while (L < 10 && xp >= CARD_LV[L]) L++; return L; }
 const cardTier = L => CARD_TIERS.find(([n]) => L >= n);
 const cardKeyOf = p => collKey(p.dec, p.team, p.name);
@@ -2553,20 +2565,22 @@ function retroCards() {
 }
 const cardBadge = (k, cls = "") => {
   const c = cardInfo(k);
-  return c.xp ? `<span class="lvchip ${c.tier[1]}${cls ? " " + cls : ""}" title="Card level ${c.L} · ${c.tier[2]}${c.next ? ` · ${fmtPts(c.next - c.xp)} XP to level ${c.L + 1}` : " · max level"}">Lv ${c.L}</span>` : "";
+  const b = cardBoostAt(c.L);
+  return c.xp ? `<span class="lvchip ${c.tier[1]}${cls ? " " + cls : ""}" title="Card level ${c.L} · ${c.tier[2]}${b ? ` · plays +${b} better in the sim` : ""}${c.next ? ` · ${fmtPts(c.next - c.xp)} XP to level ${c.L + 1}` : " · max level"}">Lv ${c.L}${b ? ` <i>▲${b}</i>` : ""}</span>` : "";
 };
 function renderCards() {
   const el = $("collCards");
   if (!el) return;
   const all = Object.entries(career.cards || {}).filter(([k, xp]) => xp > 0 && PLAYER_INDEX[k]);
-  if (!all.length) { el.innerHTML = `<span class="label">Card levels</span><span class="note">Play seasons and your players' cards level up: Bronze, Silver, Gold, then Diamond at level 10.</span>`; return; }
+  if (!all.length) { el.innerHTML = `<span class="label">Card levels</span><span class="note">Play seasons and your players' cards level up: Bronze, Silver, Gold, then Diamond at level 10. The higher the level, the better he plays: +0.3 a level, +3 at Diamond.</span>`; return; }
   const counts = { diamond: 0, gold: 0, silver: 0, bronze: 0 };
   for (const [, xp] of all) counts[cardTier(cardLevel(xp))[1]]++;
   const top = all.sort((a, b) => b[1] - a[1]).slice(0, 8);
   el.innerHTML = `<span class="label">Your best cards · ${counts.diamond} Diamond · ${counts.gold} Gold · ${counts.silver} Silver · ${fmtPts(counts.bronze)} Bronze</span>
+    <span class="note">Higher-level cards play better in your seasons and head-to-head: +0.3 a level, +3 for Diamond (not in the Monthly Draft or Vs Friend).</span>
     <div class="cardgrid">${top.map(([k]) => {
       const p = PLAYER_INDEX[k], c = cardInfo(k), pct = c.next ? (c.xp - c.prev) / (c.next - c.prev) * 100 : 100;
-      return `<div class="lvcard ${c.tier[1]}"><span class="lvtop"><b>Lv ${c.L}</b><span>${c.tier[2]}</span></span><b class="lvname">${esc(p.name)}</b><span class="lvteam">${short(p.dec)} ${esc(p.team)} · ${p.ovr}</span><span class="pbar"><i style="width:${pct.toFixed(1)}%"></i></span><span class="lvxp">${c.next ? `${fmtPts(c.xp - c.prev)} / ${fmtPts(c.next - c.prev)} XP` : "Max level"}</span></div>`;
+      return `<div class="lvcard ${c.tier[1]}"><span class="lvtop"><b>Lv ${c.L}</b><span>${c.tier[2]}</span></span><b class="lvname">${esc(p.name)}</b><span class="lvteam">${short(p.dec)} ${esc(p.team)} · ${p.ovr}${cardBoostAt(c.L) ? ` <b class="lvboost">▲${cardBoostAt(c.L)}</b>` : ""}</span><span class="pbar"><i style="width:${pct.toFixed(1)}%"></i></span><span class="lvxp">${c.next ? `${fmtPts(c.xp - c.prev)} / ${fmtPts(c.next - c.prev)} XP` : "Max level"}</span></div>`;
     }).join("")}</div>`;
 }
 
@@ -4165,7 +4179,7 @@ function renderH2H() {
     sel.hidden = false;
     sel.innerHTML = mine.map(r => `<option value="${r.id}"${r.id === h2hPick ? " selected" : ""}>${r.w}–${r.l}${r.champ ? " 🏆" : ""}${r.hard ? " 🔥" : ""} · ${esc(lastNames(r))}</option>`).join("");
     const me = mine.find(r => r.id === h2hPick);
-    $("h2hMine").textContent = `Team rating ${h2hRating(runLineup(me)).team.toFixed(1)}`;
+    $("h2hMine").textContent = `Team rating ${h2hRating(withCards(runLineup(me))).team.toFixed(1)}`;
   }
   $("h2hList").innerHTML = LEGENDS.map((t, i) => {
     const beat = h.beat["L:" + t.key];
@@ -4181,7 +4195,7 @@ async function playH2H(opp, box) {
   if (!me) { box.innerHTML = `<p class="note">Finish a season first. Your saved teams are the ones that play head-to-head.</p>`; return; }
   if (!opp.L) { box.innerHTML = `<p class="note">Couldn't rebuild that team from the game's data.</p>`; return; }
   h2hBusy = true;
-  const rA = h2hRating(runLineup(me)), rB = h2hRating(opp.L, opp.shift || 0), homeA = rA.team >= rB.team;
+  const rA = h2hRating(withCards(runLineup(me))), rB = h2hRating(opp.L, opp.shift || 0), homeA = rA.team >= rB.team;
   const pattern = [1, 1, 0, 0, 1, 0, 1], games = [];
   let a = 0, b = 0;
   while (a < 4 && b < 4) {
@@ -4843,7 +4857,7 @@ async function playGauntletSeries() {
     const box = $("gArena");
     box.hidden = false;
     const oppL = legendLineup(opp);
-    const rA = h2hRating(myL), rB = h2hRating(oppL, opp.q - opp.power), homeA = rA.team >= rB.team;
+    const rA = h2hRating(withCards(myL)), rB = h2hRating(oppL, opp.q - opp.power), homeA = rA.team >= rB.team;
     box.innerHTML = `<div class="h2hvs"><div><span class="label">Your team · ${rA.team.toFixed(1)}</span><b>${esc(c.label)}</b></div><span class="vs">vs</span><div><span class="label">Legend ${c.step + 1} of 24 · ${rB.team.toFixed(1)}</span><b>${esc(opp.label)}</b></div></div>
       <div class="row-gap"><span class="res" id="gScore">0–0</span><div class="series" id="gGames"></div></div><div class="clutch" id="gClutch" hidden></div><p class="note" id="gNote">${homeA ? "You have home court." : "They have home court."}</p>`;
     try { box.scrollIntoView({ block: "nearest" }); } catch (e) {}
@@ -5672,7 +5686,7 @@ async function svPlay() {
   if (!c || c.phase !== "play" || svBusy) return;
   svBusy = true; svStop = false;
   try {
-    const rA = h2hRating(svL(c));
+    const rA = h2hRating(withCards(svL(c)));
     for (;;) {
       const o = c.next || svOpp(c), home = c.games % 2 === 0;
       const x = playGame(rA, o.q + gauss() * 1.5, o.q + gauss() * 1.5, home, 106);
@@ -5785,7 +5799,7 @@ function renderSurv() {
 }
 // The run's scoreboard: wins, lives, the next opponent and the last few games
 function svBoardHtml(c, s) {
-  const o = c.next, rA = h2hRating(svL(c)).team;
+  const o = c.next, rA = h2hRating(withCards(svL(c))).team;
   const hearts = [0, 1, 2].map(i => `<span class="${i < c.lives ? "on" : ""}">❤️</span>`).join("");
   return `<div class="svboard">
     <div class="bzhud"><span class="bzlives" aria-label="${c.lives} of 3 lives left">${hearts}</span><span class="bzpts"><b>${c.wins}</b> win${c.wins === 1 ? "" : "s"}</span><span class="note">Team ${rA.toFixed(1)}${s.best ? ` · best ${s.best}` : ""}</span></div>
@@ -11384,7 +11398,7 @@ async function playAllPending() {
 function simPending(r) {
   const L = runLineup(r);
   if (!L || r.po !== "pending") return null;
-  let rt = teamRatings(L);
+  let rt = teamRatings(withCards(L, r.mode));
   if (Array.isArray(r.box) && r.box.length === 5 && r.box.every(b => b.fm)) {
     const forms = {};
     for (const k of SLOTS) forms[k] = { m: (r.box.find(b => b.slot === k) || {}).fm || 1 };
@@ -11583,6 +11597,9 @@ function boot() {
     toast(`🗓️ The Daily Draft is now the <b>Monthly Draft</b>: the same five rolls for everyone all month, one try a day, and your best try is your spot on the month's board.${st > 1 && monthlyState().last >= prevDay(dayPT()) ? ` Your ${st}-day streak came with it.` : ""}`);
   }
   career.seen37 = 1;
+  // Version 42: card levels make players better
+  if (seeded === null && runs.length && !career.seen42) toast(`🃏 Card levels now count on the court: every level makes a player <b>+0.3</b> better, and a <b>Diamond</b> card plays <b>+3</b> better.`);
+  career.seen42 = 1;
   // Version 41: 43 brand-new Arcade games and a brighter Arcade
   if (seeded === null && runs.length && !career.seen41) toast(`🎮 <b>43 brand-new Arcade games</b>: Pop-A-Shot, a claw machine that wins real cards, bowling, pool, Pac-Court, Dribble Hero and more.`);
   career.seen41 = 1;
