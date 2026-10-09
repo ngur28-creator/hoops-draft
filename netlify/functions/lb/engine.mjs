@@ -400,7 +400,7 @@ export function botDraft(mode, seed, opts = {}) {
     log.push(p.id);
     S.draw = picks() < 5 ? rollNext("n") : null;
   }
-  return { mode, log, cb: opts.cb || [0, 0, 0, 0, 0], rules, day: opts.day || "", po: opts.po !== false, g7: opts.g7 || [], tk: opts.tk || null,
+  return { pv: 49, mode, log, cb: opts.cb || [0, 0, 0, 0, 0], rules, day: opts.day || "", po: opts.po !== false, g7: opts.g7 || [], tk: opts.tk || null,
     players: SLOTS.map(k => ({ slot: k, name: S.lineup[k].name, dec: S.lineup[k].dec, team: S.lineup[k].team })), hard: !!opts.hard, date: "Oct 8" };
 }
 export function botFinish(proof, seed, ss) {

@@ -498,6 +498,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
 :root[data-court="vice"][data-theme="dark"] { --accent: #ff4fa3; --accent-text: #ff8fc4; --navy: #5fe6e6; }
 :root[data-court="midnight"][data-theme="dark"] { --accent: #ff4a57; --accent-text: #ff8088; --navy: #c9ced8; }
 :root[data-court="goat"][data-theme="dark"] { --accent: #ffc93c; --accent-text: #ffd76a; --navy: #ffd76a; --gold: #ffc93c; }
+#updBar { position: fixed; left: 50%; top: 10px; transform: translateX(-50%); z-index: 9999; max-width: calc(100% - 24px); padding: 10px 16px; border-radius: 12px; border: 2px solid #fff; background: #ff6a2b; color: #fff; font: 15px/1.3 var(--body); box-shadow: 0 8px 24px rgba(0,0,0,.35); cursor: pointer; }
 /* Card levels: tier colors (text, border, fill) for light and dark */
 .lvchip i { font-style: normal; font-weight: 900; opacity: .9; } .lvboost { color: var(--win); }
 .lvchip, .lvcard { --tc: var(--muted); --tb: var(--line); --tf: none; }
@@ -1286,7 +1287,7 @@ body.xplaying .toast { pointer-events: none; opacity: .88; }
 <div class="toast" id="toast" hidden role="status"></div>
 
 <script>
-const APP_VERSION = 48;
+const APP_VERSION = 49;
 // How leaderboard points are counted. Version 1 also counted team rating; entries saved under it are re-scored when shown.
 const SCORE_V = 2;
 // Anything that goes wrong is noted (last 20, in this browser and in your private cloud save) so it can be fixed
@@ -1400,6 +1401,7 @@ function tkFetch() {
   TK_BUSY = true;
   fetch(LB_API + "?ticket=1", { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(d => {
     TK_BUSY = false;
+    if (d && Number.isFinite(d.v) && d.v > APP_VERSION) showUpdateBar();
     if (!d || typeof d.tk !== "string") return;
     TK = d.tk;
     try { localStorage.setItem("hoops82.tk", TK); } catch (e) {}
@@ -1411,6 +1413,14 @@ function tkAdopt(n = 0) {
   if (!TK || !S || S.tk || S.mode !== "free" || S.done || S.locked || S.cx || picks() || S.redrawsUsed) return;
   if (S.spinning) { if (n < 20) setTimeout(() => tkAdopt(n + 1), 250); return; }
   S.tk = tkTake(); S.drawCount = 0; S.log = []; newDraw();
+}
+function showUpdateBar() {
+  if (document.getElementById("updBar")) return;
+  const b = document.createElement("button");
+  b.id = "updBar"; b.type = "button";
+  b.innerHTML = "🔄 <b>A new version of the game is out.</b> Tap to reload (your save stays).";
+  b.onclick = () => location.reload();
+  document.body.appendChild(b);
 }
 function tkTake() {
   if (!TK) { try { TK = localStorage.getItem("hoops82.tk") || null; } catch (e) {} }
@@ -3969,7 +3979,7 @@ function slimRun(r) {
 }
 // The replay proof: ticket, rolls and picks, card boosts, rules, day, whether the playoffs were played and how each Game 7 went
 function proofOf(r) {
-  return { tk: r.tk || null, log: r.log || [], cb: r.cb || [0, 0, 0, 0, 0], rules: r.rules || [], day: r.day || "", po: r.po === "played",
+  return { pv: APP_VERSION, tk: r.tk || null, log: r.log || [], cb: r.cb || [0, 0, 0, 0, 0], rules: r.rules || [], day: r.day || "", po: r.po === "played",
     g7: (r.rounds || []).map(rd => rd.g && rd.g.length === 7 ? (rd.g[6][0] > rd.g[6][1] ? 1 : 0) : null) };
 }
 // Only seasons the server can replay go to the website's boards (old seasons from before tickets stay in your record book)

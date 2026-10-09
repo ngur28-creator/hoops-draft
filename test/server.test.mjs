@@ -130,6 +130,13 @@ await t("the owner key posts any season, and a wrong key doesn't", async () => {
   r = await call("POST", "", { board: "hard", token: tok("b"), name: "bob", run: old, owner: "bob-3FVDTVdJfohwVolNN38D", replace: true });
   assert.equal(r.status, 200, JSON.stringify(r.body)); assert.equal(r.body.score, 820 + 620 + 1000 + 200);
 });
+await t("a page from before the update is asked to reload", async () => {
+  const tk = await ticket(), seed = seedOf(tk);
+  const { pv, ...proof } = botDraft("free", seed, { tk });
+  const r = await call("POST", "", { board: "normal", token: tok("d"), name: "Dee", run: botFinish(proof, seed, "b".repeat(32)) });
+  assert.equal(r.status, 400); assert.match(r.body.error, /Reload the page/);
+  assert.equal((await call("GET", "?ticket=1")).body.v, 49);
+});
 await t("challenge rules replay too", async () => {
   for (const rules of [["eralock"], ["franlock"], ["budget", "onestar"], ["noredraw"]]) {
     const run = await playSeason("free", { rules, redraws: rules.includes("noredraw") ? 0 : 1 });
@@ -154,11 +161,11 @@ await t("a better season replaces yours, a worse one is kept out, replace: true 
   assert.equal(r.status, 200); assert.equal(r.body.score, pts(low));
 });
 await t("the board shows the replayed numbers and the game's own ratings, not the page's", async () => {
-  const doctored = { ...top, pf: 99999, box: top.box.map(b => ({ ...b, ppg: 99 })), players: top.players.map(p => ({ ...p, ovr: 99 })) };
+  const doctored = { ...top, pf: 99999, box: top.box.map(b => ({ ...b, ppg: 99 })), players: top.players.map(p => ({ ...p, ovr: 12 })) };
   const r = await call("POST", "", { board: "normal", token: tok("7"), name: "Gil", run: doctored, replace: true });
   assert.equal(r.status, 200, JSON.stringify(r.body));
   const e = (await call("GET", `?board=normal&id=${r.body.id}`)).body;
-  assert.equal(e.box[0].ppg, top.box[0].ppg); assert.notEqual(e.players[0].ovr, 99); assert.ok(!("idx" in e) && !("ts" in e));
+  assert.equal(e.box[0].ppg, top.box[0].ppg); assert.notEqual(e.players[0].ovr, 12); assert.ok(!("idx" in e) && !("ts" in e));
 });
 await t("the owner's password puts a season up without a replay; a wrong one doesn't", async () => {
   const run = await real({ hard: true }), fake = { ...run, w: 82, l: 0, champ: true, reached: 3, pw: 16, pl: 0 };

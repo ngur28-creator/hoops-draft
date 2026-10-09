@@ -72,6 +72,8 @@ function boardKey(kind, day) {
   return typeof day === "string" && DAY.test(day) ? `${kind}-${day}` : null;
 }
 const SHOWN = 500;
+// The page version the server expects; older pages get a bar asking them to reload
+const PAGE_V = 49;
 
 export default async (req, context) => {
   // Deploy previews and branch deploys get their own throwaway store, so testing never touches the real board
@@ -148,7 +150,7 @@ async function ticketSeed(store, tk) {
 }
 
 async function readBoard(url, store) {
-  if (url.searchParams.get("ticket") !== null) return reply({ tk: await newTicket(store) });
+  if (url.searchParams.get("ticket") !== null) return reply({ tk: await newTicket(store), v: PAGE_V });
   const kind = url.searchParams.get("board"), q = url.searchParams;
   const key = boardKey(kind, kind === "monthly" ? q.get("month") ?? q.get("day") : q.get("day"));
   if (!key) return reply({ error: kind === "monthly" ? "Which month? Use month=YYYY-MM." : DAILY.has(kind) ? "Which day? Use day=YYYY-MM-DD." : "Unknown board" }, 400);
@@ -249,6 +251,7 @@ async function submit(req, store) {
         const c = canonOf(sent, mode);
         if (seed) {
           const tipped = await store.get(`ss/${seed}`, { type: "json" });
+          if (!tipped && !(sent.pv >= 48)) throw "An update came out and this page is old. Reload the page (close the tab and open the game again), then play a new season and it will post.";
           if (!tipped || tipped.c !== c) throw "That season didn't tip off with the server, so it can't be checked.";
         }
         const real = replaySeason(sent, mode, seed, await seasonSeedFor(store, seed, c));
