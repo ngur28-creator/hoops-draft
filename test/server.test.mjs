@@ -1,7 +1,8 @@
 // Tests for the leaderboard API against an in-memory stand-in for Netlify Blobs.
 process.env.HOOPS_TK_SECRET = "test-secret";
+process.env.HOOPS_OWNER_HASH = "6ac7d958de501c93a3300a8551c85a0fadf2637b60d8d7da425459137862fdcb";
 import { handle, dayPT } from "../netlify/functions/lb/lb.mjs";
-import { botSeason } from "../netlify/functions/lb/engine.mjs";
+import { botDraft, botFinish } from "../netlify/functions/lb/engine.mjs";
 import assert from "node:assert/strict";
 import { memoryStore } from "./memory-store.mjs";
 
@@ -25,7 +26,14 @@ const t = async (name, fn) => { try { await fn(); results.push("PASS " + name); 
 const ticket = async () => (await call("GET", "?ticket=1")).body.tk;
 const seedOf = tk => tk.split(".")[0];
 let rnd = 1; const rand = () => { rnd = (rnd * 16807) % 2147483647; return rnd / 2147483647; };
-const real = async (opts = {}) => { const tk = await ticket(); return botSeason("free", seedOf(tk), { ...opts, tk }); };
+// The page tips off by sending its finished draft for its season seed, then plays the season from it
+const tipOff = async proof => { const r = await call("POST", "", { action: "season", ...proof }); if (r.status !== 200) throw new Error(JSON.stringify(r.body)); return r.body.ss; };
+const playSeason = async (mode, opts = {}) => {
+  const tk = mode === "monthly" ? null : await ticket(), seed = tk && seedOf(tk);
+  const proof = botDraft(mode, seed, { ...opts, tk });
+  return botFinish(proof, seed, await tipOff(proof));
+};
+const real = (opts = {}) => playSeason("free", opts);
 const pts = r => r.w * 10 + (r.champ ? 500 + (12 - Math.min(12, r.pl)) * 10 : Math.min(15, r.pw) * 10) + (r.w === 82 ? 1000 : 0) + (r.hard ? 200 : 0);
 // A handful of real seasons, best first
 const pool = [];
@@ -64,13 +72,13 @@ await t("CHEAT: a dream lineup that was never rolled is refused", async () => {
   const run = await real();
   const fake = { ...run, players: run.players.map((p, i) => i ? p : { slot: "PG", name: "Michael Jordan", dec: "1990s", team: "Bulls" }) };
   const r = await call("POST", "", { board: "normal", token: tok("d"), name: "Dee", run: fake });
-  assert.equal(r.status, 400); assert.match(r.body.error, /rolls/);
+  assert.equal(r.status, 400); assert.match(r.body.error, /rolls|tip off/);
 });
 await t("CHEAT: picks that weren't on the roll, extra re-draws or a short draft are refused", async () => {
   const run = await real();
   for (const log of [["jordami01", ...run.log.slice(1)], ["T", "T", "T", ...run.log], run.log.slice(0, 4), [...run.log, "E"]]) {
     const r = await call("POST", "", { board: "normal", token: tok("d"), name: "Dee", run: { ...run, log } });
-    assert.equal(r.status, 400, log.join()); assert.match(r.body.error, /rolls|couldn't be read/);
+    assert.equal(r.status, 400, log.join()); assert.match(r.body.error, /rolls|couldn't be read|tip off/);
   }
 });
 await t("CHEAT: a forged, missing or made-up ticket is refused", async () => {
@@ -84,11 +92,10 @@ await t("CHEAT: a forged, missing or made-up ticket is refused", async () => {
 await t("CHEAT: impossible card levels are refused", async () => {
   const run = await real();
   const r = await call("POST", "", { board: "normal", token: tok("d"), name: "Dee", run: { ...run, cb: [15, 0, 0, 0, 0] } });
-  assert.equal(r.status, 400); assert.match(r.body.error, /card levels/);
+  assert.equal(r.status, 400); assert.match(r.body.error, /card levels|tip off/);
 });
 await t("Diamond cards are real: a season played with +3 cards replays with them", async () => {
-  const tk = await ticket();
-  const run = botSeason("free", seedOf(tk), { tk, cb: [3, 3, 2.4, 0.3, 0] });
+  const run = await playSeason("free", { cb: [3, 3, 2.4, 0.3, 0] });
   const r = await call("POST", "", { board: "normal", token: tok("d"), name: "Dee", run });
   assert.equal(r.status, 200, JSON.stringify(r.body));
 });
@@ -96,17 +103,42 @@ await t("CHEAT: someone else's season (its ticket) can't be posted as yours", as
   const r = await call("POST", "", { board: "normal", token: tok("e"), name: "Eve", run: second });
   assert.equal(r.status, 409); assert.match(r.body.error, /already posted/);
 });
+await t("CHEAT: the season seed only comes once the lineup is set, and only for one lineup a draft", async () => {
+  const tk = await ticket(), seed = seedOf(tk);
+  const proof = botDraft("free", seed, { tk });
+  const ss = await tipOff(proof);
+  assert.equal(await tipOff(proof), ss); // asking again for the same lineup is fine
+  const moved = { ...proof, players: [proof.players[1], proof.players[0], ...proof.players.slice(2)].map((p, i) => ({ ...p, slot: ["PG", "SG", "SF", "PF", "C"][i] })) };
+  let r = await call("POST", "", { action: "season", ...moved });
+  assert.equal(r.status, 409); assert.match(r.body.error, /different lineup/);
+  r = await call("POST", "", { action: "season", ...proof, cb: [3, 3, 3, 3, 3] });
+  assert.equal(r.status, 409);
+  // a season played from a seed the page made up doesn't match
+  const fake = botFinish(proof, seed, "f".repeat(32));
+  r = await call("POST", "", { board: "normal", token: tok("d"), name: "Dee", run: fake });
+  assert.equal(r.status, 400); assert.match(r.body.error, /replay/);
+  // and one that never tipped off with the server can't go up
+  const tk2 = await ticket(), p2 = botDraft("free", seedOf(tk2), { tk: tk2 });
+  r = await call("POST", "", { board: "normal", token: tok("d"), name: "Dee", run: botFinish(p2, seedOf(tk2), "a".repeat(32)) });
+  assert.equal(r.status, 400); assert.match(r.body.error, /tip off/);
+});
+await t("the owner key posts any season, and a wrong key doesn't", async () => {
+  const old = { w: 82, l: 0, champ: true, hard: true, reached: 3, pw: 16, pl: 0, pf: 9900, pa: 8000, date: "Oct 8",
+    players: [["PG", "Michael Jordan", "1990s", "Bulls"], ["SG", "Kobe Bryant", "2000s", "Lakers"], ["SF", "LeBron James", "2010s", "Heat"], ["PF", "Tim Duncan", "2000s", "Spurs"], ["C", "Shaquille O'Neal", "2000s", "Lakers"]].map(([slot, name, dec, team]) => ({ slot, name, dec, team })) };
+  let r = await call("POST", "", { board: "hard", token: tok("b"), name: "bob", run: old, owner: "nope" });
+  assert.equal(r.status, 400);
+  r = await call("POST", "", { board: "hard", token: tok("b"), name: "bob", run: old, owner: "bob-3FVDTVdJfohwVolNN38D", replace: true });
+  assert.equal(r.status, 200, JSON.stringify(r.body)); assert.equal(r.body.score, 820 + 620 + 1000 + 200);
+});
 await t("challenge rules replay too", async () => {
   for (const rules of [["eralock"], ["franlock"], ["budget", "onestar"], ["noredraw"]]) {
-    const tk = await ticket();
-    const run = botSeason("free", seedOf(tk), { tk, rules, redraws: rules.includes("noredraw") ? 0 : 1 });
+    const run = await playSeason("free", { rules, redraws: rules.includes("noredraw") ? 0 : 1 });
     const r = await call("POST", "", { board: "normal", token: tok("f"), name: "Fay", run, replace: true });
     assert.equal(r.status, 200, rules + JSON.stringify(r.body));
   }
 });
 await t("re-draws replay", async () => {
-  const tk = await ticket();
-  const run = botSeason("free", seedOf(tk), { tk, redraws: 1 });
+  const run = await playSeason("free", { redraws: 1 });
   assert.equal(run.log[0], "T");
   const r = await call("POST", "", { board: "normal", token: tok("f"), name: "Fay", run, replace: true });
   assert.equal(r.status, 200, JSON.stringify(r.body));
@@ -128,6 +160,17 @@ await t("the board shows the replayed numbers and the game's own ratings, not th
   const e = (await call("GET", `?board=normal&id=${r.body.id}`)).body;
   assert.equal(e.box[0].ppg, top.box[0].ppg); assert.notEqual(e.players[0].ovr, 99); assert.ok(!("idx" in e) && !("ts" in e));
 });
+await t("the owner's password puts a season up without a replay; a wrong one doesn't", async () => {
+  const run = await real({ hard: true }), fake = { ...run, w: 82, l: 0, champ: true, reached: 3, pw: 16, pl: 0 };
+  let r = await call("POST", "", { board: "hard", token: tok("5"), name: "Owner", run: fake, owner: "nope" });
+  assert.equal(r.status, 400);
+  r = await call("POST", "", { board: "hard", token: tok("5"), name: "Owner", run: { ...fake, tk: undefined }, owner: "test-owner", replace: true });
+  assert.equal(r.status, 200, JSON.stringify(r.body)); assert.equal(r.body.score, 820 + 500 + 120 + 1000 + 200);
+  r = await call("POST", "", { board: "monthly", month: dayPT().slice(0, 7), token: tok("5"), name: "Owner", entry: fake, owner: "test-owner" });
+  assert.equal(r.status, 400);
+  r = await call("POST", "", { board: "hard", token: tok("5"), name: "Owner", run: { ...fake, w: 83, l: -1 }, owner: "test-owner" });
+  assert.equal(r.status, 400);
+});
 await t("an old season without a ticket can't go up", async () => {
   const { tk, ...old } = await real();
   const r = await call("POST", "", { board: "normal", token: tok("8"), name: "Hank", run: old });
@@ -138,7 +181,7 @@ await t("the old Daily Draft board is closed", async () => {
   assert.equal(r.status, 400); assert.match(r.body.error, /Daily Draft is over/);
 });
 await t("Speed Draft: a replayed season plus the time bonus, which can't be more than 400", async () => {
-  const tk = await ticket(), run = botSeason("speed", seedOf(tk), { tk });
+  const run = await playSeason("speed");
   let r = await call("POST", "", { board: "speed", token: tok("1"), name: "Gus", entry: { ...run, bonus: 215 } });
   assert.equal(r.status, 200, JSON.stringify(r.body)); assert.equal(r.body.score, pts(run) + 215);
   for (const bonus of [401, -5, 2.5, undefined]) assert.equal((await call("POST", "", { board: "speed", token: tok("1"), name: "Gus", entry: { ...run, bonus } })).status, 400, String(bonus));
@@ -149,7 +192,7 @@ await t("Speed Draft: a replayed season plus the time bonus, which can't be more
 });
 await t("Monthly Draft: this month's board replays the try from its day; other months are refused", async () => {
   const day = dayPT(), month = day.slice(0, 7);
-  const a = botSeason("monthly", null, { day }), b = botSeason("monthly", null, { day, random: rand });
+  const a = await playSeason("monthly", { day }), b = await playSeason("monthly", { day, random: rand });
   let r = await call("POST", "", { board: "monthly", day: month, token: tok("1"), name: "Gus", entry: a });
   assert.equal(r.status, 200, JSON.stringify(r.body)); assert.equal(r.body.score, pts({ ...a, hard: false }));
   r = await call("POST", "", { board: "monthly", month, token: tok("2"), name: "Hal", entry: { ...b, hard: true } });
@@ -170,8 +213,8 @@ await t("Monthly Draft: this month's board replays the try from its day; other m
 await t("Monthly Draft: just after midnight on the 1st last month's try still counts, and two weeks later it doesn't", async () => {
   const realNow = Date.now;
   try {
-    const nov = botSeason("monthly", null, { day: "2026-11-30" });
     Date.now = () => Date.parse("2026-12-01T09:00:00Z"); // 1am on December 1 in California
+    const nov = await playSeason("monthly", { day: "2026-11-30" });
     let r = await call("POST", "", { board: "monthly", day: "2026-11", token: tok("9"), name: "Ivy", entry: nov });
     assert.equal(r.status, 200, JSON.stringify(r.body));
     assert.equal((await call("POST", "", { board: "monthly", day: "2026-10", token: tok("9"), name: "Ivy", entry: nov })).status, 400);

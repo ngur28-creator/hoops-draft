@@ -15,7 +15,9 @@ Counter; the Prize Wheel spins free once a day. Three daily quests change every 
   entries from pages that haven't reloaded since the Monthly Draft replaced it.) Anyone can submit; each browser keeps a secret token, so only its
   owner can replace their entry. Seasons can't be faked: every draft starts from a ticket the server signs (a
   random seed), and the server replays the whole draft and season with the game's own code (`engine.mjs`, built
-  from `site/index.html`) and posts what really happened. The Monthly Draft replays from its day. Arcade results
+  from `site/index.html`) and posts what really happened. The season's own seed only comes from the server once the lineup is
+  final (one lineup per draft), so nobody can try lineups against it. The Monthly Draft replays from its day. The
+  owner can post any season with the owner key (only its hash is in the code). Arcade results
   are checked for being possible.
 - `netlify/functions/duel/duel.mjs` is Draft vs Friend over the internet at `/api/duel`: one player creates a duel,
   the other joins with their username, and the server checks every pick (whose turn, which roster, open spot).

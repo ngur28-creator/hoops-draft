@@ -289,13 +289,14 @@ const DAY_RE = /^\d{4}-\d{2}-\d{2}$/;
 // Replays one season from its proof and returns what really happened, or throws a message.
 //   mode   "free" (the Normal and Hard Mode boards), "speed" or "monthly"
 //   seed   the ticket's seed (free and speed), checked by the caller
+//   ss     the season seed the server worked out once the lineup was final
 //   r      { log, cb, rules, day, po, g7, players: [{ slot, name, dec, team }] }
 function newDraft(mode, rules) {
   S = { lineup: { PG: null, SG: null, SF: null, PF: null, C: null }, draw: null, teamRedraw: 1, eraRedraw: 1, mode, drawCount: 0, rules,
     lockDec: null, lockName: null, tk: null, day: "", month: "" };
   if (rules.includes("noredraw") || mode !== "free") S.teamRedraw = S.eraRedraw = 0;
 }
-export function replaySeason(r, mode, seed) {
+export function replaySeason(r, mode, seed, ss) {
   if (!r || typeof r !== "object") throw "That season couldn't be read.";
   const rules = mode === "free" && Array.isArray(r.rules) ? r.rules.filter(x => typeof x === "string").slice(0, 12) : [];
   newDraft(mode, rules);
@@ -347,14 +348,14 @@ export function replaySeason(r, mode, seed) {
     if (typeof v !== "number" || !(v === 0 || CARD_VALUES.has(v))) throw "That season's card levels aren't possible.";
     L[k] = { ...L[k], cb: v };
   });
-  const ids = SLOTS.map(k => L[k].id + L[k].dec).join("|");
-  R = mulberry32(hashStr(mode === "monthly" ? `${S.day}:season:${SLOTS.map(k => k + L[k].id + L[k].dec).join("|")}` : `tk:${seed}:season`));
+  if (typeof ss !== "string" || !ss) throw "That season has no season seed.";
+  R = mulberry32(hashStr("ss:" + ss));
   const res = seasonSim(L);
   const w = res.games.filter(g => g.won).length;
   let pw = 0, pl = 0, reached = 0, champ = false;
   if (r.po === true) {
     if (w < 42) throw "That season didn't make the playoffs.";
-    R = mulberry32(hashStr(mode === "monthly" ? `${S.day}:po:${ids}` : `tk:${seed}:po`));
+    R = mulberry32(hashStr("ss:" + ss + ":po"));
     const seedNo = seedFor(w), g7 = Array.isArray(r.g7) ? r.g7 : [];
     for (let i = 0; i < 4; i++) {
       reached = i;
@@ -383,7 +384,7 @@ export function replaySeason(r, mode, seed) {
 
 // A bot that drafts and plays a season the way the page does (the tests use it to make real, replayable seasons).
 // opts: { rules, day (Monthly), redraws, random (a 0-1 function: pick at random instead of the best rating), cb, po, g7, hard, tk }
-export function botSeason(mode, seed, opts = {}) {
+export function botDraft(mode, seed, opts = {}) {
   const rules = opts.rules || [];
   newDraft(mode, rules);
   if (mode === "monthly") { S.day = opts.day; S.month = opts.day.slice(0, 7); } else S.tk = { s: seed };
@@ -399,9 +400,11 @@ export function botSeason(mode, seed, opts = {}) {
     log.push(p.id);
     S.draw = picks() < 5 ? rollNext("n") : null;
   }
-  const proof = { log, cb: opts.cb || [0, 0, 0, 0, 0], rules, day: opts.day || "", po: opts.po !== false, g7: opts.g7 || [], tk: opts.tk || null,
-    players: SLOTS.map(k => ({ slot: k, name: S.lineup[k].name, dec: S.lineup[k].dec, team: S.lineup[k].team })) };
+  return { mode, log, cb: opts.cb || [0, 0, 0, 0, 0], rules, day: opts.day || "", po: opts.po !== false, g7: opts.g7 || [], tk: opts.tk || null,
+    players: SLOTS.map(k => ({ slot: k, name: S.lineup[k].name, dec: S.lineup[k].dec, team: S.lineup[k].team })), hard: !!opts.hard, date: "Oct 8" };
+}
+export function botFinish(proof, seed, ss) {
   let real;
-  try { real = replaySeason(proof, mode, seed); } catch (e) { proof.po = false; real = replaySeason(proof, mode, seed); }
-  return { ...proof, ...real, hard: !!opts.hard, date: "Oct 8" };
+  try { real = replaySeason(proof, proof.mode, seed, ss); } catch (e) { proof = { ...proof, po: false }; real = replaySeason(proof, proof.mode, seed, ss); }
+  return { ...proof, ...real };
 }

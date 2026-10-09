@@ -454,6 +454,50 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
 .pmini.legendary { border-color: #e2a400; background: linear-gradient(135deg, #fff4c2, #ffd76a); color: #3a2a00; }
 .pmini.epic { border-color: #8a4fe0; background: linear-gradient(135deg, #f0e6ff, #d7bfff); color: #2a1150; }
 .pmini.rare { border-color: #2f6fe0; }
+.pill.rankpill { background: linear-gradient(135deg, rgba(255,106,43,.16), rgba(226,164,0,.18)); }
+.pill.evpill { background: linear-gradient(135deg, rgba(43,214,123,.18), rgba(47,111,224,.16)); }
+.lvcard .lvtrain { margin-top: 4px; font-size: 12px; padding: 4px 8px; }
+#cxPw { flex: 1; min-width: 0; font: 16px system-ui, sans-serif; padding: 7px 9px; border-radius: 8px; border: 1px solid #343a55; background: #000; color: #fff; }
+.pill.packpill { cursor: pointer; border: 0; font: inherit; color: inherit; background: linear-gradient(135deg, rgba(255,201,60,.45), rgba(255,106,43,.35)); box-shadow: 0 0 0 2px rgba(255,106,43,.35); animation: pkpulse 2.2s ease-in-out infinite; }
+@keyframes pkpulse { 50% { box-shadow: 0 0 0 4px rgba(255,106,43,.15); } }
+@media (prefers-reduced-motion: reduce) { .pill.packpill { animation: none; } }
+.rankbox { display: flex; flex-direction: column; gap: 8px; padding: 12px; border-radius: 14px; background: linear-gradient(135deg, rgba(255,106,43,.10), rgba(47,111,224,.10)); border: 1px solid var(--line); }
+.rkhead { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
+.rkbadge { font-family: var(--display); font-size: 20px; letter-spacing: .02em; padding: 4px 12px; border-radius: 999px; background: var(--panel); border: 2px solid var(--line); }
+.rkbadge.t1 { border-color: #9aa6b8; } .rkbadge.t2 { border-color: #e2a400; } .rkbadge.t3 { border-color: #2fb5c9; } .rkbadge.t4 { border-color: #7fa2ff; box-shadow: 0 0 12px rgba(127,162,255,.5); } .rkbadge.t5 { border-color: #ffc93c; box-shadow: 0 0 16px rgba(255,201,60,.6); }
+.rkbar i { transition: width 1.1s cubic-bezier(.2,.8,.2,1); }
+.courts { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.court { display: inline-flex; align-items: center; gap: 6px; font: inherit; font-size: 12.5px; padding: 5px 9px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); color: inherit; cursor: pointer; }
+.court:disabled { opacity: .55; cursor: default; }
+.court.on { outline: 2px solid var(--accent); }
+.court i { width: 14px; height: 14px; border-radius: 50%; background: #ff6a2b; }
+.court.c-showtime i { background: linear-gradient(135deg, #6b2fd1, #f5b301); } .court.c-celtic i { background: #0f8a4f; } .court.c-vice i { background: linear-gradient(135deg, #ff4fa3, #1ad1d1); }
+.court.c-midnight i { background: linear-gradient(135deg, #111, #e0202f); } .court.c-goat i { background: linear-gradient(135deg, #ffd76a, #b98200); }
+.rankafter { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line); }
+.rankafter .rkbar { flex: 1 1 100%; }
+.rankafter.up { border: 2px solid #e2a400; box-shadow: 0 0 18px rgba(226,164,0,.35); }
+.rkd.pos { color: var(--win); } .rkd.neg { color: var(--loss); }
+.rkup { font-family: var(--display); color: var(--gold); animation: rkpop .8s ease-out; }
+@keyframes rkpop { from { transform: scale(1.6); opacity: 0; } }
+.pocall { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; border-radius: 12px; border: 1px dashed var(--line); }
+.pocalls { flex-wrap: wrap; }
+:root[data-court="showtime"] { --accent: #6b2fd1; --accent-deep: #4b1a9e; --accent-text: #5b22c0; --court: #6b2fd1; --navy: #4b1a9e; --gold: #b98200; --foil: linear-gradient(135deg, #6b2fd1, #f5b301 40%, #a77bff 70%, #6b2fd1); }
+:root[data-court="celtic"] { --accent: #0f8a4f; --accent-deep: #0a6b3c; --accent-text: #0a6b3c; --court: #0f8a4f; --navy: #0a6b3c; --foil: linear-gradient(135deg, #0f8a4f, #b6f0c9 40%, #0f8a4f); }
+:root[data-court="vice"] { --accent: #e0287f; --accent-deep: #b81f68; --accent-text: #c21f6e; --court: #e0287f; --navy: #0e8f9a; --foil: linear-gradient(135deg, #ff4fa3, #1ad1d1 50%, #ff4fa3); }
+:root[data-court="midnight"] { --accent: #d01f2e; --accent-deep: #9e1520; --accent-text: #b81a28; --court: #d01f2e; --navy: #23262e; --foil: linear-gradient(135deg, #111, #e0202f 50%, #111); }
+:root[data-court="goat"] { --accent: #c99400; --accent-deep: #8f6a00; --accent-text: #8f6a00; --court: #c99400; --navy: #6b5000; --gold: #c99400; --foil: linear-gradient(135deg, #ffd76a, #fff4c2 40%, #c99400 70%, #ffd76a); }
+@media (prefers-color-scheme: dark) {
+  :root[data-court="showtime"]:not([data-theme="light"]) { --accent: #9d6bff; --accent-text: #c4a6ff; --navy: #c4a6ff; --gold: #ffc93c; }
+  :root[data-court="celtic"]:not([data-theme="light"]) { --accent: #2bd67b; --accent-text: #6fe9a6; --navy: #6fe9a6; }
+  :root[data-court="vice"]:not([data-theme="light"]) { --accent: #ff4fa3; --accent-text: #ff8fc4; --navy: #5fe6e6; }
+  :root[data-court="midnight"]:not([data-theme="light"]) { --accent: #ff4a57; --accent-text: #ff8088; --navy: #c9ced8; }
+  :root[data-court="goat"]:not([data-theme="light"]) { --accent: #ffc93c; --accent-text: #ffd76a; --navy: #ffd76a; --gold: #ffc93c; }
+}
+:root[data-court="showtime"][data-theme="dark"] { --accent: #9d6bff; --accent-text: #c4a6ff; --navy: #c4a6ff; --gold: #ffc93c; }
+:root[data-court="celtic"][data-theme="dark"] { --accent: #2bd67b; --accent-text: #6fe9a6; --navy: #6fe9a6; }
+:root[data-court="vice"][data-theme="dark"] { --accent: #ff4fa3; --accent-text: #ff8fc4; --navy: #5fe6e6; }
+:root[data-court="midnight"][data-theme="dark"] { --accent: #ff4a57; --accent-text: #ff8088; --navy: #c9ced8; }
+:root[data-court="goat"][data-theme="dark"] { --accent: #ffc93c; --accent-text: #ffd76a; --navy: #ffd76a; --gold: #ffc93c; }
 /* Card levels: tier colors (text, border, fill) for light and dark */
 .lvchip i { font-style: normal; font-weight: 900; opacity: .9; } .lvboost { color: var(--win); }
 .lvchip, .lvcard { --tc: var(--muted); --tb: var(--line); --tf: none; }
@@ -997,6 +1041,7 @@ body.xplaying .toast { pointer-events: none; opacity: .88; }
   <section class="panel stack modepanel" id="modePanel" hidden aria-label="Game mode"></section>
 
   <section class="panel stack" id="chPanel" aria-label="Daily quests and challenges">
+    <div class="rankbox" id="rankBox"></div>
     <div class="head"><h2>📋 Daily quests</h2><span class="label" id="qSum"></span></div>
     <div class="chs quests" id="qList"></div>
     <div class="head"><h2>Challenges</h2><span class="label" id="chSum"></span></div>
@@ -1098,6 +1143,8 @@ body.xplaying .toast { pointer-events: none; opacity: .88; }
         <span class="label">Season averages · <abbr title="Games Played — all starters play all 82 regular season games (no injuries)">82 GP</abbr> each</span>
         <div class="plist" id="box"></div>
       </div>
+      <div class="pocall" id="poCall" hidden></div>
+      <div class="rankafter" id="rankAfter" hidden></div>
       <div id="poWrap" class="stack" hidden>
         <div class="head"><h2>Playoffs</h2><span class="label" id="poSeed"></span></div>
         <div class="clutch" id="clutch" hidden></div>
@@ -1109,6 +1156,7 @@ body.xplaying .toast { pointer-events: none; opacity: .88; }
         <button class="btn primary" id="modeNext" hidden></button>
         <button class="btn primary" id="again">Draft again</button>
         <button class="btn" id="packBtn2" hidden>🎁 Open pack</button>
+        <button class="btn" id="packAll2" hidden>⚡ Open all packs</button>
         <button class="btn" id="copy">Copy result</button>
         <span class="note" id="copyNote"></span>
       </div>
@@ -1238,7 +1286,7 @@ body.xplaying .toast { pointer-events: none; opacity: .88; }
 <div class="toast" id="toast" hidden role="status"></div>
 
 <script>
-const APP_VERSION = 46;
+const APP_VERSION = 48;
 // How leaderboard points are counted. Version 1 also counted team rating; entries saved under it are re-scored when shown.
 const SCORE_V = 2;
 // Anything that goes wrong is noted (last 20, in this browser and in your private cloud save) so it can be fixed
@@ -1659,7 +1707,7 @@ function renderHeader() {
   const top = lbBestForMode("normal") || lbBest();
   const titles = runs.filter(r => r.champ).length;
   const got = gotCount();
-  $("bests").innerHTML = (top ? `<span class="pill" title="Your best season: ${fmtPts(lbScore(top))} leaderboard points">Best <b>${top.w}–${top.l}${top.champ ? " 🏆" : ""}</b></span>` : "") +
+  $("bests").innerHTML = packPill() + evPill() + rankPill() + (top ? `<span class="pill" title="Your best season: ${fmtPts(lbScore(top))} leaderboard points">Best <b>${top.w}–${top.l}${top.champ ? " 🏆" : ""}</b></span>` : "") +
     `<span class="pill">Titles <b>${titles}</b></span><span class="pill">Trophies <b>${fmtPts(got)}/${fmtPts(ACH.length)}</b></span>`;
 }
 
@@ -1707,7 +1755,7 @@ function renderInner() {
    Only opens with five quick taps on the dash in the title plus a code. Nothing here is saved: reloading turns it
    all off. While anything is on, nothing posts to any board, and every season played with it on is tagged so it
    never posts later either. */
-const CX = { ok: false, boost: 0, f: { oracle: 0, redraw: 0, gold: 0, xray: 0, win: 0, hot: 0, diamond: 0, monthly: 0, rules: 0, slow: 0, x2: 0, wheel: 0, hol: 0, po: 0, stats: 0, inf: 0, easy: 0, luck: 0, props: 0, dup: 0, clutch: 0 }, rec: null };
+const CX = { ok: false, boost: 0, f: { oracle: 0, redraw: 0, gold: 0, xray: 0, win: 0, hot: 0, diamond: 0, monthly: 0, rules: 0, slow: 0, x2: 0, wheel: 0, hol: 0, po: 0, stats: 0, inf: 0, easy: 0, luck: 0, props: 0, dup: 0, clutch: 0, courts: 0 }, rec: null };
 const cxAny = () => CX.boost > 0 || CX.rec != null || Object.values(CX.f).some(Boolean);
 let cxForce = null; // true/false: the next game must be a win/loss
 const cxMark = () => { if (S && cxAny()) S.cx = 1; };
@@ -1850,6 +1898,10 @@ function cxPanel() {
     <div class="cxrow"><input id="cxQ" type="text" autocomplete="off" placeholder="🌍 Draft anyone ever: type a name"></div><div id="cxRes"></div>
     ${S && picks() && !S.done ? `<div class="cxrow">${SLOTS.filter(k => S.lineup[k]).map(k => `<button class="cxb" data-a="clr" data-k="${k}"${dis}>↩️ Undo ${k}</button>`).join("")}</div>` : ""}
     <div class="cxrow">${B("scan", cxFound ? "🧭 Scan again" : "🧭 Which teams get me to 82–0?")}</div><div id="cxFound">${cxFoundHtml()}</div>
+    <h4>Leaderboard</h4>
+    <p class="cxn">Put any of your seasons on the board: one played with cheats, or one from before the server started checking.${LB_REST ? " The server checks your owner key (this device remembers it)." : ""}</p>
+    ${LB_REST ? `<div class="cxrow"><input id="cxPw" type="password" autocomplete="off" placeholder="Owner key" aria-label="Owner key" value="${esc(CX.pw || (() => { try { return localStorage.getItem("hoops82.ok") || ""; } catch (e) { return ""; } })())}"></div>` : ""}
+    <div id="cxPost">${cxPostHtml()}</div><p class="cxn" id="cxPostNote"></p>
     <h4>Season</h4>
     ${T("win", "🏆 Win every game", "season, playoffs, Head-to-head, Gauntlet, Survival")}
     <div class="cxt"><span><b>🎯 Set your record</b><i>the season lands exactly on it, losses scattered so it looks real</i></span></div>
@@ -1875,6 +1927,8 @@ function cxPanel() {
     <div class="cxrow">${B("xmax", "💯 Max score this game")}${B("stars", "⭐ 3 stars on every game")}</div>
     ${T("luck", "🍀 Lucky packs", "every card you pull is a Legend")}
     <div class="cxrow">${B("tix", "🎟 +500 tickets")}${B("tix5k", "🎟 +5,000 tickets")}${B("pack", "👑 Free Legend pack")}${B("packs", "👑 ×10 Legend packs")}${B("packs25", "🎁 +25 of every pack")}</div>
+    <div class="cxrow">${B("rankup", "🏅 Rank up a division")}${B("legend", "👑 Straight to Legend")}</div>
+    ${T("courts", "🎨 Every court color", "use any court color before you rank up to it")}
     <div class="cxrow">${B("openall", "⚡ Open every pack now")}${B("sets", "🏆 Finish every legendary set")}${B("xp", "✨ +5,000 XP")}${B("lv10", "⬆️ +10 levels")}</div>
     ${myst ? `<p class="cxn">🕵️ Today's Mystery Player: <b>${esc(myst)}</b></p>` : ""}
     <div class="cxrow">${B("off", "Turn everything off")}${B("close", "Close")}</div></div>`;
@@ -1896,6 +1950,8 @@ function cxPanel() {
     else if (a === "god") { Object.assign(CX.f, { oracle: 1, redraw: 1, gold: 1, win: 1, po: 1, hot: 1, stats: 1, diamond: 1 }); CX.boost = Math.max(CX.boost, 15); CX.rec = null; cxAfter("god"); return; }
     else if (a === "sneaky") { CX.rec = 82; CX.f.po = 1; CX.f.win = 0; cxAfter("sneaky"); return; }
     else if (a === "packs") givePack("legend", 10);
+    else if (a === "post") { const r = runs.find(x => String(x.id) === b.dataset.id); if (r) cxPostRun(r, b); return; }
+    else if (a === "rankup" || a === "legend") { const st = rankState(); st.rp = a === "legend" ? Math.max(st.rp, 1500) : st.rp + 100; st.best = Math.max(st.best, st.rp); saveCareer(); renderHeader(); renderRankBox(); }
     else if (a === "packs25") { givePack("normal", 25); givePack("gold", 25); givePack("legend", 25); }
     else if (a === "tix5k") { xTix(5000); saveCareer(); }
     else if (a === "openall") { el.hidden = true; openAllPacks(document.body); return; }
@@ -1925,6 +1981,38 @@ function cxPanel() {
     }
     cxPanel();
   });
+}
+// Your best seasons played with cheats, ready to post
+function cxPostHtml() {
+  const list = runs.filter(r => !r.dyn && r.players && r.players.length === 5 && r.mode !== "monthly" && r.mode !== "speed").sort((a, b) => lbScore(b) - lbScore(a)).slice(0, 8);
+  if (!list.length) return `<p class="cxn">No seasons yet.</p>`;
+  return list.map(r => `<div class="cxr"><span><b>${esc(recText(r))}</b>${r.hard ? " · 🔥 Hard" : ""}${r.cx ? " · 🛠 cheats" : ""} · ${fmtPts(lbScore(r))} pts<small>${r.players.map(p => esc(p.name)).join(", ")}</small></span><button class="cxb" data-a="post" data-id="${r.id}">📤 Post to ${r.hard ? "Hard Mode" : "Normal"}</button></div>`).join("");
+}
+async function cxPostRun(r, btn) {
+  const note = $("cxPostNote"), board = r.hard ? "hard" : "normal", where = board === "hard" ? "Hard Mode" : "Normal";
+  btn.disabled = true; note.textContent = "Posting…";
+  try {
+    if (LB_REST) {
+      const pw = (($("cxPw") && $("cxPw").value) || "").trim();
+      CX.pw = pw;
+      if (!pw) throw { message: "Type your owner key first." };
+      try { localStorage.setItem("hoops82.ok", pw); } catch (e) {}
+      const name = boardName();
+      if (!name) throw { message: "Pick your name for the board in the leaderboard section first." };
+      const res = await fetch(LB_API, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ board, token: lbToken, name, run: slimRun(r), owner: pw, replace: true }) });
+      const out = await res.json().catch(() => ({}));
+      if (!res.ok) throw { message: /ticket|replay|rolls|tip off/.test(out.error || "") ? "That owner key isn't right." : out.error || "Couldn't post it." };
+      if (out.id) lbMyId = out.id;
+      lbMine[board] = { score: out.score, rid: r.id, rec: recText(r) };
+      note.textContent = `✓ Your ${recText(r)} is on the ${where} board${out.rank ? ` at #${out.rank}` : ""}.`;
+      try { if (board === lbCurrentTab) loadLbTabRest(board, true); } catch (e) {}
+    } else {
+      await postClaude(board, r, true, true);
+      note.textContent = `✓ Your ${recText(r)} is on the ${where} board.`;
+    }
+    sfx("cheer");
+  } catch (e) { note.textContent = (e && e.message) || "Couldn't post it."; }
+  btn.disabled = false;
 }
 function cxGate() {
   if (CX.ok) { cxPanel(); return; }
@@ -2027,12 +2115,35 @@ function playerGame(mean, won) {
   };
 }
 function seasonRng() {
-  if (S.mode !== "monthly") return S.tk ? mulberry32(hashStr("tk:" + S.tk.s + ":season")) : Math.random;
+  if (S.ss) return mulberry32(hashStr("ss:" + S.ss));
+  if (S.mode !== "monthly") return Math.random;
   return mulberry32(hashStr(S.day + ":season:" + SLOTS.map(k => k + S.lineup[k].id + S.lineup[k].dec).join("|")));
 }
 
 let lastResult = "", curRun = null, poRunning = false, simRunning = false;
+// What the server needs to work out the season seed: the finished draft, the five in their spots and card boosts
+const cbNow = () => { const LC = withCards(S.lineup, S.mode); return SLOTS.map(k => (LC[k] && LC[k].cb) || 0); };
 function simulate() {
+  if (simRunning) return;
+  const md = S.mode === "monthly" ? "monthly" : S.mode === "speed" ? "speed" : S.mode === "free" ? "free" : null;
+  cxMark();
+  if (!LB_REST || !md || S.cx || (md !== "monthly" && !S.tk)) { S.ss = null; return simulateNow(); }
+  simRunning = true;
+  const btn = $("simBtn"), label = btn.textContent;
+  btn.disabled = true; btn.textContent = "Tipping off…";
+  const body = { action: "season", mode: md, tk: S.tk ? S.tk.t : null, day: S.day, log: S.log || [], cb: cbNow(),
+    players: SLOTS.map(k => ({ slot: k, name: S.lineup[k].name, dec: S.lineup[k].dec, team: S.lineup[k].team })) };
+  const ctl = typeof AbortController === "function" ? new AbortController() : null, to = setTimeout(() => ctl && ctl.abort(), 7000);
+  fetch(LB_API, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body), signal: ctl ? ctl.signal : undefined })
+    .then(r => r.ok ? r.json() : null).catch(() => null).then(d => {
+      clearTimeout(to);
+      btn.disabled = false; btn.textContent = label;
+      S.ss = d && typeof d.ss === "string" ? d.ss : null;
+      simRunning = false;
+      simulateNow();
+    });
+}
+function simulateNow() {
   if (simRunning) return;
   S.propLock = S.props && S.propLines ? { picks: { ...S.props }, lines: { ...S.propLines } } : null;
   cxMark();
@@ -2227,7 +2338,7 @@ function finishSeason(w, l, res) {
   // What the server needs to replay it: the ticket, every roll and pick, the card boosts, the rules, the day
   if (S.propLock) run.props = S.propLock;
   run.tk = S.tk ? S.tk.t : null; run.log = (S.log || []).slice(); run.day = S.day;
-  { const LC = withCards(S.lineup, S.mode); run.cb = SLOTS.map(k => (LC[k] && LC[k].cb) || 0); }
+  run.cb = cbNow(); run.ss = S.ss || null;
   const news = seasonNews(res, run);
   run.news = news;
   $("news").innerHTML = newsList(news);
@@ -2303,6 +2414,8 @@ const ROUNDS = ["First Round", "Conference Semifinals", "Conference Finals", "NB
 const sleep = ms => new Promise(r => setTimeout(r, reduce || speed === "instant" ? 0 : speed === "fast" ? ms / 3 : ms));
 const seedFor = w => w >= 62 ? 1 : w >= 56 ? 2 : w >= 52 ? 3 : w >= 49 ? 4 : w >= 46 ? 5 : w >= 44 ? 6 : w >= 43 ? 7 : 8;
 function resetPlayoffs() {
+  if ($("poCall")) $("poCall").hidden = true;
+  if ($("rankAfter")) $("rankAfter").hidden = true;
   $("poWrap").hidden = true; $("poBtn").hidden = $("poBtn2").hidden = true;
   $("rounds").innerHTML = ""; $("champ").textContent = ""; $("champ").className = "champ"; $("poSeed").textContent = "";
 }
@@ -2382,12 +2495,12 @@ async function playoffs() {
   finally { poRunning = false; }
 }
 async function playoffsInner() {
-  $("poBtn").hidden = $("poBtn2").hidden = true; $("poWrap").hidden = false;
+  $("poBtn").hidden = $("poBtn2").hidden = true; $("poWrap").hidden = false; $("poCall").hidden = true;
   try { $("poWrap").scrollIntoView({ block: "start", behavior: reduce ? "auto" : "smooth" }); } catch (e) {}
   $("poSeed").textContent = `#${curRun.seed} seed`;
   const r = curRes ? curRes.r : teamRatings(withCards(S.lineup, S.mode)), rounds = [];
   // In the Monthly Draft the playoffs are seeded too (the same team on the same day gets the same bracket); only your Game 7 shots differ
-  const poR = curRun.mode === "monthly" ? mulberry32(hashStr(`${curRun.day}:po:${SLOTS.map(k => S.lineup[k].id + S.lineup[k].dec).join("|")}`)) : curRun.tk ? mulberry32(hashStr("tk:" + tkSeedOf(curRun.tk) + ":po")) : null;
+  const poR = curRun.ss ? mulberry32(hashStr("ss:" + curRun.ss + ":po")) : curRun.mode === "monthly" ? mulberry32(hashStr(`${curRun.day}:po:${SLOTS.map(k => S.lineup[k].id + S.lineup[k].dec).join("|")}`)) : null;
   const withR = f => { if (!poR) return f(); const prev = R; R = poR; try { return f(); } finally { R = prev; } };
   let pw = 0, pl = 0, reached = 0, champ = false;
   for (let i = 0; i < 4; i++) {
@@ -2956,13 +3069,14 @@ function renderCards() {
   if (!all.length) { el.innerHTML = `<span class="label">Card levels</span><span class="note">Play seasons and your players' cards level up: Bronze, Silver, Gold, then Diamond at level 10. The higher the level, the better he plays: +0.3 a level, +3 at Diamond.</span>`; return; }
   const counts = { diamond: 0, gold: 0, silver: 0, bronze: 0 };
   for (const [, xp] of all) counts[cardTier(cardLevel(xp))[1]]++;
-  const top = all.sort((a, b) => b[1] - a[1]).slice(0, 8);
+  const top = all.sort((a, b) => b[1] - a[1]).slice(0, 12);
   el.innerHTML = `<span class="label">Your best cards · ${counts.diamond} Diamond · ${counts.gold} Gold · ${counts.silver} Silver · ${fmtPts(counts.bronze)} Bronze</span>
     <span class="note">Higher-level cards play better in your seasons and head-to-head: +0.3 a level, +3 for Diamond (not in the Monthly Draft or Vs Friend).</span>
     <div class="cardgrid">${top.map(([k]) => {
       const p = PLAYER_INDEX[k], c = cardInfo(k), pct = c.next ? (c.xp - c.prev) / (c.next - c.prev) * 100 : 100;
-      return `<div class="lvcard ${c.tier[1]}"><span class="lvtop"><b>Lv ${c.L}</b><span>${c.tier[2]}</span></span><b class="lvname">${esc(p.name)}</b><span class="lvteam">${short(p.dec)} ${esc(p.team)} · ${p.ovr}${cardBoostAt(c.L) ? ` <b class="lvboost">▲${cardBoostAt(c.L)}</b>` : ""}</span><span class="pbar"><i style="width:${pct.toFixed(1)}%"></i></span><span class="lvxp">${c.next ? `${fmtPts(c.xp - c.prev)} / ${fmtPts(c.next - c.prev)} XP` : "Max level"}</span></div>`;
-    }).join("")}</div>`;
+      return `<div class="lvcard ${c.tier[1]}"><span class="lvtop"><b>Lv ${c.L}</b><span>${c.tier[2]}</span></span><b class="lvname">${esc(p.name)}</b><span class="lvteam">${short(p.dec)} ${esc(p.team)} · ${p.ovr}${cardBoostAt(c.L) ? ` <b class="lvboost">▲${cardBoostAt(c.L)}</b>` : ""}</span><span class="pbar"><i style="width:${pct.toFixed(1)}%"></i></span><span class="lvxp">${c.next ? `${fmtPts(c.xp - c.prev)} / ${fmtPts(c.next - c.prev)} XP` : "Max level"}</span>${c.next ? `<button class="btn sm lvtrain" data-train="${esc(k)}">🏋️ Train +${TRAIN_XP} XP · ${TRAIN_COST} 🎟</button>` : ""}</div>`;
+    }).join("")}</div><span class="note">Train a card with Arcade tickets (you have ${fmtPts(xState().tix)} 🎟).</span>`;
+  el.querySelectorAll("[data-train]").forEach(b => b.onclick = () => trainCard(b.dataset.train));
 }
 
 /* ---------- Levels and XP ---------- */
@@ -2973,6 +3087,7 @@ const levelTitle = L => { const t = LEVEL_TITLES.find(([n]) => L >= n)[1]; retur
 let quietXp = false;
 function gainXp(n) {
   if (!n) return;
+  if (n > 0 && evToday().id === "xp2") n *= 2;
   const before = levelOf(career.xp).level;
   career.xp += n;
   const after = levelOf(career.xp).level;
@@ -3506,6 +3621,8 @@ function renderSets() {
 
 // Extras after every season: props, bingo, the day's first season (double XP) and a mystery bonus
 function funAfter(run, phase, log) {
+  if (phase !== "season") try { poCallAfter(run, log); } catch (e) { logError(e && e.message, e && e.stack); }
+  try { rankAfter(run, phase, log); } catch (e) { logError(e && e.message, e && e.stack); }
   if (phase === "season") {
     if (career.firstDay !== todayKey()) {
       career.firstDay = todayKey();
@@ -3516,8 +3633,9 @@ function funAfter(run, phase, log) {
     if (pr) {
       const hits = pr.filter(x => x[1]).length;
       run.props.hits = hits; run.props.of = pr.length;
-      if (hits) { xTix(hits * PROP_TIX); gainXp(hits * PROP_XP); }
-      log.push([`🔮 Props: ${hits} of ${pr.length} right${hits ? ` · +${hits * PROP_TIX} 🎟` : ""}`, hits * PROP_XP]);
+      const pm = evToday().id === "props2" ? 2 : 1;
+      if (hits) { xTix(hits * PROP_TIX * pm); gainXp(hits * PROP_XP * pm); }
+      log.push([`🔮 Props: ${hits} of ${pr.length} right${hits ? ` · +${hits * PROP_TIX * pm} 🎟` : ""}${pm > 1 && hits ? " (Props Thursday)" : ""}`, hits * PROP_XP * pm]);
       if (hits === 4) { givePack("gold"); log.push(["🔮 All four props right: a gold pack", 0]); toast("🔮 <b>Called all four!</b> A gold pack is yours"); }
     }
     const x = Math.random();
@@ -3527,6 +3645,130 @@ function funAfter(run, phase, log) {
     else { const t = 5 + Math.floor(Math.random() * 5) * 5; xTix(t); log.push([`🎰 Mystery bonus: ${t} 🎟 tickets`, 0]); }
   }
   bingoMark(run, log);
+}
+/* ---------- Ranked ----------
+   Every season moves your rank: Bronze, Silver, Gold, Platinum and Diamond (three divisions each, 100 RP apiece),
+   then Legend. Win more than your rank expects and you climb; fall short and you slip (never out of a tier you've
+   reached). Every promotion pays a pack. */
+const RANK_NAMES = ["Bronze", "Silver", "Gold", "Platinum", "Diamond"], RANK_ICONS = ["🥉", "🥈", "🥇", "💠", "💎"];
+function rankAt(rp) {
+  if (rp >= 1500) return { tier: 5, div: 0, key: "L", label: `👑 Legend`, sub: `${fmtPts(rp - 1500)} LP`, into: 100, floor: 1500 };
+  const t = Math.floor(rp / 300), d = 3 - Math.floor((rp % 300) / 100);
+  return { tier: t, div: d, key: t + ":" + d, label: `${RANK_ICONS[t]} ${RANK_NAMES[t]} ${["", "I", "II", "III"][d]}`, sub: `${rp % 100} / 100 RP`, into: rp % 100, floor: t * 300 };
+}
+const rankState = () => career.rank || (career.rank = { rp: 0, best: 0, seasons: 0 });
+const rankPar = tier => 48 + tier * 5;
+function rankAfter(run, phase, log) {
+  if (run.cx) { if (phase === "season") log.push(["🏅 Ranked: seasons with cheats don't count", 0]); return; }
+  const st = rankState(), before = rankAt(st.rp);
+  let d = phase === "season" ? Math.round(Math.max(-40, Math.min(60, (run.w - rankPar(before.tier)) * 1.5))) : Math.round(run.pw * 1.5) + (run.champ ? 20 : 0);
+  if (d > 0 && evToday().id === "rp2") d *= 2;
+  if (!d) return;
+  const rp0 = st.rp;
+  st.rp = Math.max(before.floor, st.rp + d);
+  run.rk = [phase === "season" || !run.rk ? rp0 : run.rk[0], st.rp];
+  if (phase === "season") st.seasons++;
+  st.best = Math.max(st.best, st.rp);
+  const after = rankAt(st.rp);
+  log.push([`🏅 Ranked: ${d > 0 ? "+" : ""}${d} RP · ${after.label} (${after.sub})`, 0]);
+  if (after.tier > before.tier || (after.tier === before.tier && after.div < before.div)) {
+    const pack = after.tier >= 4 ? "legend" : after.tier >= 2 ? "gold" : "normal";
+    givePack(pack);
+    log.push([`🏅 Promoted to ${after.label}: a ${pack === "normal" ? "pack" : pack + " pack"}`, 0]);
+    toast(`🏅 <b>Promoted to ${after.label}!</b>`);
+    if (after.tier > before.tier) { sfx("cheer"); if (!reduce) confetti(); }
+  } else if (after.div > before.div) log.push([`🏅 Down to ${after.label}`, 0]);
+  renderHeader();
+}
+const rankPill = () => { const r = rankAt(rankState().rp); return `<span class="pill rankpill" title="Ranked: win more than your rank expects (${rankPar(r.tier)}+ wins) to climb">${r.label} <b>${r.sub}</b></span>`; };
+
+/* ---------- Daily events (by the day of the week in California) ---------- */
+const EVENTS = [
+  { id: "xp2", icon: "⚡", name: "Double XP Sunday", text: "all XP doubled" },
+  { id: "tix2", icon: "🎟", name: "Ticket Monday", text: "Arcade tickets doubled" },
+  { id: "gold", icon: "🏅", name: "Gold Tuesday", text: "every season pays a gold pack" },
+  { id: "rp2", icon: "📈", name: "Ranked Wednesday", text: "double RP for climbing" },
+  { id: "props2", icon: "🔮", name: "Props Thursday", text: "props pay double" },
+  { id: "lucky", icon: "🍀", name: "Lucky Friday", text: "way better Legend odds in packs" },
+  { id: "xp2", icon: "⚡", name: "Double XP Saturday", text: "all XP doubled" },
+];
+function evToday() { try { return EVENTS[new Date(dayPT() + "T12:00:00Z").getUTCDay()]; } catch (e) { return EVENTS[0]; } }
+const evPill = () => { const e = evToday(); return `<span class="pill evpill" title="Today's event: ${e.text}. A new one every day.">${e.icon} ${e.name}</span>`; };
+
+/* ---------- Card training: spend Arcade tickets on a card's XP ---------- */
+const TRAIN_COST = 40, TRAIN_XP = 60;
+function trainCard(k) {
+  const a = xState();
+  if (a.tix < TRAIN_COST) { toast(`You need ${TRAIN_COST} 🎟 to train. Win them in the Arcade.`); return; }
+  const before = cardInfo(k);
+  if (!before.next) return;
+  a.tix -= TRAIN_COST;
+  career.cards[k] = Math.min(CARD_LV[CARD_LV.length - 1], (career.cards[k] || 0) + TRAIN_XP);
+  const after = cardInfo(k);
+  saveCareer();
+  sfx(after.L > before.L ? "gold" : "flip");
+  if (after.L > before.L) toast(`🏋️ <b>${esc(PLAYER_INDEX[k].name)}</b> is now Lv ${after.L}${after.L === 10 ? " · 💎 Diamond!" : ""}`);
+  renderCards();
+}
+/* ---------- Header packs chip: every pack you have, opened in one tap ---------- */
+function packPill() {
+  let n = 0;
+  try { n = packsHave() + (dailyReady() ? 1 : 0); } catch (e) {}
+  return n ? `<button class="pill packpill" type="button" onclick="${n > 1 ? "openAllPacks(this)" : "openPack(this)"}">🎁 ${n} pack${n === 1 ? "" : "s"} · <b>${n > 1 ? "Open all" : "Open"}</b></button>` : "";
+}
+
+/* ---------- Ranked card and court colors ----------
+   Each new rank tier unlocks a court color scheme for the whole site. */
+const COURTS = [
+  { id: "", name: "Classic", tier: 0 }, { id: "showtime", name: "Showtime purple & gold", tier: 1 }, { id: "celtic", name: "Celtic green", tier: 2 },
+  { id: "vice", name: "South Beach neon", tier: 3 }, { id: "midnight", name: "Midnight red", tier: 4 }, { id: "goat", name: "GOAT gold", tier: 5 },
+];
+function applyCourt() { const c = career.court || ""; if (c) document.documentElement.dataset.court = c; else delete document.documentElement.dataset.court; }
+function renderRankBox() {
+  const box = $("rankBox");
+  if (!box) return;
+  const st = rankState(), r = rankAt(st.rp), best = rankAt(st.best || 0);
+  const next = r.tier >= 5 ? "You're a Legend: every season adds LP." : `${100 - r.into} RP to ${r.div > 1 ? "the next division" : `${["🥈 Silver", "🥇 Gold", "💠 Platinum", "💎 Diamond", "👑 Legend"][r.tier]}`}`;
+  box.innerHTML = `<div class="rkhead"><span class="rkbadge t${r.tier}">${r.label}</span><span class="note">${next} · win <b>${rankPar(r.tier)}+</b> to climb${st.seasons ? ` · ${st.seasons} ranked season${st.seasons === 1 ? "" : "s"}` : ""}</span></div>
+    <span class="pbar rkbar"><i style="width:${r.tier >= 5 ? 100 : r.into}%"></i></span>
+    <div class="courts"><span class="label">🎨 Court colors</span>${COURTS.map(c => { const open = best.tier >= c.tier || !!CX.f.courts; return `<button class="court c-${c.id || "classic"}${(career.court || "") === c.id ? " on" : ""}" data-court="${c.id}"${open ? "" : " disabled"} title="${esc(c.name)}${open ? "" : ` · unlocks at ${["", "🥈 Silver", "🥇 Gold", "💠 Platinum", "💎 Diamond", "👑 Legend"][c.tier]}`}"><i></i>${open ? esc(c.name) : "🔒 " + ["", "Silver", "Gold", "Platinum", "Diamond", "Legend"][c.tier]}</button>`; }).join("")}</div>`;
+  box.querySelectorAll("[data-court]").forEach(b => b.onclick = () => { career.court = b.dataset.court; saveCareer(); applyCourt(); renderRankBox(); sfx("flip"); });
+}
+// After a season: how your rank moved, with the bar filling from where it was
+function renderRankAfter(run) {
+  const box = $("rankAfter");
+  if (!box || !run.rk) { if (box) box.hidden = true; return; }
+  const a = rankAt(run.rk[0]), b = rankAt(run.rk[1]), d = run.rk[1] - run.rk[0], up = b.tier > a.tier || (b.tier === a.tier && b.div < a.div);
+  box.hidden = false;
+  box.className = "rankafter" + (up ? " up" : "");
+  box.innerHTML = `<span class="rkbadge t${b.tier}">${b.label}</span><b class="rkd ${d >= 0 ? "pos" : "neg"}">${d >= 0 ? "+" : ""}${d} RP</b>${up ? `<b class="rkup">PROMOTED!</b>` : ""}
+    <span class="pbar rkbar"><i style="width:${up ? 0 : a.tier >= 5 ? 100 : a.into}%"></i></span><span class="note">${b.sub}</span>`;
+  requestAnimationFrame(() => requestAnimationFrame(() => { const i = box.querySelector(".rkbar i"); if (i) i.style.width = (b.tier >= 5 ? 100 : b.into) + "%"; }));
+}
+
+/* ---------- Call your playoff run ----------
+   Before the playoffs, say how far you'll go. Right calls pay tickets; calling a title is worth a gold pack and
+   calling 16–0 a legend pack. */
+const PO_CALLS = ["Out in round 1", "Out in round 2", "Out in the conference finals", "Lose the Finals", "Win the title", "Go 16–0"];
+const PO_TIX = [10, 15, 20, 25, 30, 60];
+function renderPoCall(run) {
+  const box = $("poCall");
+  if (!box) return;
+  if (!run || run.po !== "pending" || run.w < 42) { box.hidden = true; return; }
+  box.hidden = false;
+  box.innerHTML = `<b>📣 Call your playoff run</b><span class="note">Right calls pay tickets; a title call pays a gold pack and 16–0 a legend pack.</span>
+    <div class="seg pocalls" role="group">${PO_CALLS.map((t, i) => `<button data-poc="${i}" aria-pressed="${run.poPick === i}">${t}</button>`).join("")}</div>`;
+  box.querySelectorAll("[data-poc]").forEach(b => b.onclick = () => { run.poPick = run.poPick === +b.dataset.poc ? null : +b.dataset.poc; sfx("flip"); renderPoCall(run); });
+}
+function poCallAfter(run, log) {
+  if (run.poPick == null) return;
+  const out = run.champ ? (run.pl === 0 ? 5 : 4) : Math.min(3, run.reached), hit = CX.f.props || run.poPick === out;
+  run.poCall = { pick: run.poPick, out, hit };
+  if (!hit) { log.push([`📣 Playoff call: "${PO_CALLS[run.poPick]}" · it was "${PO_CALLS[out]}"`, 0]); return; }
+  xTix(PO_TIX[run.poPick]); gainXp(25);
+  log.push([`📣 Called it: ${PO_CALLS[run.poPick]} · +${PO_TIX[run.poPick]} 🎟`, 25]);
+  if (run.poPick === 5) { givePack("legend"); log.push(["📣 Called 16–0: a legend pack", 0]); toast("📣 <b>You called 16–0!</b> A legend pack"); }
+  else if (run.poPick === 4) { givePack("gold"); log.push(["📣 Called the title: a gold pack", 0]); }
 }
 function afterSeason(run, phase) {
   run.xpLog = run.xpLog || [];
@@ -3542,7 +3784,8 @@ function afterSeason(run, phase) {
     const xp = Math.round((20 + run.w + (run.w === 82 ? 150 : run.w >= 70 ? 25 : 0)) * m);
     log.push([`Season: ${run.w} wins${m > 1 ? ` (×${m.toFixed(2)} for rules)` : ""}`, xp]);
     gainXp(xp);
-    givePack("normal"); log.push(["Season reward: a pack of player cards", 0]);
+    if (evToday().id === "gold") { givePack("gold"); log.push(["Season reward (Gold Tuesday): a gold pack", 0]); }
+    else { givePack("normal"); log.push(["Season reward: a pack of player cards", 0]); }
     if (run.w === 82) { givePack("legend"); log.push(["82–0 reward: a legend pack", 0]); }
   } else {
     life.playoffWins += run.pw; if (run.champ) { life.titles++; if (run.hard) life.hardTitles++; }
@@ -3572,7 +3815,8 @@ function afterSeason(run, phase) {
   } catch (e) { logError(e && e.message, e && e.stack); }
   try { funAfter(run, phase, log); } catch (e) { logError(e && e.message, e && e.stack); }
   saveCareer();
-  if (run === curRun) { renderXpSummary(run); renderScoreCard(run); }
+  if (run === curRun) { renderXpSummary(run); renderScoreCard(run); try { renderRankAfter(run); renderPoCall(run); } catch (e) {} }
+  try { renderRankBox(); } catch (e) {}
   renderCareer(); renderChallenges(); renderCollection(); renderH2H();
   setTimeout(() => autoPost(true), 0); // after the season is saved
 }
@@ -3729,7 +3973,7 @@ function proofOf(r) {
     g7: (r.rounds || []).map(rd => rd.g && rd.g.length === 7 ? (rd.g[6][0] > rd.g[6][1] ? 1 : 0) : null) };
 }
 // Only seasons the server can replay go to the website's boards (old seasons from before tickets stay in your record book)
-const canPost = r => !r.cx && !r.dyn && (!LB_REST || !!r.tk || r.mode === "monthly");
+const canPost = r => !r.cx && !r.dyn && (!LB_REST || !!r.ss);
 
 async function submitRest() {
   const board = lbCurrentTab, best = lbBestForMode(board);
@@ -4128,6 +4372,10 @@ function updateLbSubmit() {
   const canSubmit = LB_REST ? !!best : !!(lbDb && lbWay && best);
   // Your name is typed in on the website, and by invited editors Claude doesn't name
   $("lbName").hidden = !(LB_REST || lbWay === "guest");
+  const mineB = lbMine[lbCurrentTab], better = !!(LB_REST && best && mineB && mineB.score >= lbScore(best));
+  $("lbSubmitBtn").hidden = better;
+  if (better) $("lbSubmitNote").textContent = `Your entry on this board${mineB.rec ? ` (${mineB.rec})` : ""} is ${fmtPts(mineB.score)} pts, better than any season you can post right now. Beat it and the new one replaces it by itself.`;
+  else if (/better than any season/.test($("lbSubmitNote").textContent)) $("lbSubmitNote").textContent = "";
   if (canSubmit) {
     $("lbSubmitWrap").hidden = false;
     if (lbCurrentTab === "hard") {
@@ -4427,7 +4675,7 @@ function rollRarity(odds) {
 function rollPack(kind) {
   const P = PACKS[kind], out = [], seen = new Set();
   for (let i = 0; i < 3; i++) {
-    const rar = CX.f.luck ? "legendary" : rollRarity(i === 0 && P.first ? P.first : P.odds);
+    const rar = CX.f.luck || (evToday().id === "lucky" && Math.random() < .1) ? "legendary" : rollRarity(i === 0 && P.first ? P.first : P.odds);
     let k, tries = 0;
     do { k = PACK_POOL[rar][Math.floor(Math.random() * PACK_POOL[rar].length)]; } while (seen.has(k) && ++tries < 20);
     seen.add(k);
@@ -4441,6 +4689,8 @@ function renderPackBar() {
   const n = packsHave(), daily = dailyReady();
   bar.hidden = !n && !daily;
   if ($("packBtn2")) $("packBtn2").hidden = !n && !daily;
+  if ($("packAll2")) { $("packAll2").hidden = n + (daily ? 1 : 0) < 2; $("packAll2").textContent = `⚡ Open all ${n + (daily ? 1 : 0)} packs`; $("packAll2").onclick = () => openAllPacks($("packAll2")); }
+  try { renderHeader(); } catch (e) {}
   const h = career.pack.have;
   const kinds = [["legend", "legend pack"], ["gold", "gold pack"], ["normal", "pack"]].filter(([k]) => h[k]).map(([k, l]) => `${h[k]} ${l}${h[k] === 1 ? "" : "s"}`);
   const total = n + (daily ? 1 : 0);
@@ -4544,6 +4794,7 @@ function showPack(anchor, kind, title, cards, xp, fresh) {
     if (flipped.size === 3) done();
   };
   $("mBox").querySelectorAll(".pcard").forEach(el => el.onclick = () => flip(el));
+  if ((packsHave() || dailyReady()) && !$("pkAll")) { $("pkReveal").insertAdjacentHTML("afterend", `<button class="btn" id="pkAll">⚡ Open all the rest</button>`); $("pkAll").onclick = () => { closeRun(); openAllPacks(anchor); }; }
   $("pkReveal").onclick = () => $("mBox").querySelectorAll(".pcard").forEach(flip);
   $("mClose").onclick = closeRun;
   $("mClose").focus({ preventScroll: true });
@@ -4929,8 +5180,8 @@ $("h2hFriendName").addEventListener("keydown", e => { if (e.key === "Enter") fin
    Hard Mode board, everything else on Normal. Inside Claude only the owner and invited editors can write. */
 let autoBusy = false;
 // Puts a season up as your entry on one board. Unless `replace` is set, an entry with as many points stays.
-async function postClaude(board, run, replace) {
-  if (run.cx || cxAny()) return { kept: true, score: lbScore(run), same: true };
+async function postClaude(board, run, replace, force) {
+  if (!force && (run.cx || cxAny())) return { kept: true, score: lbScore(run), same: true };
   const guest = lbWay === "guest", id = myDocId();
   if (!id) throw { code: "invalid_argument" };
   let name = guest ? String(store.get(KEY_LBNAME, "") || "").trim() : "";
@@ -5981,7 +6232,7 @@ function questEvent(ev, ...args) {
 }
 const questStreakNow = q => q.streak && (q.lastAll === q.day || q.lastAll === prevDay(q.day)) ? q.streak : 0;
 function renderQuests() {
-  try { renderBingo(); } catch (e) {}
+  try { renderBingo(); renderRankBox(); applyCourt(); } catch (e) {}
   const box = $("qList");
   if (!box) return;
   const q = questState(), n = q.list.filter(it => it.done).length, st = questStreakNow(q);
@@ -6723,6 +6974,7 @@ const xGotd = () => XG[hashStr("gotd:" + dayPT()) % XG.length];
 const xSpinReady = () => !!CX.f.wheel || xState().spinDay !== dayPT();
 function xTix(n, why) {
   const a = xState();
+  if (n > 0 && evToday().id === "tix2") n *= 2;
   a.tix = Math.max(0, a.tix + n);
   if (n > 0) a.tixTotal += n;
   saveCareer();
@@ -12199,6 +12451,13 @@ function boot() {
     toast(`🗓️ The Daily Draft is now the <b>Monthly Draft</b>: the same five rolls for everyone all month, one try a day, and your best try is your spot on the month's board.${st > 1 && monthlyState().last >= prevDay(dayPT()) ? ` Your ${st}-day streak came with it.` : ""}`);
   }
   career.seen37 = 1;
+  // Version 48: court colors, playoff calls, open all from the top
+  if (seeded === null && runs.length && !career.seen48) toast(`🆕 <b>Rank up to unlock 🎨 court colors</b> for the whole site, 📣 call your playoff run for packs, and tap the 🎁 chip at the top to open every pack at once.`);
+  career.seen48 = 1;
+  // Version 47: ranked and daily events
+  if (seeded === null && runs.length && !career.seen47) toast(`🆕 <b>Ranked is here:</b> every season moves you from 🥉 Bronze up to 👑 Legend, with a pack for every promotion. Plus a new event every day (today: ${evToday().icon} ${evToday().name}) and 🏋️ card training with Arcade tickets.`);
+  else if (seeded === null && career.evSeen !== dayPT()) toast(`${evToday().icon} <b>Today: ${evToday().name}</b> · ${evToday().text}`);
+  career.seen47 = 1; career.evSeen = dayPT();
   // Version 46: props, bingo, sets, open all, and seasons the server replays
   if (seeded === null && runs.length && !career.seen46) toast(`🆕 <b>New:</b> 🔮 Season props before every tip-off, 🎯 Season Bingo, 🏆 Legendary sets in your collection, ☀️ double XP on your first season each day, 🎰 a mystery bonus after every season and ⚡ Open all packs. The leaderboard now replays every season to check it.`);
   career.seen46 = 1;

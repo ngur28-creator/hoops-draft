@@ -32,6 +32,10 @@
 // its picks. The server replays the whole draft and season with the game's own code (engine.mjs) and posts what
 // really happened: a record, a lineup that wasn't rolled, or a forged or borrowed ticket gets turned away. The
 // Monthly Draft is seeded by its day, so it replays the same way without a ticket.
+// The season itself is seeded separately, and only once the lineup is final: the page sends its finished draft
+// (POST { action: "season", ... }) and gets back a season seed only the server can work out. One lineup per draft
+// ticket, so nobody can try lineups against a known seed. The owner can post any season with the owner key
+// (only its SHA-256 is kept here).
 //
 // Storage (one Netlify Blobs store):
 //   e/<board>/<id>                                        full entry (each player only ever writes their own)
@@ -101,6 +105,34 @@ async function secret(store) {
   if (process.env.HOOPS_TK_SECRET) return (SECRET = process.env.HOOPS_TK_SECRET);
   await store.set("k/secret", randomBytes(32).toString("hex"), { onlyIfNew: true });
   return (SECRET = await store.get("k/secret"));
+}
+const OWNER_HASH = "8764e8fb64200365ce42422f114898120026aa3f408f1189600d85ab58346fe5";
+// The site owner can put a season on the Normal or Hard Mode board without a replay (only the key's hash lives here)
+const isOwner = k => typeof k === "string" && k.length < 100 && [OWNER_HASH, process.env.HOOPS_OWNER_HASH].includes(createHash("sha256").update(k).digest("hex"));
+// What fixes a season: the mode, the Monthly day, every roll and pick, the five in their spots and their card boosts
+function canonOf(r, mode) {
+  const players = Array.isArray(r.players) ? r.players.slice(0, 5).map(p => [p && p.slot, p && p.dec, p && p.team, p && p.name].map(v => String(v ?? "").slice(0, 60))) : [];
+  const log = Array.isArray(r.log) ? r.log.slice(0, 40).map(v => String(v).slice(0, 20)) : [];
+  const cb = Array.isArray(r.cb) ? r.cb.slice(0, 5).map(Number) : [];
+  return JSON.stringify({ m: mode, d: mode === "monthly" ? String(r.day ?? "").slice(0, 10) : "", log, players, cb });
+}
+async function seasonSeedFor(store, seed, c) { return sign(await secret(store), "season|" + (seed || "") + "|" + c); }
+// The page's finished draft in, its season seed out
+async function seasonSeed(store, body) {
+  const mode = ["free", "speed", "monthly"].includes(body.mode) ? body.mode : null;
+  if (!mode) return reply({ error: "Bad request" }, 400);
+  let seed = null;
+  try {
+    if (mode === "monthly") { if (![dayPT(-1), dayPT(0), dayPT(1)].includes(body.day)) throw "That Monthly Draft day is over."; }
+    else seed = await ticketSeed(store, body.tk);
+  } catch (msg) { return reply({ error: msg }, 400); }
+  const c = canonOf(body, mode);
+  if (seed) {
+    const prev = await store.get(`ss/${seed}`, { type: "json" });
+    if (prev && prev.c !== c) return reply({ error: "That draft already tipped off with a different lineup." }, 409);
+    if (!prev) await store.setJSON(`ss/${seed}`, { c });
+  }
+  return reply({ ss: await seasonSeedFor(store, seed, c) });
 }
 const sign = (key, msg) => createHmac("sha256", key).update(msg).digest("hex").slice(0, 32);
 async function newTicket(store) {
@@ -178,6 +210,7 @@ async function submit(req, store) {
   if (text.length > 20000) return reply({ error: "That submission is too big." }, 413);
   let body;
   try { body = JSON.parse(text); } catch { return reply({ error: "Bad request" }, 400); }
+  if (body && body.action === "season") return seasonSeed(store, body);
   const { board: kind, token } = body || {};
   if (!KINDS.has(kind) && !xCap(kind)) return reply({ error: "Unknown board" }, 400);
   // A Daily Draft or Mystery Player entry is for today (in California), or the day either side of it; a Monthly
@@ -210,11 +243,19 @@ async function submit(req, store) {
       // Replay the draft and season and use what really happened
       const mode = kind === "monthly" ? "monthly" : kind === "speed" ? "speed" : "free";
       if (mode === "monthly" && !(typeof sent.day === "string" && sent.day.slice(0, 7) === month)) throw "That try isn't from this month's Monthly Draft.";
-      if (mode !== "monthly") seed = await ticketSeed(store, sent.tk);
-      const real = replaySeason(sent, mode, seed);
-      if (real.w !== run.w || (sent.po === true && (real.champ !== run.champ || real.pw !== run.pw || real.pl !== run.pl))) throw "That season doesn't match its replay, so it can't go on the board.";
-      Object.assign(run, { w: real.w, l: real.l, pf: real.pf, pa: real.pa, pw: real.pw, pl: real.pl, reached: real.reached, champ: real.champ, players: real.players,
-        box: real.players.map((p, i) => ({ ...p, ...real.box[i] })) });
+      // The owner's season goes up as sent (still checked for real players and a possible record)
+      if (!(BOARDS.has(kind) && isOwner(body.owner))) {
+        if (mode !== "monthly") seed = await ticketSeed(store, sent.tk);
+        const c = canonOf(sent, mode);
+        if (seed) {
+          const tipped = await store.get(`ss/${seed}`, { type: "json" });
+          if (!tipped || tipped.c !== c) throw "That season didn't tip off with the server, so it can't be checked.";
+        }
+        const real = replaySeason(sent, mode, seed, await seasonSeedFor(store, seed, c));
+        if (real.w !== run.w || (sent.po === true && (real.champ !== run.champ || real.pw !== run.pw || real.pl !== run.pl))) throw "That season doesn't match its replay, so it can't go on the board.";
+        Object.assign(run, { w: real.w, l: real.l, pf: real.pf, pa: real.pa, pw: real.pw, pl: real.pl, reached: real.reached, champ: real.champ, players: real.players,
+          box: real.players.map((p, i) => ({ ...p, ...real.box[i] })) });
+      }
       if (!daily && run.hard !== (kind === "hard")) {
         return reply({ error: kind === "hard" ? "Only hard mode (blind picks) seasons go on the Hard Mode board." : "Hard mode seasons go on the Hard Mode board." }, 400);
       }
