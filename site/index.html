@@ -431,6 +431,29 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
 .cxr > span { flex: 1 1 180px; min-width: 0; }
 .chip.cxo { background: #13894a; color: #fff; border-color: #13894a; }
 .prow.cxbest { box-shadow: inset 4px 0 0 #2bd67b; }
+.props { border: 1px dashed rgba(127,127,127,.5); border-radius: 12px; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+.props .phead { display: flex; flex-direction: column; gap: 2px; }
+.props .prop { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 10px; }
+.props .prop > span { flex: 1 1 200px; }
+.props select { font: inherit; padding: 5px 8px; border-radius: 8px; max-width: 100%; }
+.bingo { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; max-width: 480px; }
+.bsq { border: 2px solid rgba(127,127,127,.35); border-radius: 10px; padding: 8px 6px; min-height: 62px; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 12.5px; font-weight: 600; line-height: 1.2; background: rgba(127,127,127,.06); }
+.bsq.got { background: linear-gradient(135deg, #2bd67b, #13894a); color: #fff; border-color: #13894a; }
+.bsq.free { background: linear-gradient(135deg, #ffb36b, #ff6a2b); color: #fff; border-color: #ff6a2b; font-weight: 800; letter-spacing: .08em; }
+.bsq.flash { animation: bflash .7s ease-out; }
+@keyframes bflash { from { transform: scale(1.15); box-shadow: 0 0 0 6px rgba(43,214,123,.5); } }
+.setsgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; margin: 6px 0; }
+.setc { display: flex; flex-direction: column; gap: 5px; padding: 9px 11px; border: 1px solid rgba(127,127,127,.3); border-radius: 10px; }
+.setc.ready { border: 2px solid #e2a400; box-shadow: 0 0 14px rgba(226,164,0,.35); }
+.setc.done { opacity: .6; }
+.pall { display: grid; grid-template-columns: repeat(auto-fill, minmax(116px, 1fr)); gap: 8px; max-height: 62vh; overflow: auto; padding: 2px; margin-top: 8px; }
+.pmini { position: relative; display: flex; flex-direction: column; gap: 2px; padding: 8px; border-radius: 10px; border: 2px solid rgba(127,127,127,.35); background: rgba(127,127,127,.07); font-size: 12.5px; line-height: 1.2; }
+.pmini .pr { font-weight: 800; font-size: 18px; }
+.pmini .pt { opacity: .7; font-size: 11.5px; }
+.pmini .pnew { position: absolute; top: 6px; right: 6px; font-size: 10px; font-weight: 800; background: #13894a; color: #fff; border-radius: 6px; padding: 1px 5px; }
+.pmini.legendary { border-color: #e2a400; background: linear-gradient(135deg, #fff4c2, #ffd76a); color: #3a2a00; }
+.pmini.epic { border-color: #8a4fe0; background: linear-gradient(135deg, #f0e6ff, #d7bfff); color: #2a1150; }
+.pmini.rare { border-color: #2f6fe0; }
 /* Card levels: tier colors (text, border, fill) for light and dark */
 .lvchip i { font-style: normal; font-weight: 900; opacity: .9; } .lvboost { color: var(--win); }
 .lvchip, .lvcard { --tc: var(--muted); --tb: var(--line); --tf: none; }
@@ -978,6 +1001,9 @@ body.xplaying .toast { pointer-events: none; opacity: .88; }
     <div class="chs quests" id="qList"></div>
     <div class="head"><h2>Challenges</h2><span class="label" id="chSum"></span></div>
     <div class="chs" id="chList"></div>
+    <div class="head"><h2>🎯 Season Bingo</h2><span class="label" id="bgSum"></span></div>
+    <div class="bingo" id="bgGrid"></div>
+    <p class="note" id="bgNote"></p>
   </section>
 
   <section class="panel lineup" id="lineupPanel" aria-label="Your starting five">
@@ -1029,6 +1055,7 @@ body.xplaying .toast { pointer-events: none; opacity: .88; }
     <span class="label" id="simRules"></span>
     <div class="grades" id="projGrades"></div>
     <div class="chem" id="chem"></div>
+    <div class="props" id="propBox"></div>
     <div class="row-gap">
       <button class="btn primary" id="simBtn">Tip off the season</button>
       <div class="speed"><span class="label">Sim speed</span><div class="seg" role="group" aria-label="Sim speed" id="speedSeg"></div></div>
@@ -1130,6 +1157,7 @@ body.xplaying .toast { pointer-events: none; opacity: .88; }
     <div class="head"><h2>Collection</h2><span class="label" id="collSum"></span></div>
     <p class="note">Every player you draft joins your collection for good. Players you've never drafted are marked New on the roster.</p>
     <div class="collbars" id="collBars"></div>
+    <div class="cgroup" id="collSets"></div>
     <div class="cgroup" id="collCards"></div>
     <div class="cgroup" id="collChase"></div>
     <div class="cgroup" id="collRecent"></div>
@@ -1210,7 +1238,7 @@ body.xplaying .toast { pointer-events: none; opacity: .88; }
 <div class="toast" id="toast" hidden role="status"></div>
 
 <script>
-const APP_VERSION = 45;
+const APP_VERSION = 46;
 // How leaderboard points are counted. Version 1 also counted team rating; entries saved under it are re-scored when shown.
 const SCORE_V = 2;
 // Anything that goes wrong is noted (last 20, in this browser and in your private cloud save) so it can be fixed
@@ -1286,7 +1314,8 @@ function fresh() {
   // Rules and hard mode are for free play; the Monthly Draft has no re-draws, so everyone sees the same five rolls
   const rules = mode === "free" ? (career.rules || []).filter(id => ruleUnlocked(id)) : [];
   S = { lineup: { PG: null, SG: null, SF: null, PF: null, C: null }, draw: null, teamRedraw: 1, eraRedraw: 1, spinning: false, done: false, mode, day: mode === "monthly" ? dayPT() : todayKey(), drawCount: 0,
-    rules, lockDec: null, lockName: null, redrawsUsed: 0, draftXp: 0 };
+    rules, lockDec: null, lockName: null, redrawsUsed: 0, draftXp: 0, log: [], tk: null };
+  if (mode === "free" || mode === "speed") S.tk = tkTake();
   if (rules.includes("noredraw") || mode === "monthly" || mode === "speed") S.teamRedraw = S.eraRedraw = 0;
   if (mode === "monthly") S.month = monthOf(S.day);
   if (mode === "speed") { S.speedLeft = []; S.speedAt = null; }
@@ -1296,7 +1325,7 @@ const hasRule = id => !!(S && S.rules && S.rules.includes(id));
 const picks = () => SLOTS.filter(k => S.lineup[k]).length;
 const drafted = id => SLOTS.some(k => S.lineup[k] && S.lineup[k].id === id);
 const openSlots = () => SLOTS.filter(k => !S.lineup[k]);
-const pickable = p => !drafted(p.id) && openSlots().length > 0 && !ruleBlock(p);
+const pickable = p => (!!CX.f.dup || !drafted(p.id)) && openSlots().length > 0 && !ruleBlock(p);
 // Why a rule stops you drafting this player, or "" if it doesn't
 function ruleBlock(p) {
   if (hasRule("budget") && p.ovr > 85) return "Over budget";
@@ -1312,9 +1341,41 @@ function fitLabel(p, slot) {
   return `<span class="fit ${d === 1 ? "meh" : "bad"}">Out of position −${PEN[d]}</span>`;
 }
 // Seeded draws in the Monthly Draft: the same five rolls for everyone all month
+/* ---------- Season tickets ----------
+   On the website every draft starts from a ticket the server signs: a random seed. The rolls, the season and
+   the playoffs all come from it, so the server replays the whole draft and season and only posts what really
+   happened. A page can't fake a record, a lineup it never rolled, or a ticket. */
+var TK = null, TK_BUSY = false;
+const tkSeedOf = t => String(t || "").split(".")[0];
+function tkFetch() {
+  if (TK || TK_BUSY || typeof LB_REST === "undefined" || !LB_REST) return;
+  TK_BUSY = true;
+  fetch(LB_API + "?ticket=1", { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(d => {
+    TK_BUSY = false;
+    if (!d || typeof d.tk !== "string") return;
+    TK = d.tk;
+    try { localStorage.setItem("hoops82.tk", TK); } catch (e) {}
+    tkAdopt();
+  }).catch(() => { TK_BUSY = false; });
+}
+// A fresh draft that started before the ticket came: start it from the ticket (nothing picked or re-drawn yet)
+function tkAdopt(n = 0) {
+  if (!TK || !S || S.tk || S.mode !== "free" || S.done || S.locked || S.cx || picks() || S.redrawsUsed) return;
+  if (S.spinning) { if (n < 20) setTimeout(() => tkAdopt(n + 1), 250); return; }
+  S.tk = tkTake(); S.drawCount = 0; S.log = []; newDraw();
+}
+function tkTake() {
+  if (!TK) { try { TK = localStorage.getItem("hoops82.tk") || null; } catch (e) {} }
+  const t = TK;
+  TK = null;
+  try { localStorage.removeItem("hoops82.tk"); } catch (e) {}
+  setTimeout(tkFetch, 0);
+  return t ? { t, s: tkSeedOf(t) } : null;
+}
 function seeded(fn) {
   const prev = R;
   if (S.mode === "monthly") R = mulberry32(hashStr((S.month || monthOf(S.day)) + ":monthly:" + S.drawCount));
+  else if (S.tk) R = mulberry32(hashStr(S.tk.s + ":draw:" + S.drawCount));
   try { return fn(); } finally { R = prev; S.drawCount++; }
 }
 
@@ -1395,12 +1456,20 @@ function allowedDraws() {
   return opts.length ? opts : ALL_DRAWS.filter(x => hasPickable(x.dec, x.fid));
 }
 let goldenRoll = false;
+// The next roll: "n" a new one, "t" a re-drawn team, "e" a re-drawn era
+function rollNext(kind) {
+  if (kind === "t") return seeded(() => rnd(teamOpts()));
+  if (kind === "e") return seeded(() => rnd(eraOpts()));
+  const opts = allowedDraws();
+  const gold = opts.filter(x => LEGENDS.some(t => t.key === x.dec + "|" + x.fid));
+  return seeded(() => { goldenRoll = gold.length > 0 && (R() < 1 / 16 || !!CX.f.gold); return rnd(goldenRoll ? gold : opts); });
+}
 function newDraw() {
   const opts = allowedDraws();
   // About one roll in 16 is golden: one of the 24 legendary rosters (when your rules allow it)
   const gold = opts.filter(x => LEGENDS.some(t => t.key === x.dec + "|" + x.fid));
   // R is seeded in the Monthly Draft, so golden rolls land the same for everyone
-  spin(seeded(() => { goldenRoll = gold.length > 0 && (R() < 1 / 16 || !!CX.f.gold); return rnd(goldenRoll ? gold : opts); }));
+  spin(rollNext("n"));
 }
 // Re-draw team: another franchise from the same decade (blocked once Franchise lock has locked in)
 const teamOpts = () => !S.draw || S.lockName ? [] : allowedDraws().filter(x => x.dec === S.draw.dec && x.fid !== S.draw.fid);
@@ -1410,7 +1479,8 @@ function redrawTeam() {
   if (!opts.length) return;
   if (!CX.f.redraw) { S.teamRedraw--; S.redrawsUsed++; } else S.cx = 1;
   goldenRoll = false;
-  spin(seeded(() => rnd(opts)));
+  (S.log || (S.log = [])).push("T");
+  spin(rollNext("t"));
 }
 // Re-draw era: the same franchise name from another decade (blocked once Era lock has locked in)
 const eraOpts = () => {
@@ -1424,7 +1494,8 @@ function redrawEra() {
   if (!opts.length) return;
   if (!CX.f.redraw) { S.eraRedraw--; S.redrawsUsed++; } else S.cx = 1;
   goldenRoll = false;
-  spin(seeded(() => rnd(opts)));
+  (S.log || (S.log = [])).push("E");
+  spin(rollNext("e"));
 }
 function flash(slot) {
   const el = document.querySelector(`.slot[data-slot="${slot}"]`);
@@ -1439,6 +1510,7 @@ function draft(p, slot) {
     if (hasRule("franlock")) S.lockName = team;
   }
   const isNew = !career.coll[collKey(S.draw.dec, team, p.name)];
+  (S.log || (S.log = [])).push(p.id);
   S.lineup[slot] = { ...p, dec: S.draw.dec, fid: S.draw.fid, team, fresh: isNew };
   if (isNew) collectPlayer(S.lineup[slot]);
   render(); flash(slot);
@@ -1578,6 +1650,7 @@ function renderProjection(hard) {
     `<div class="grade"><span class="label">${k}</span><b>${hard ? "?" : letter(v)}</b><span class="foot">${hard ? "hidden" : v.toFixed(1)}</span></div>`).join("");
   $("chem").innerHTML = hard ? "" : r.notes.map(([c, t]) => `<span class="tag ${c}">${t}</span>`).join("");
   if (CX.f.oracle) { const pj = cxProj(S.lineup, 300); $("chem").insertAdjacentHTML("beforeend", `<span class="tag good cxo">≈${pj.ew.toFixed(1)} wins · 82–0 chance ${cxPct(pj.p82)}</span>`); }
+  if (career.firstDay !== todayKey()) $("chem").insertAdjacentHTML("beforeend", `<span class="tag good">☀️ First season today: double XP</span>`);
   $("speedSeg").innerHTML = [["normal", "Normal"], ["fast", "Fast"], ["instant", "Instant"]].map(([k, l]) => `<button data-s="${k}" aria-pressed="${speed === k}">${l}</button>`).join("");
   $("speedSeg").querySelectorAll("button").forEach(b => b.onclick = () => { speed = b.dataset.s; store.set(KEY_SPEED, speed); renderProjection(hard); });
 }
@@ -1610,7 +1683,7 @@ function renderInner() {
   const noDraft = S.mode === "duel" || S.mode === "arcade";
   $("lineupPanel").hidden = noDraft;
   if (noDraft || S.locked || S.offseason) { $("drawPanel").hidden = $("simPanel").hidden = true; $("seasonPanel").hidden = !S.done || noDraft; return; }
-  if (full) { if (!S.done) renderProjection(hard); return; }
+  if (full) { if (!S.done) { renderProjection(hard); renderProps(hard); } return; }
   $("pickNo").textContent = `Pick ${picks() + 1} / 5`;
   $("rTeam").disabled = S.spinning || (!S.teamRedraw && !CX.f.redraw) || !S.draw || !teamOpts().length;
   $("rEra").disabled = S.spinning || (!S.eraRedraw && !CX.f.redraw) || !S.draw || !eraOpts().length;
@@ -1634,7 +1707,7 @@ function renderInner() {
    Only opens with five quick taps on the dash in the title plus a code. Nothing here is saved: reloading turns it
    all off. While anything is on, nothing posts to any board, and every season played with it on is tagged so it
    never posts later either. */
-const CX = { ok: false, boost: 0, f: { oracle: 0, redraw: 0, gold: 0, xray: 0, win: 0, hot: 0, diamond: 0, monthly: 0, rules: 0, slow: 0, x2: 0, wheel: 0, hol: 0, po: 0, stats: 0, inf: 0, easy: 0 }, rec: null };
+const CX = { ok: false, boost: 0, f: { oracle: 0, redraw: 0, gold: 0, xray: 0, win: 0, hot: 0, diamond: 0, monthly: 0, rules: 0, slow: 0, x2: 0, wheel: 0, hol: 0, po: 0, stats: 0, inf: 0, easy: 0, luck: 0, props: 0, dup: 0, clutch: 0 }, rec: null };
 const cxAny = () => CX.boost > 0 || CX.rec != null || Object.values(CX.f).some(Boolean);
 let cxForce = null; // true/false: the next game must be a win/loss
 const cxMark = () => { if (S && cxAny()) S.cx = 1; };
@@ -1788,6 +1861,10 @@ function cxPanel() {
     ${T("diamond", "💎 Every card Diamond", "all your players get the Diamond +3")}
     ${T("monthly", "📅 Unlimited Monthly Draft tries", "")}
     ${T("rules", "🧪 Every challenge rule unlocked", "")}
+    ${T("clutch", "🎯 Can't-miss Game 7 shots", "a huge, slow green zone on every last shot")}
+    ${T("props", "🔮 Props always hit", "every season prop you call comes true")}
+    ${T("dup", "👯 Same player twice", "draft one player into more than one spot")}
+    <div class="cxrow">${B("resim", "🔁 Replay this five", S && S.done && picks() === 5 ? "" : " disabled")}${B("bline", "🎯 Fill a bingo line")}${B("bfull", "🎯 Clear the bingo card")}</div>
     <h4>Arcade</h4>
     ${T("slow", "🐢 Slow motion", "the canvas games run at half speed")}
     ${T("x2", "✖️ Double scores", "")}
@@ -1796,7 +1873,9 @@ function cxPanel() {
     ${T("inf", "❤️ Infinite lives", "misses never cost a life in the canvas games")}
     ${T("easy", "🎯 Easy mini-games", "a huge, slow green zone in Buzzer Beater and a frozen Speed Draft clock")}
     <div class="cxrow">${B("xmax", "💯 Max score this game")}${B("stars", "⭐ 3 stars on every game")}</div>
-    <div class="cxrow">${B("tix", "🎟 +500 tickets")}${B("pack", "👑 Free Legend pack")}${B("packs", "👑 ×10 Legend packs")}${B("xp", "✨ +5,000 XP")}</div>
+    ${T("luck", "🍀 Lucky packs", "every card you pull is a Legend")}
+    <div class="cxrow">${B("tix", "🎟 +500 tickets")}${B("tix5k", "🎟 +5,000 tickets")}${B("pack", "👑 Free Legend pack")}${B("packs", "👑 ×10 Legend packs")}${B("packs25", "🎁 +25 of every pack")}</div>
+    <div class="cxrow">${B("openall", "⚡ Open every pack now")}${B("sets", "🏆 Finish every legendary set")}${B("xp", "✨ +5,000 XP")}${B("lv10", "⬆️ +10 levels")}</div>
     ${myst ? `<p class="cxn">🕵️ Today's Mystery Player: <b>${esc(myst)}</b></p>` : ""}
     <div class="cxrow">${B("off", "Turn everything off")}${B("close", "Close")}</div></div>`;
   el.scrollTop = keep;
@@ -1817,6 +1896,18 @@ function cxPanel() {
     else if (a === "god") { Object.assign(CX.f, { oracle: 1, redraw: 1, gold: 1, win: 1, po: 1, hot: 1, stats: 1, diamond: 1 }); CX.boost = Math.max(CX.boost, 15); CX.rec = null; cxAfter("god"); return; }
     else if (a === "sneaky") { CX.rec = 82; CX.f.po = 1; CX.f.win = 0; cxAfter("sneaky"); return; }
     else if (a === "packs") givePack("legend", 10);
+    else if (a === "packs25") { givePack("normal", 25); givePack("gold", 25); givePack("legend", 25); }
+    else if (a === "tix5k") { xTix(5000); saveCareer(); }
+    else if (a === "openall") { el.hidden = true; openAllPacks(document.body); return; }
+    else if (a === "lv10") { for (let i = 0; i < 10; i++) { const L = levelOf(career.xp); gainXp(L.need - L.into); } }
+    else if (a === "sets") { for (const x of setsList()) x.keys.forEach(k => { if (!career.coll[k]) career.coll[k] = Math.floor(Date.now() / 1000); }); collCache = null; saveCareer(); renderCollection(); }
+    else if (a === "bline" || a === "bfull") {
+      const bs = bingoState(), log = [];
+      if (a === "bfull") bs.got = bs.got.map(() => 1);
+      else { const ln = BINGO_LINES.find(l => !l.every(j => bs.got[j])); if (ln) ln.forEach(j => { bs.got[j] = 1; }); }
+      bingoPay(log); saveCareer();
+    }
+    else if (a === "resim") { if (S && S.done && picks() === 5 && !simRunning) { el.hidden = true; S.cx = 1; S.done = false; resetPlayoffs(); $("afterPanel").hidden = true; render(); simulate(); } return; }
     else if (a === "xmax") { if (X && !X.done && X.s) { X.cx = 1; X.s.score = X.g.cap; el.hidden = true; xFinish(); } return; }
     else if (a === "stars") { for (const g of XG) if (g.cat !== "classic" && g.cap) xG(g.id).stars = 3; saveCareer(); }
     else if (a === "best") { if (cxCanDraft() && picks() < 5 && S.draw) { const v = cxPickVals(DATA[S.draw.dec][S.draw.fid].players), p = v.best && DATA[S.draw.dec][S.draw.fid].players.find(x => x.id === v.best); if (p) { S.cx = 1; draft(p, v.get(p.id).k); } } }
@@ -1936,13 +2027,14 @@ function playerGame(mean, won) {
   };
 }
 function seasonRng() {
-  if (S.mode !== "monthly") return Math.random;
+  if (S.mode !== "monthly") return S.tk ? mulberry32(hashStr("tk:" + S.tk.s + ":season")) : Math.random;
   return mulberry32(hashStr(S.day + ":season:" + SLOTS.map(k => k + S.lineup[k].id + S.lineup[k].dec).join("|")));
 }
 
 let lastResult = "", curRun = null, poRunning = false, simRunning = false;
 function simulate() {
   if (simRunning) return;
+  S.propLock = S.props && S.propLines ? { picks: { ...S.props }, lines: { ...S.propLines } } : null;
   cxMark();
   simRunning = true;
   S.done = true; render(); resetPlayoffs();
@@ -2132,6 +2224,10 @@ function finishSeason(w, l, res) {
   const { pf, pa, home, away, r } = res;
   const run = makeRun(res, S.lineup, { hard: $("hardmode").checked, rules: S.rules || [], redraws: S.redrawsUsed || 0 });
   if (S.cx || cxAny()) run.cx = 1;
+  // What the server needs to replay it: the ticket, every roll and pick, the card boosts, the rules, the day
+  if (S.propLock) run.props = S.propLock;
+  run.tk = S.tk ? S.tk.t : null; run.log = (S.log || []).slice(); run.day = S.day;
+  { const LC = withCards(S.lineup, S.mode); run.cb = SLOTS.map(k => (LC[k] && LC[k].cb) || 0); }
   const news = seasonNews(res, run);
   run.news = news;
   $("news").innerHTML = newsList(news);
@@ -2291,7 +2387,7 @@ async function playoffsInner() {
   $("poSeed").textContent = `#${curRun.seed} seed`;
   const r = curRes ? curRes.r : teamRatings(withCards(S.lineup, S.mode)), rounds = [];
   // In the Monthly Draft the playoffs are seeded too (the same team on the same day gets the same bracket); only your Game 7 shots differ
-  const poR = curRun.mode === "monthly" ? mulberry32(hashStr(`${curRun.day}:po:${SLOTS.map(k => S.lineup[k].id + S.lineup[k].dec).join("|")}`)) : null;
+  const poR = curRun.mode === "monthly" ? mulberry32(hashStr(`${curRun.day}:po:${SLOTS.map(k => S.lineup[k].id + S.lineup[k].dec).join("|")}`)) : curRun.tk ? mulberry32(hashStr("tk:" + tkSeedOf(curRun.tk) + ":po")) : null;
   const withR = f => { if (!poR) return f(); const prev = R; R = poR; try { return f(); } finally { R = prev; } };
   let pw = 0, pl = 0, reached = 0, champ = false;
   for (let i = 0; i < 4; i++) {
@@ -2763,6 +2859,7 @@ function collectPlayer(p) {
 }
 let chaseKeys = null;
 function renderCollection() {
+  try { renderSets(); } catch (e) {}
   const c = collStats();
   $("collSum").textContent = `${fmtPts(c.total)} players · ${c.by.legendary} of ${RARITY_TOTALS.legendary} legends`;
   const bars = [["legendary", "Legends", "95+"], ["epic", "Epics", "90–94"], ["rare", "Stars", "80–89"], ["common", "Role players", "under 80"]];
@@ -3267,6 +3364,170 @@ const ACH_BY_ID = Object.fromEntries(ACH.map(a => [a.id, a]));
 const ACH_BY_CAT = ACH_CATS.map((_, ci) => ACH.filter(a => a.cat === ci));
 
 /* ---------- After each season and each playoff run ---------- */
+/* ---------- Season Props ----------
+   Before tip-off, call four things about the season: wins over/under, the longest win streak, whether anyone
+   scores 50 in a game, and the MVP. Each one you get right pays tickets and XP; all four right is a gold pack. */
+const PROP_TIX = 8, PROP_XP = 15;
+function propLines(hard) {
+  if (hard) return { wins: 60.5, streak: 14.5 };
+  const p = Math.min(.995, cxPWin(teamRatings(withCards(S.lineup, S.mode)), true));
+  const wins = Math.max(10.5, Math.min(81.5, Math.round(82 * p) - .5));
+  const n = 82 * (1 - p), L = n <= 1 ? 60 : Math.log(n) / Math.log(1 / p);
+  return { wins, streak: Math.max(3.5, Math.min(70.5, Math.round(L) + .5)) };
+}
+function renderProps(hard) {
+  const box = $("propBox");
+  if (!box || !S) return;
+  const P = S.props || (S.props = {}), ln = propLines(hard);
+  const seg = (k, opts) => `<div class="seg" role="group">${opts.map(([v, l]) => `<button data-pk="${k}" data-pv="${v}" aria-pressed="${P[k] === v}">${l}</button>`).join("")}</div>`;
+  const five = SLOTS.map(k => S.lineup[k]).filter(Boolean);
+  const n = ["wins", "streak", "fifty", "mvp"].filter(k => P[k] != null).length;
+  box.innerHTML = `<div class="phead"><b>🔮 Season props</b><span class="note">Call it before tip-off: +${PROP_TIX} 🎟 for each one you get right, all four = a gold pack${n ? ` · ${n} called` : ""}</span></div>
+    <div class="prop"><span>Wins: over or under <b>${ln.wins}</b>?</span>${seg("wins", [["o", "Over"], ["u", "Under"]])}</div>
+    <div class="prop"><span>Longest win streak: over or under <b>${ln.streak}</b>?</span>${seg("streak", [["o", "Over"], ["u", "Under"]])}</div>
+    <div class="prop"><span>Does anyone score <b>50</b> in a game?</span>${seg("fifty", [["y", "Yes"], ["n", "No"]])}</div>
+    <div class="prop"><span>Season <b>MVP</b>?</span><select id="propMvp" aria-label="Season MVP pick"><option value="">Pick one…</option>${five.map(p => `<option value="${esc(p.name)}"${P.mvp === p.name ? " selected" : ""}>${esc(p.name)}</option>`).join("")}</select></div>`;
+  box.querySelectorAll("[data-pk]").forEach(b => b.onclick = () => { P[b.dataset.pk] = P[b.dataset.pk] === b.dataset.pv ? null : b.dataset.pv; sfx("flip"); renderProps(hard); });
+  $("propMvp").onchange = () => { P.mvp = $("propMvp").value || null; renderProps(hard); };
+  S.propLines = ln;
+}
+function propsResult(run) {
+  const P = run.props;
+  if (!P || !P.picks) return null;
+  const { picks: k, lines: ln } = P, out = [];
+  if (k.wins) out.push(["wins", (run.w > ln.wins) === (k.wins === "o")]);
+  if (k.streak) out.push(["streak", (run.streak > ln.streak) === (k.streak === "o")]);
+  if (k.fifty) out.push(["fifty", (feat(run, "maxPts") >= 50) === (k.fifty === "y")]);
+  if (k.mvp) out.push(["mvp", run.mvp === k.mvp]);
+  if (CX.f.props) out.forEach(x => { x[1] = true; });
+  return out.length ? out : null;
+}
+
+/* ---------- Season Bingo ----------
+   A 3×3 card of things to do in a season (the middle is free). Squares stay marked across seasons; every line
+   is a gold pack, the whole card two legend packs, then a new card. */
+const BINGO = [
+  ["w60", "Win 60+", r => r.w >= 60], ["w70", "Win 70+", r => r.w >= 70], ["w76", "Win 76+", r => r.w >= 76],
+  ["st20", "20-game win streak", r => r.streak >= 20], ["st35", "35-game win streak", r => r.streak >= 35],
+  ["td", "A triple-double", r => feat(r, "td") >= 1], ["td12", "12 triple-doubles", r => feat(r, "td") >= 12],
+  ["p50", "A 50-point game", r => feat(r, "maxPts") >= 50], ["r25", "A 25-rebound game", r => feat(r, "maxReb") >= 25],
+  ["a18", "An 18-assist game", r => feat(r, "maxAst") >= 18], ["b9", "A 9-block game", r => feat(r, "maxBlk") >= 9],
+  ["ot", "Win in overtime", r => feat(r, "otWins") >= 1], ["big40", "Win by 40+", r => feat(r, "bigWin") >= 40],
+  ["s145", "Score 145 in a game", r => feat(r, "maxScore") >= 145], ["hold80", "Hold a team under 80", r => feat(r, "minAllowed") < 80],
+  ["home41", "Go 41–0 at home", r => !!r.home && r.home[0] === 41], ["road36", "36+ road wins", r => !!r.away && r.away[0] >= 36],
+  ["ppg30", "Someone averages 30", r => (r.box || []).some(b => b.ppg >= 30)], ["rpg14", "Someone averages 14 boards", r => (r.box || []).some(b => b.rpg >= 14)],
+  ["apg10", "Someone averages 10 assists", r => (r.box || []).some(b => b.apg >= 10)], ["eras5", "Five players, five decades", r => new Set((r.players || []).map(p => p.dec)).size === 5],
+  ["sixties", "A '60s player in your five", r => (r.players || []).some(p => p.dec === "1960s")], ["nat", "All five at natural spots", r => (r.players || []).every(p => p.natural)],
+  ["hard", "A hard mode season", r => !!r.hard], ["sweep", "Sweep a playoff series", r => series(r).some(rd => rd.res[0] === 4 && rd.res[1] === 0)],
+  ["finals", "Reach the Finals", r => played(r) && r.reached >= 3], ["title", "Win the title", r => !!r.champ],
+  ["g7", "Win a Game 7", r => series(r).some(rd => rd.res[0] === 4 && rd.res[1] === 3)], ["boss", "Beat a legendary team in the Finals", r => !!r.champ && !!(series(r)[3] || {}).boss],
+  ["t2", "Title with 2 or fewer playoff losses", r => !!r.champ && r.pl <= 2], ["close10", "Win 10 games by 3 or less", r => feat(r, "close") >= 10],
+];
+const BINGO_LINES = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]];
+function bingoState() {
+  const b = career.bingo || (career.bingo = { sq: [], got: [], lines: [], cards: 0 });
+  if (b.sq.length !== 9 || b.sq.some((id, i) => i !== 4 && !BINGO.some(x => x[0] === id))) {
+    // three easy squares, three medium, two hard
+    const pick = (list, n) => list.filter(id => BINGO.some(x => x[0] === id)).sort(() => Math.random() - .5).slice(0, n);
+    const ids = [...pick(["w60", "td", "ot", "hold80", "sixties", "nat", "sweep", "close10"], 3),
+      ...pick(["w70", "st20", "p50", "r25", "big40", "s145", "ppg30", "rpg14", "apg10", "finals", "title", "eras5", "hard", "road36", "g7"], 3),
+      ...pick(["w76", "st35", "td12", "a18", "b9", "home41", "boss", "t2"], 2)].sort(() => Math.random() - .5);
+    b.sq = [...ids.slice(0, 4), "free", ...ids.slice(4)];
+    b.got = b.sq.map((_, i) => i === 4 ? 1 : 0); b.lines = [];
+  }
+  return b;
+}
+function bingoMark(run, log) {
+  const b = bingoState(), fresh = [];
+  b.sq.forEach((id, i) => { if (b.got[i]) return; const t = BINGO.find(x => x[0] === id); try { if (t && t[2](run)) { b.got[i] = 1; fresh.push(i); } } catch (e) {} });
+  bingoPay(log, fresh);
+}
+function bingoPay(log, fresh = []) {
+  const b = bingoState();
+  if (fresh.length) log.push([`🎯 Bingo: ${fresh.map(i => BINGO.find(x => x[0] === b.sq[i])[1]).join(", ")}`, 10 * fresh.length]), gainXp(10 * fresh.length);
+  BINGO_LINES.forEach((ln, i) => {
+    if (b.lines.includes(i) || !ln.every(j => b.got[j])) return;
+    b.lines.push(i); givePack("gold"); gainXp(40);
+    log.push(["🎯 BINGO! A line: a gold pack", 40]);
+    toast(`🎯 <b>BINGO!</b> A gold pack is yours`);
+  });
+  if (b.got.every(Boolean)) {
+    givePack("legend", 2); gainXp(200); b.cards++;
+    log.push(["🎯 Blackout! The whole card: two legend packs", 200]);
+    toast(`🎯 <b>BLACKOUT!</b> Two legend packs. Here's a new card.`); confetti();
+    b.sq = [];
+    bingoState();
+  }
+  renderBingo(fresh);
+}
+function renderBingo(flash = []) {
+  const box = $("bgGrid");
+  if (!box) return;
+  const b = bingoState(), n = b.got.filter(Boolean).length;
+  $("bgSum").textContent = `${n} / 9 · ${b.lines.length} line${b.lines.length === 1 ? "" : "s"}${b.cards ? ` · ${b.cards} card${b.cards === 1 ? "" : "s"} cleared` : ""}`;
+  box.innerHTML = b.sq.map((id, i) => i === 4 ? `<div class="bsq free">FREE</div>` : `<div class="bsq${b.got[i] ? " got" : ""}${flash.includes(i) ? " flash" : ""}">${b.got[i] ? "✓ " : ""}${esc(BINGO.find(x => x[0] === id)[1])}</div>`).join("");
+  $("bgNote").textContent = "Squares stay marked from season to season. Every line is a gold pack; the whole card is two legend packs and a new card.";
+}
+
+/* ---------- Legendary sets ----------
+   The starting five of each of the 24 legendary teams. Collect all five (draft them or pull them from packs)
+   and claim a legend pack and 100 XP. */
+function setsList() {
+  return LEGENDS.map(t => {
+    const [dec, fid] = t.key.split("|"), team = DATA[dec][fid].name;
+    const keys = t.stars.map(n => collKey(dec, team, n)), have = keys.filter(k => career.coll[k]).length;
+    return { key: t.key, label: t.label, stars: t.stars, keys, have, claimed: !!(career.sets && career.sets[t.key]) };
+  });
+}
+let setsAll = false;
+function renderSets() {
+  const box = $("collSets");
+  if (!box) return;
+  const list = setsList().sort((a, b) => (a.claimed - b.claimed) || ((b.have === 5) - (a.have === 5)) || b.have - a.have);
+  const done = list.filter(x => x.claimed).length, ready = list.filter(x => x.have === 5 && !x.claimed).length;
+  const shown = setsAll ? list : list.slice(0, 6);
+  box.innerHTML = `<div class="head"><h3>🏆 Legendary sets</h3><span class="label">${done} / ${list.length} claimed${ready ? ` · <b>${ready} ready!</b>` : ""}</span></div>
+    <p class="note">Collect a legendary team's starting five (draft them or pull them from packs) for a legend pack and 100 XP.</p>
+    <div class="setsgrid">${shown.map(x => `<div class="setc${x.claimed ? " done" : x.have === 5 ? " ready" : ""}"><b>${esc(x.label)}</b><span class="pbar"><i style="width:${x.have / 5 * 100}%"></i></span>
+      <span class="note">${x.stars.map((n, i) => `${career.coll[x.keys[i]] ? "✓" : "·"} ${esc(n)}`).join("<br>")}</span>
+      ${x.claimed ? `<span class="label">✓ Claimed</span>` : x.have === 5 ? `<button class="btn sm primary" data-set="${x.key}">Claim 👑</button>` : `<span class="label">${x.have} / 5</span>`}</div>`).join("")}</div>
+    ${list.length > 6 ? `<button class="btn sm" id="setsMore">${setsAll ? "Show fewer" : `Show all ${list.length}`}</button>` : ""}`;
+  box.querySelectorAll("[data-set]").forEach(b => b.onclick = () => {
+    const sets = career.sets || (career.sets = {});
+    if (sets[b.dataset.set]) return;
+    sets[b.dataset.set] = todayKey();
+    givePack("legend"); gainXp(100); saveCareer();
+    sfx("cheer"); if (!reduce) confetti();
+    toast(`🏆 Set complete! A legend pack and 100 XP`);
+    renderSets();
+  });
+  if ($("setsMore")) $("setsMore").onclick = () => { setsAll = !setsAll; renderSets(); };
+}
+
+// Extras after every season: props, bingo, the day's first season (double XP) and a mystery bonus
+function funAfter(run, phase, log) {
+  if (phase === "season") {
+    if (career.firstDay !== todayKey()) {
+      career.firstDay = todayKey();
+      const xp = Math.round((20 + run.w + (run.w === 82 ? 150 : run.w >= 70 ? 25 : 0)) * xpMult(run));
+      log.push(["☀️ First season of the day: double XP", xp]); gainXp(xp);
+    }
+    const pr = propsResult(run);
+    if (pr) {
+      const hits = pr.filter(x => x[1]).length;
+      run.props.hits = hits; run.props.of = pr.length;
+      if (hits) { xTix(hits * PROP_TIX); gainXp(hits * PROP_XP); }
+      log.push([`🔮 Props: ${hits} of ${pr.length} right${hits ? ` · +${hits * PROP_TIX} 🎟` : ""}`, hits * PROP_XP]);
+      if (hits === 4) { givePack("gold"); log.push(["🔮 All four props right: a gold pack", 0]); toast("🔮 <b>Called all four!</b> A gold pack is yours"); }
+    }
+    const x = Math.random();
+    if (x < .01) { givePack("legend"); log.push(["🎰 Mystery bonus: a LEGEND PACK!", 0]); toast("🎰 Mystery bonus: <b>a legend pack!</b>"); }
+    else if (x < .1) { givePack("gold"); log.push(["🎰 Mystery bonus: a gold pack", 0]); }
+    else if (x < .35) { const n = 50 + Math.floor(Math.random() * 11) * 10; gainXp(n); log.push([`🎰 Mystery bonus: ${n} XP`, n]); }
+    else { const t = 5 + Math.floor(Math.random() * 5) * 5; xTix(t); log.push([`🎰 Mystery bonus: ${t} 🎟 tickets`, 0]); }
+  }
+  bingoMark(run, log);
+}
 function afterSeason(run, phase) {
   run.xpLog = run.xpLog || [];
   const log = run.xpLog, m = xpMult(run), life = career.life;
@@ -3309,6 +3570,7 @@ function afterSeason(run, phase) {
     questEvent("season", run, phase);
     questState().list.forEach((it, i) => { if (it.done && !was[i] && QUESTS[it.id]) log.push([`Daily quest: ${QUESTS[it.id].text}`, QUESTS[it.id].xp]); });
   } catch (e) { logError(e && e.message, e && e.stack); }
+  try { funAfter(run, phase, log); } catch (e) { logError(e && e.message, e && e.stack); }
   saveCareer();
   if (run === curRun) { renderXpSummary(run); renderScoreCard(run); }
   renderCareer(); renderChallenges(); renderCollection(); renderH2H();
@@ -3458,9 +3720,16 @@ function slimRun(r) {
     w: r.w, l: r.l || 0, champ: !!r.champ, hard: !!r.hard, date: r.date || "",
     players: r.players.map(p => ({ slot: p.slot, name: p.name, dec: p.dec, team: p.team })),
     box: (r.box || []).map(b => ({ ppg: b.ppg, rpg: b.rpg, apg: b.apg, spg: b.spg, bpg: b.bpg })),
-    pf: r.pf || 0, pa: r.pa || 0, reached: r.reached || 0, pw: r.pw || 0, pl: r.pl || 0, rid: Number.isFinite(r.id) ? r.id : null
+    pf: r.pf || 0, pa: r.pa || 0, reached: r.reached || 0, pw: r.pw || 0, pl: r.pl || 0, rid: Number.isFinite(r.id) ? r.id : null, ...proofOf(r)
   };
 }
+// The replay proof: ticket, rolls and picks, card boosts, rules, day, whether the playoffs were played and how each Game 7 went
+function proofOf(r) {
+  return { tk: r.tk || null, log: r.log || [], cb: r.cb || [0, 0, 0, 0, 0], rules: r.rules || [], day: r.day || "", po: r.po === "played",
+    g7: (r.rounds || []).map(rd => rd.g && rd.g.length === 7 ? (rd.g[6][0] > rd.g[6][1] ? 1 : 0) : null) };
+}
+// Only seasons the server can replay go to the website's boards (old seasons from before tickets stay in your record book)
+const canPost = r => !r.cx && !r.dyn && (!LB_REST || !!r.tk || r.mode === "monthly");
 
 async function submitRest() {
   const board = lbCurrentTab, best = lbBestForMode(board);
@@ -3525,7 +3794,7 @@ function betterRun(a, b) {
   return (lbScore(a) - lbScore(b)) || (((a.pf || 0) - (a.pa || 0)) - ((b.pf || 0) - (b.pa || 0))) || ((a.id || 0) - (b.id || 0));
 }
 function bestOf(list) { return list.length ? list.reduce((best, r) => betterRun(r, best) > 0 ? r : best) : null; }
-function lbBest() { return bestOf(runs.filter(r => !r.cx)); }
+function lbBest() { return bestOf(runs.filter(canPost)); }
 // "79–3 🏆 16–1" or "75–7, 15 playoff wins"
 function recText(r) {
   if (!r) return "";
@@ -3725,7 +3994,7 @@ function updateLbRank() {
 }
 
 function lbBestForMode(mode) {
-  return bestOf(runs.filter(r => !r.cx && (mode === "hard" ? !!r.hard : !r.hard)));
+  return bestOf(runs.filter(r => canPost(r) && (mode === "hard" ? !!r.hard : !r.hard)));
 }
 
 function switchLbTab(mode) {
@@ -4158,7 +4427,7 @@ function rollRarity(odds) {
 function rollPack(kind) {
   const P = PACKS[kind], out = [], seen = new Set();
   for (let i = 0; i < 3; i++) {
-    const rar = rollRarity(i === 0 && P.first ? P.first : P.odds);
+    const rar = CX.f.luck ? "legendary" : rollRarity(i === 0 && P.first ? P.first : P.odds);
     let k, tries = 0;
     do { k = PACK_POOL[rar][Math.floor(Math.random() * PACK_POOL[rar].length)]; } while (seen.has(k) && ++tries < 20);
     seen.add(k);
@@ -4174,8 +4443,10 @@ function renderPackBar() {
   if ($("packBtn2")) $("packBtn2").hidden = !n && !daily;
   const h = career.pack.have;
   const kinds = [["legend", "legend pack"], ["gold", "gold pack"], ["normal", "pack"]].filter(([k]) => h[k]).map(([k, l]) => `${h[k]} ${l}${h[k] === 1 ? "" : "s"}`);
-  bar.innerHTML = `<span class="packicon" aria-hidden="true">🎁</span><span class="packtext">${daily ? `<b>Free daily pack ready!</b>${kinds.length ? " · " : ""}` : ""}${kinds.length ? `<b>${kinds.join(", ")}</b> to open` : ""}</span><button class="btn primary mid" id="packOpen">${daily ? "Open free pack" : "Open a pack"}</button>`;
+  const total = n + (daily ? 1 : 0);
+  bar.innerHTML = `<span class="packicon" aria-hidden="true">🎁</span><span class="packtext">${daily ? `<b>Free daily pack ready!</b>${kinds.length ? " · " : ""}` : ""}${kinds.length ? `<b>${kinds.join(", ")}</b> to open` : ""}</span><button class="btn primary mid" id="packOpen">${daily ? "Open free pack" : "Open a pack"}</button>${total > 1 ? `<button class="btn mid" id="packAll">⚡ Open all ${total}</button>` : ""}`;
   $("packOpen").onclick = () => openPack($("packOpen"));
+  if ($("packAll")) $("packAll").onclick = () => openAllPacks($("packAll"));
 }
 // Which pack opens next: the free daily one first, then the best one you have
 function nextPack() {
@@ -4188,6 +4459,13 @@ function openPack(anchor) {
   const which = nextPack();
   if (!which) return;
   packBusy = true;
+  const { kind, cards, xp, fresh } = creditPack(which), pk = career.pack;
+  lastFocus = anchor || document.activeElement;
+  const title = which === "daily" ? `Free daily pack${pk.streak > 1 ? ` · ${pk.streak}-day streak` : ""}` : PACKS[kind].name;
+  return showPack(anchor, kind, title, cards, xp, fresh);
+}
+// Opens one pack's worth of cards into your collection (the reveal is just for show)
+function creditPack(which) {
   const kind = which === "daily" ? "normal" : which, pk = career.pack;
   if (which === "daily") {
     const y = new Date(); y.setDate(y.getDate() - 1);
@@ -4212,8 +4490,35 @@ function openPack(anchor) {
   if (fresh === 3) pk.allNew++;
   collCache = null;
   saveCareer();
+  return { kind, cards, xp, fresh };
+}
+// Every pack you have, opened in one go, with all the cards laid out best first
+function openAllPacks(anchor) {
+  if (packBusy || !nextPack()) return;
+  packBusy = true;
+  const all = [];
+  let xp = 0, fresh = 0, n = 0;
+  for (let w; n < 999 && (w = nextPack()); n++) { const r = creditPack(w); all.push(...r.cards); xp += r.xp; fresh += r.fresh; }
+  const order = { legendary: 0, epic: 1, rare: 2, common: 3 };
+  all.sort((a, b) => order[a.rar] - order[b.rar] || b.p.ovr - a.p.ovr);
+  const counts = ["legendary", "epic", "rare", "common"].map(r => [r, all.filter(c => c.rar === r).length]).filter(x => x[1]);
   lastFocus = anchor || document.activeElement;
-  const title = which === "daily" ? `Free daily pack${pk.streak > 1 ? ` · ${pk.streak}-day streak` : ""}` : PACKS[kind].name;
+  $("mBox").innerHTML = `<div class="mtop"><div><span class="label">${n} pack${n === 1 ? "" : "s"} opened at once</span><h2 id="mTitle">⚡ ${all.length} cards</h2></div><button class="btn sm" id="mClose">Close</button></div>
+    <p class="note">${counts.map(([r, c]) => `<b>${c}</b> ${RARITY.find(x => x[1] === r)[2]}`).join(" · ")} · <b>${fresh} new</b> · +${fmtPts(xp)} XP</p>
+    <div class="pall">${all.map(c => `<div class="pmini ${c.rar}"><span class="pr">${c.p.ovr}</span><b>${esc(c.p.name)}</b><span class="pt">${esc(short(c.p.dec))} ${esc(c.p.team)}</span>${c.isNew ? `<span class="pnew">NEW</span>` : ""}</div>`).join("")}</div>`;
+  $("modal").hidden = false;
+  document.body.style.overflow = "hidden";
+  placeModal(anchor);
+  $("mClose").onclick = closeRun;
+  $("mClose").focus({ preventScroll: true });
+  if (all.some(c => c.rar === "legendary")) { sfx("cheer"); if (!reduce) confetti(); } else sfx("gold");
+  gainXp(xp);
+  checkCareerTrophies();
+  renderCollection(); renderPackBar();
+  packBusy = false;
+}
+function showPack(anchor, kind, title, cards, xp, fresh) {
+  const pk = career.pack;
   $("mBox").innerHTML = `<div class="mtop"><div><span class="label">Tap each card to flip it</span><h2 id="mTitle">${esc(title)}</h2></div><button class="btn sm" id="mClose">Close</button></div>
     <div class="pcards ${kind}">${cards.map((c, i) => `<button class="pcard ${c.rar}" data-i="${i}" aria-label="Card ${i + 1}, tap to flip"><span class="pback"><span>82–0</span></span><span class="pface">
       <span class="pr">${c.p.ovr}</span><b>${esc(c.p.name)}</b><span class="pt">${esc(short(c.p.dec))} ${esc(c.p.team)}</span><span class="prar">${RARITY.find(r => r[1] === c.rar)[2]}</span>
@@ -4226,6 +4531,7 @@ function openPack(anchor) {
   const done = () => {
     $("pkNote").textContent = `${fresh} new player${fresh === 1 ? "" : "s"} · +${xp} XP${packsHave() || dailyReady() ? " · more packs to open" : ""}`;
     $("pkReveal").textContent = packsHave() || dailyReady() ? "Open next pack" : "Done";
+    if ((packsHave() || dailyReady()) && !$("pkAll")) { $("pkReveal").insertAdjacentHTML("afterend", `<button class="btn" id="pkAll">⚡ Open all the rest</button>`); $("pkAll").onclick = () => { closeRun(); openAllPacks(anchor); }; }
     $("pkReveal").onclick = () => { if (packsHave() || dailyReady()) { closeRun(); openPack(anchor); } else closeRun(); };
   };
   const flip = el => {
@@ -4333,7 +4639,7 @@ function clutchGame(g, r, st, i, opts = {}) {
     if (!five.length) return resolve([...g, 0]);
     let who = five.reduce((a, b) => b.s > a.s ? b : a);
     // Better shooter: more green and a slower marker. Better team: a bit more green. Later rounds: a bit faster.
-    const feel = s => ({ green: Math.max(10, Math.min(30, 14 + (s - 70) * .2 + edge * .8)), pace: 1.55 - (s - 30) * .0125 + i * .05 });
+    const feel = s => CX.f.clutch ? { green: 90, pace: .35 } : ({ green: Math.max(10, Math.min(30, 14 + (s - 70) * .2 + edge * .8)), pace: 1.55 - (s - 30) * .0125 + i * .05 });
     let { green, pace } = feel(who.s), lo = 0, hi = 0;
     box.hidden = false;
     box.innerHTML = `<b class="ctitle">${opts.title ? esc(opts.title) : `Game 7${i === 3 ? " of the NBA Finals" : `, ${ROUNDS[i]}`}`}. Tied, 4 seconds left.</b>
@@ -4885,7 +5191,7 @@ function postMonthly(run) {
   if (run.champ && run.po === "played" && !run.monthlyTitle) { run.monthlyTitle = true; m.titles++; }
   saveCareer();
   modePost("monthly", { score, sv: SCORE_V, w: run.w, l: run.l, champ: !!run.champ, pw: run.pw || 0, pl: run.pl || 0, reached: run.reached || 0, pf: run.pf || 0, pa: run.pa || 0,
-    players: run.players.map(p => ({ slot: p.slot, name: p.name, dec: p.dec, team: p.team, ovr: p.ovr })) }, run.month)
+    players: run.players.map(p => ({ slot: p.slot, name: p.name, dec: p.dec, team: p.team, ovr: p.ovr })), ...proofOf(run) }, run.month)
     .then(() => { const list = modeBoardCache["monthly" + run.month]; const i = list ? list.findIndex(e => e.me) : -1; if (i >= 0 && i < 3 && !run.monthlyTop3) { run.monthlyTop3 = true; m.top3++; saveCareer(); checkCareerTrophies(); } });
 }
 function monthlyShareText(run) {
@@ -5675,6 +5981,7 @@ function questEvent(ev, ...args) {
 }
 const questStreakNow = q => q.streak && (q.lastAll === q.day || q.lastAll === prevDay(q.day)) ? q.streak : 0;
 function renderQuests() {
+  try { renderBingo(); } catch (e) {}
   const box = $("qList");
   if (!box) return;
   const q = questState(), n = q.list.filter(it => it.done).length, st = questStreakNow(q);
@@ -6333,8 +6640,9 @@ function spdPost(run) {
   const a = arcState().speed, total = lbScore(run) + (run.speedBonus || 0);
   a.best = Math.max(a.best, total);
   saveCareer(); checkCareerTrophies();
+  if (!canPost(run)) { if (S && S.mode === "speed") renderModePanel(); return; }
   arcPost("speed", { score: total, sv: SCORE_V, w: run.w, l: run.l, champ: !!run.champ, pw: run.pw || 0, pl: run.pl || 0, reached: run.reached || 0, pf: run.pf || 0, pa: run.pa || 0, bonus: run.speedBonus || 0,
-    players: run.players.map(p => ({ slot: p.slot, name: p.name, dec: p.dec, team: p.team, ovr: p.ovr })) });
+    players: run.players.map(p => ({ slot: p.slot, name: p.name, dec: p.dec, team: p.team, ovr: p.ovr })), ...proofOf(run) });
   if (S && S.mode === "speed") renderModePanel();
 }
 // Not started yet: the first roll waits for the Start button, so reading the rules costs no time
@@ -11536,7 +11844,7 @@ function saveCur() {
   if (!S) return;
   if (S.done || S.locked || S.offseason || S.mode === "duel" || S.mode === "arcade") { store.del(KEY_CUR); return; }
   store.set(KEY_CUR, { lineup: S.lineup, draw: S.spinning ? null : S.draw, teamRedraw: S.teamRedraw, eraRedraw: S.eraRedraw, hard: $("hardmode").checked, mode: S.mode, day: S.day, drawCount: S.drawCount,
-    rules: S.rules, lockDec: S.lockDec, lockName: S.lockName, redrawsUsed: S.redrawsUsed, draftXp: S.draftXp, speedLeft: S.speedLeft, speedAt: S.speedAt });
+    rules: S.rules, lockDec: S.lockDec, lockName: S.lockName, redrawsUsed: S.redrawsUsed, draftXp: S.draftXp, speedLeft: S.speedLeft, speedAt: S.speedAt, log: S.log || [], tk: S.tk || null, cx: S.cx || 0 });
 }
 function poText(r) {
   if (r.po === "missed") return "Missed playoffs";
@@ -11849,6 +12157,7 @@ function boot() {
     S.teamRedraw = sv.teamRedraw ?? 1; S.eraRedraw = sv.eraRedraw ?? 1;
     S.rules = Array.isArray(sv.rules) ? sv.rules : []; S.lockDec = sv.lockDec || null; S.lockName = sv.lockName || null;
     S.redrawsUsed = sv.redrawsUsed || 0; S.draftXp = sv.draftXp || 0;
+    S.log = Array.isArray(sv.log) ? sv.log : []; S.tk = sv.tk && typeof sv.tk.t === "string" ? sv.tk : null; if (sv.cx) S.cx = 1;
     if (mode === "speed") { S.speedLeft = Array.isArray(sv.speedLeft) ? sv.speedLeft.slice(0, 5) : []; S.speedAt = sv.speedAt && typeof sv.speedAt.t === "number" ? sv.speedAt : null; }
     $("hardmode").checked = mode === "free" && !!sv.hard;
     if (mode === "monthly") S.month = monthOf(S.day);
@@ -11890,6 +12199,9 @@ function boot() {
     toast(`🗓️ The Daily Draft is now the <b>Monthly Draft</b>: the same five rolls for everyone all month, one try a day, and your best try is your spot on the month's board.${st > 1 && monthlyState().last >= prevDay(dayPT()) ? ` Your ${st}-day streak came with it.` : ""}`);
   }
   career.seen37 = 1;
+  // Version 46: props, bingo, sets, open all, and seasons the server replays
+  if (seeded === null && runs.length && !career.seen46) toast(`🆕 <b>New:</b> 🔮 Season props before every tip-off, 🎯 Season Bingo, 🏆 Legendary sets in your collection, ☀️ double XP on your first season each day, 🎰 a mystery bonus after every season and ⚡ Open all packs. The leaderboard now replays every season to check it.`);
+  career.seen46 = 1;
   // Version 42: card levels make players better
   if (seeded === null && runs.length && !career.seen42) toast(`🃏 Card levels now count on the court: every level makes a player <b>+0.3</b> better, and a <b>Diamond</b> card plays <b>+3</b> better.`);
   career.seen42 = 1;

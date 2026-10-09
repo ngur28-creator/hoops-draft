@@ -27,15 +27,19 @@
 // Anyone can submit. Each browser keeps a secret token; your player id is a hash of it, so only you can
 // replace your own entry. One entry per player per board, and a lower score never replaces a higher one
 // unless you ask for it (replace: true, when you pick a season to show from your record book).
-// The server never trusts the page's score: it recalculates it from the record, checks the playoff
-// result adds up, and looks every player up in the game's own data.
+// The server never trusts the page's score. Every season starts from a ticket the server signs (GET ?ticket=1: a
+// random seed); the page draws its rolls, sims its season and plays its playoffs from that seed and sends back
+// its picks. The server replays the whole draft and season with the game's own code (engine.mjs) and posts what
+// really happened: a record, a lineup that wasn't rolled, or a forged or borrowed ticket gets turned away. The
+// Monthly Draft is seeded by its day, so it replays the same way without a ticket.
 //
 // Storage (one Netlify Blobs store):
 //   e/<board>/<id>                                        full entry (each player only ever writes their own)
 //   i/<board>/<id>~<score>~<w>~<l>~<champ>~<ts>~<name>    empty marker; listing this prefix reads the whole board at once
 //   n/<name>                                              { id } so two players can't share a name
 import { getStore, getDeployStore } from "@netlify/blobs";
-import { createHash } from "node:crypto";
+import { createHash, createHmac, randomBytes } from "node:crypto";
+import { replaySeason } from "./engine.mjs";
 import VALID from "./valid.mjs";
 import XGAMES from "./xgames.mjs";
 
@@ -90,7 +94,29 @@ function reply(body, status = 200) {
   return new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json", "cache-control": "no-store" } });
 }
 
+/* ---------- Season tickets ---------- */
+let SECRET = null;
+async function secret(store) {
+  if (SECRET) return SECRET;
+  if (process.env.HOOPS_TK_SECRET) return (SECRET = process.env.HOOPS_TK_SECRET);
+  await store.set("k/secret", randomBytes(32).toString("hex"), { onlyIfNew: true });
+  return (SECRET = await store.get("k/secret"));
+}
+const sign = (key, msg) => createHmac("sha256", key).update(msg).digest("hex").slice(0, 32);
+async function newTicket(store) {
+  const seed = randomBytes(16).toString("hex"), ts = Date.now().toString(36);
+  return `${seed}.${ts}.${sign(await secret(store), seed + "." + ts)}`;
+}
+// The seed of a genuine ticket, or a message
+async function ticketSeed(store, tk) {
+  const m = typeof tk === "string" && /^([0-9a-f]{32})\.([0-9a-z]{1,12})\.([0-9a-f]{32})$/.exec(tk);
+  if (!m) throw "That season has no ticket from the server, so it can't be checked. Seasons drafted after this update can.";
+  if (sign(await secret(store), m[1] + "." + m[2]) !== m[3]) throw "That season's ticket isn't one the server gave out.";
+  return m[1];
+}
+
 async function readBoard(url, store) {
+  if (url.searchParams.get("ticket") !== null) return reply({ tk: await newTicket(store) });
   const kind = url.searchParams.get("board"), q = url.searchParams;
   const key = boardKey(kind, kind === "monthly" ? q.get("month") ?? q.get("day") : q.get("day"));
   if (!key) return reply({ error: kind === "monthly" ? "Which month? Use month=YYYY-MM." : DAILY.has(kind) ? "Which day? Use day=YYYY-MM-DD." : "Unknown board" }, 400);
@@ -169,8 +195,9 @@ async function submit(req, store) {
   if (!nameId) return reply({ error: "Use at least one letter or number in your name." }, 400);
 
   // What goes on the board, its score, and the three numbers its row shows
-  let rec;
+  let rec, seed = null;
   try {
+    if (kind === "daily") throw "The Daily Draft is over. Play the Monthly Draft.";
     if (kind === "gauntlet") rec = checkGauntlet(body.entry);
     else if (kind === "dynasty") rec = checkDynasty(body.entry);
     else if (ARCADE.has(kind)) rec = checkArcade(kind, body.entry);
@@ -178,7 +205,16 @@ async function submit(req, store) {
     else {
       // Monthly, Daily and Speed Draft seasons are always normal mode
       const daily = kind === "monthly" || kind === "daily" || kind === "speed";
-      const run = checkRun(daily ? { ...(body.entry || body.run), hard: false } : body.run);
+      const sent = daily ? { ...(body.entry || body.run), hard: false } : body.run;
+      const run = checkRun(sent);
+      // Replay the draft and season and use what really happened
+      const mode = kind === "monthly" ? "monthly" : kind === "speed" ? "speed" : "free";
+      if (mode === "monthly" && !(typeof sent.day === "string" && sent.day.slice(0, 7) === month)) throw "That try isn't from this month's Monthly Draft.";
+      if (mode !== "monthly") seed = await ticketSeed(store, sent.tk);
+      const real = replaySeason(sent, mode, seed);
+      if (real.w !== run.w || (sent.po === true && (real.champ !== run.champ || real.pw !== run.pw || real.pl !== run.pl))) throw "That season doesn't match its replay, so it can't go on the board.";
+      Object.assign(run, { w: real.w, l: real.l, pf: real.pf, pa: real.pa, pw: real.pw, pl: real.pl, reached: real.reached, champ: real.champ, players: real.players,
+        box: real.players.map((p, i) => ({ ...p, ...real.box[i] })) });
       if (!daily && run.hard !== (kind === "hard")) {
         return reply({ error: kind === "hard" ? "Only hard mode (blind picks) seasons go on the Hard Mode board." : "Hard mode seasons go on the Hard Mode board." }, 400);
       }
@@ -199,6 +235,13 @@ async function submit(req, store) {
   const prev = await store.get(`e/${board}/${id}`, { type: "json" });
   if (prev && prev.score > score && !(body.replace === true && BOARDS.has(kind))) {
     return reply({ ok: true, kept: true, id, score: prev.score, rank: await rankOf(store, board, id, kind) });
+  }
+
+  // A ticket belongs to whoever posts it first
+  if (seed) {
+    const t = await store.get(`t/${seed}`, { type: "json" });
+    if (t && t.id !== id) return reply({ error: "That season was already posted by someone else." }, 409);
+    if (!t) await store.setJSON(`t/${seed}`, { id });
   }
 
   // Names are first come, first served (the conditional write makes two people grabbing one name at once safe)

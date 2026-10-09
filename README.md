@@ -13,8 +13,10 @@ Counter; the Prize Wheel spins free once a day. Three daily quests change every 
   Dynasty, Higher or Lower, Buzzer Beater, Survival and Speed Draft boards, and one board for each of the
   Arcade's 95 canvas games (`x_<id>`, listed with their highest possible scores in `xgames.mjs`). (The old Daily Draft boards still take
   entries from pages that haven't reloaded since the Monthly Draft replaced it.) Anyone can submit; each browser keeps a secret token, so only its
-  owner can replace their entry. The server looks every player up in `valid.mjs` and recalculates season scores
-  itself, so ratings can't be faked; Arcade results are checked for being possible.
+  owner can replace their entry. Seasons can't be faked: every draft starts from a ticket the server signs (a
+  random seed), and the server replays the whole draft and season with the game's own code (`engine.mjs`, built
+  from `site/index.html`) and posts what really happened. The Monthly Draft replays from its day. Arcade results
+  are checked for being possible.
 - `netlify/functions/duel/duel.mjs` is Draft vs Friend over the internet at `/api/duel`: one player creates a duel,
   the other joins with their username, and the server checks every pick (whose turn, which roster, open spot).
 - Scores live in Netlify Blobs (store `hoops-lb`). Deploy previews use a separate throwaway store.
