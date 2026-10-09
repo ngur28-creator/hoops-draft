@@ -1210,7 +1210,7 @@ body.xplaying .toast { pointer-events: none; opacity: .88; }
 <div class="toast" id="toast" hidden role="status"></div>
 
 <script>
-const APP_VERSION = 44;
+const APP_VERSION = 45;
 // How leaderboard points are counted. Version 1 also counted team rating; entries saved under it are re-scored when shown.
 const SCORE_V = 2;
 // Anything that goes wrong is noted (last 20, in this browser and in your private cloud save) so it can be fixed
@@ -1545,7 +1545,7 @@ function renderRoster(hard) {
     const newChip = isNew ? `<span class="chip new${!hard && p.ovr >= 95 ? " legend" : ""}">${!hard && p.ovr >= 95 ? "New legend" : "New"}</span>` : "";
     const lvChip = isNew ? "" : cardBadge(collKey(S.draw.dec, team.name, p.name));
     row.innerHTML = `<div class="pname"><b>${esc(p.name)}</b><span class="chips">${chips}${newChip}${lvChip}</span></div><div class="pstats">${statCells(vals, hard, sort.key)}</div><div class="pdraft"></div>`;
-    if (cxv && cxv.has(p.id)) { const v = cxv.get(p.id); row.querySelector(".chips").insertAdjacentHTML("beforeend", `<span class="chip cxo">${v.w.toFixed(0)}W ${v.k}</span>`); if (cxv.best === p.id) row.classList.add("cxbest"); }
+    if (cxv && cxv.has(p.id)) { const v = cxv.get(p.id); row.querySelector(".chips").insertAdjacentHTML("beforeend", `<span class="chip cxo">${v.p82 != null ? "82–0 " + cxPct(v.p82) : v.w.toFixed(0) + "W"} ${v.k}</span>`); if (cxv.best === p.id) row.classList.add("cxbest"); }
     const cell = row.querySelector(".pdraft");
     if (drafted(p.id)) cell.innerHTML = `<span class="note">Drafted</span>`;
     else if (ruleBlock(p) && open.length) cell.innerHTML = `<span class="note">${ruleBlock(p)}</span>`;
@@ -1634,8 +1634,9 @@ function renderInner() {
    Only opens with five quick taps on the dash in the title plus a code. Nothing here is saved: reloading turns it
    all off. While anything is on, nothing posts to any board, and every season played with it on is tagged so it
    never posts later either. */
-const CX = { ok: false, boost: 0, f: { oracle: 0, redraw: 0, gold: 0, xray: 0, win: 0, hot: 0, diamond: 0, monthly: 0, rules: 0, slow: 0, x2: 0, wheel: 0, hol: 0 } };
-const cxAny = () => CX.boost > 0 || Object.values(CX.f).some(Boolean);
+const CX = { ok: false, boost: 0, f: { oracle: 0, redraw: 0, gold: 0, xray: 0, win: 0, hot: 0, diamond: 0, monthly: 0, rules: 0, slow: 0, x2: 0, wheel: 0, hol: 0, po: 0, stats: 0, inf: 0, easy: 0 }, rec: null };
+const cxAny = () => CX.boost > 0 || CX.rec != null || Object.values(CX.f).some(Boolean);
+let cxForce = null; // true/false: the next game must be a win/loss
 const cxMark = () => { if (S && cxAny()) S.cx = 1; };
 const cxPhi = x => {
   const t = 1 / (1 + 0.2316419 * Math.abs(x)), d = 0.3989423 * Math.exp(-x * x / 2);
@@ -1645,6 +1646,7 @@ const cxPhi = x => {
 const CX_Z = [-1.59, -0.97, -0.59, -0.28, 0, 0.28, 0.59, 0.97, 1.59];
 // One game's win chance against the season's spread of opponents (home and road averaged)
 function cxPWin(r, raw) {
+  if (!raw && CX.rec != null) return CX.rec / 82;
   if (CX.f.win && !raw) return 1;
   let s = 0;
   for (const z of CX_Z) {
@@ -1677,7 +1679,7 @@ function cxPickVals(list) {
     const pp = { ...p, dec: S.draw.dec, fid: S.draw.fid, team };
     let bw = -1, bk = null;
     for (const k of open) { const w = cxQuickW({ ...base, [k]: pp }); if (w > bw) { bw = w; bk = k; } }
-    out.set(p.id, { w: bw, k: bk });
+    out.set(p.id, { w: bw, k: bk, p82: open.length === 1 ? cxProj({ ...base, [bk]: pp }, 150).p82 : null });
     if (!best || bw > best.w) best = { id: p.id, w: bw };
   }
   if (best) out.best = best.id;
@@ -1742,6 +1744,7 @@ function cxSearch() {
 }
 function cxAfter(k) {
   cxMark();
+  const dash = document.querySelector("h1 .dash"); if (dash) dash.style.opacity = cxAny() ? ".75" : "";
   try {
     if (k === "monthly" && mode === "monthly" && S && !S.done) startOver();
     else if (mode === "arcade") { if (arcView === "hol" && hol) renderHol(); }
@@ -1762,19 +1765,25 @@ function cxPanel() {
   const teams = ALL_DRAWS.filter(x => x.dec === dec).map(x => [x.fid, DATA[x.dec][x.fid].name]).sort((a, b) => a[1].localeCompare(b[1]));
   el.innerHTML = `<div class="cxin"><div class="cxh"><b>🛠 Back office</b><button class="cxb" data-a="close" aria-label="Close">✕</button></div>
     <p class="cxn">${cxAny() ? "<b>Something's on:</b> nothing you play right now goes on any leaderboard." : "Everything's off. Turn anything on and that run stays off every leaderboard."} Reloading the page turns it all off.</p>
+    <div class="cxrow">${B("god", "⚡ God mode")}${B("sneaky", "🎭 Sneaky 82–0")}</div>
+    <p class="cxn">God mode turns on everything that wins. Sneaky 82–0 just sets the record to 82–0 and sweeps the playoffs: same team, real-looking scores and stats.</p>
     <h4>Draft</h4>
     ${T("oracle", "🔮 Oracle", "projected wins on every player, the best pick glows green, 82–0 chance on your finished five")}
     ${T("redraw", "♾️ Unlimited re-draws", "the re-draw buttons never run out (Monthly Draft too)")}
     ${T("gold", "✨ Always golden", "every roll is one of the all-time great rosters")}
     ${T("xray", "👁️ X-ray hard mode", "see ratings and stats in hard mode")}
-    <div class="cxrow">${B("roll", "🎲 New roll", can && picks() < 5 ? "" : " disabled")}${B("dream", "🤖 Auto-draft a dream team", can && picks() < 5 ? "" : " disabled")}</div>
+    <div class="cxrow">${B("best", "🔮 Take the best pick", can && picks() < 5 ? "" : " disabled")}${B("roll", "🎲 New roll", can && picks() < 5 ? "" : " disabled")}${B("dream", "🤖 Auto-draft a dream team", can && picks() < 5 ? "" : " disabled")}</div>
     <div class="cxrow"><select id="cxDec" aria-label="Era">${DECS.map(d => `<option value="${d}"${d === dec ? " selected" : ""}>${d}</option>`).join("")}</select><select id="cxTeam" aria-label="Team">${teams.map(([f, n]) => `<option value="${f}">${esc(n)}</option>`).join("")}</select>${B("pick", "🎯 Roll this", can && picks() < 5 ? "" : " disabled")}</div>
     <div class="cxrow"><input id="cxQ" type="text" autocomplete="off" placeholder="🌍 Draft anyone ever: type a name"></div><div id="cxRes"></div>
     ${S && picks() && !S.done ? `<div class="cxrow">${SLOTS.filter(k => S.lineup[k]).map(k => `<button class="cxb" data-a="clr" data-k="${k}"${dis}>↩️ Undo ${k}</button>`).join("")}</div>` : ""}
     <div class="cxrow">${B("scan", cxFound ? "🧭 Scan again" : "🧭 Which teams get me to 82–0?")}</div><div id="cxFound">${cxFoundHtml()}</div>
     <h4>Season</h4>
     ${T("win", "🏆 Win every game", "season, playoffs, Head-to-head, Gauntlet, Survival")}
+    <div class="cxt"><span><b>🎯 Set your record</b><i>the season lands exactly on it, losses scattered so it looks real</i></span></div>
+    <div class="cxrow"><select id="cxRec" aria-label="Record" style="max-width:none">${[["", "Off"], ...[82, 81, 80, 79, 77, 75, 73, 70, 65, 60].map(w => [w, `${w}–${82 - w}`])].map(([v, l]) => `<option value="${v}"${String(CX.rec ?? "") === String(v) ? " selected" : ""}>${l}</option>`).join("")}</select></div>
+    ${T("po", "🏆 Sweep the playoffs", "16–0 every time")}
     ${T("hot", "🔥 Monster seasons", "every starter has a career year")}
+    ${T("stats", "📈 Video-game stat lines", "everyone's numbers go way up: 40-point scorers, triple-doubles galore")}
     <div class="cxt"><span><b>💪 Rating boost: +<span id="cxBv">${CX.boost}</span></b><i>added to every player you play with</i></span></div><input type="range" id="cxBoost" min="0" max="30" step="1" value="${CX.boost}" aria-label="Rating boost">
     ${T("diamond", "💎 Every card Diamond", "all your players get the Diamond +3")}
     ${T("monthly", "📅 Unlimited Monthly Draft tries", "")}
@@ -1784,7 +1793,10 @@ function cxPanel() {
     ${T("x2", "✖️ Double scores", "")}
     ${T("wheel", "🎡 Free Prize Wheel spins", "")}
     ${T("hol", "🔼 Higher or Lower tell", "the right button has a faint line along its bottom")}
-    <div class="cxrow">${B("tix", "🎟 +500 tickets")}${B("pack", "👑 Free Legend pack")}${B("xp", "⭐ +5,000 XP")}</div>
+    ${T("inf", "❤️ Infinite lives", "misses never cost a life in the canvas games")}
+    ${T("easy", "🎯 Easy mini-games", "a huge, slow green zone in Buzzer Beater and a frozen Speed Draft clock")}
+    <div class="cxrow">${B("xmax", "💯 Max score this game")}${B("stars", "⭐ 3 stars on every game")}</div>
+    <div class="cxrow">${B("tix", "🎟 +500 tickets")}${B("pack", "👑 Free Legend pack")}${B("packs", "👑 ×10 Legend packs")}${B("xp", "✨ +5,000 XP")}</div>
     ${myst ? `<p class="cxn">🕵️ Today's Mystery Player: <b>${esc(myst)}</b></p>` : ""}
     <div class="cxrow">${B("off", "Turn everything off")}${B("close", "Close")}</div></div>`;
   el.scrollTop = keep;
@@ -1793,14 +1805,21 @@ function cxPanel() {
   $("cxBoost").onchange = () => { CX.boost = +$("cxBoost").value; cxAfter("boost"); };
   $("cxDec").onchange = () => { CX.dec = $("cxDec").value; cxPanel(); };
   $("cxQ").oninput = cxSearch;
+  $("cxRec").onchange = () => { CX.rec = $("cxRec").value === "" ? null : +$("cxRec").value; cxAfter("rec"); };
   el.querySelectorAll("button[data-a]").forEach(b => b.onclick = () => {
     const a = b.dataset.a;
     if (a === "close") { el.hidden = true; return; }
-    if (a === "off") { for (const k in CX.f) CX.f[k] = 0; CX.boost = 0; cxAfter("off"); return; }
+    if (a === "off") { for (const k in CX.f) CX.f[k] = 0; CX.boost = 0; CX.rec = null; cxAfter("off"); return; }
     if (a === "tix") { xTix(500); saveCareer(); }
     else if (a === "pack") givePack("legend");
     else if (a === "xp") gainXp(5000);
     else if (a === "scan") { b.textContent = "Scanning every roster…"; b.disabled = true; setTimeout(() => { cxScan(); cxPanel(); }, 30); return; }
+    else if (a === "god") { Object.assign(CX.f, { oracle: 1, redraw: 1, gold: 1, win: 1, po: 1, hot: 1, stats: 1, diamond: 1 }); CX.boost = Math.max(CX.boost, 15); CX.rec = null; cxAfter("god"); return; }
+    else if (a === "sneaky") { CX.rec = 82; CX.f.po = 1; CX.f.win = 0; cxAfter("sneaky"); return; }
+    else if (a === "packs") givePack("legend", 10);
+    else if (a === "xmax") { if (X && !X.done && X.s) { X.cx = 1; X.s.score = X.g.cap; el.hidden = true; xFinish(); } return; }
+    else if (a === "stars") { for (const g of XG) if (g.cat !== "classic" && g.cap) xG(g.id).stars = 3; saveCareer(); }
+    else if (a === "best") { if (cxCanDraft() && picks() < 5 && S.draw) { const v = cxPickVals(DATA[S.draw.dec][S.draw.fid].players), p = v.best && DATA[S.draw.dec][S.draw.fid].players.find(x => x.id === v.best); if (p) { S.cx = 1; draft(p, v.get(p.id).k); } } }
     else if (a === "roll") { if (cxCanDraft() && picks() < 5) { S.cx = 1; newDraw(); } }
     else if (a === "dream") { if (cxCanDraft() && picks() < 5) cxDream(); }
     else if (a === "pick") { if (cxCanDraft() && picks() < 5) { const x = ALL_DRAWS.find(d => d.dec === $("cxDec").value && String(d.fid) === $("cxTeam").value); if (x) { S.cx = 1; S.draw = x; goldenRoll = false; query = ""; render(); } } }
@@ -1833,6 +1852,14 @@ function cxGate() {
   const d = document.querySelector("h1 .dash");
   if (!d) return;
   let n = 0, t0 = 0;
+  let typed = "";
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape" && $("cxSheet") && !$("cxSheet").hidden) { $("cxSheet").hidden = true; return; }
+    const t = e.target, tag = t && t.tagName;
+    if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || e.key.length !== 1) return;
+    typed = (typed + e.key.toLowerCase()).slice(-6);
+    if (hashStr("cx:" + typed) === 2819385829) { typed = ""; CX.ok = true; cxPanel(); }
+  }, true);
   d.addEventListener("click", () => { const now = Date.now(); if (now - t0 > 2500) { n = 0; t0 = now; } if (++n >= 5) { n = 0; cxGate(); } });
 })();
 function playGame(r, oOff, oDef, home, base, raw) {
@@ -1841,7 +1868,8 @@ function playGame(r, oOff, oDef, home, base, raw) {
   let them = Math.round(base + (oOff - r.def) * 0.7 - hca / 2 + gauss() * 8.5);
   let ot = 0;
   while (us === them) { ot++; us += Math.round(10 + gauss() * 3); them += Math.round(10 + gauss() * 3); }
-  if (CX.f.win && !raw && us < them) { const t = us; us = them; them = t; }
+  const want = raw ? null : cxForce != null ? cxForce : CX.f.win ? true : null;
+  if (want != null && (us > them) !== want) { const t = us; us = them; them = t; }
   return { us, them, won: us > them, ot, home };
 }
 /* ---------- Season form ----------
@@ -1930,6 +1958,7 @@ function seasonSim(L) {
   const forms = rollForms(L);
   const r = withForm(teamRatings(L), forms);
   const means = lineMeans(L, forms);
+  if (CX.f.stats) for (const k of SLOTS) { const m = means[k]; m.pts *= 1.45; m.reb *= 1.35; m.ast *= 1.35; m.stl *= 1.4; m.blk *= 1.4; }
   const games = [];
   const tot = {}, tds = {}; SLOTS.forEach(k => { tot[k] = { pts: 0, reb: 0, ast: 0, stl: 0, blk: 0 }; tds[k] = 0; });
   const perfs = [];
@@ -1937,10 +1966,14 @@ function seasonSim(L) {
   const feats = { td: 0, fiveX5: false, maxPts: 0, maxReb: 0, maxAst: 0, maxBlk: 0, maxStl: 0, otWins: 0, bigWin: 0, maxScore: 0, minAllowed: 999, close: 0, firstLoss: 0,
     qd: false, p40r20: false, p301515: false, bigLoss: 0, maxOtWin: 0 };
   let pf = 0, pa = 0;
+  const cxLoss = new Set();
+  if (CX.rec != null) { const idx = [...Array(82).keys()].sort(() => Math.random() - .5); idx.slice(0, 82 - CX.rec).forEach(i => cxLoss.add(i)); }
   for (let g = 0; g < 82; g++) {
     const q = Math.min(95, Math.max(64, 75 + gauss() * 5));
     const isHome = g % 2 === 0;
+    cxForce = CX.rec != null ? !cxLoss.has(g) : null;
     const x = playGame(r, q + gauss() * 2, q + gauss() * 2, isHome, 110);
+    cxForce = null;
     x.opp = rnd(TEAM_LABELS);
     pf += x.us; pa += x.them;
     if (x.won) {
@@ -2217,7 +2250,9 @@ function roundSetup(i, seed, w) {
 const PO_PATTERN = [1, 1, 0, 0, 1, 0, 1];
 function seriesGame(r, st, n) {
   const home = st.hc ? !!PO_PATTERN[n] : !PO_PATTERN[n];
+  cxForce = CX.f.po ? true : null;
   const g = playGame(r, st.oOff, st.oDef, home, 106);
+  cxForce = null;
   return [g.us, g.them, home ? 1 : 0, g.ot ? 1 : 0];
 }
 function playoffSim(r, seed, w) {
@@ -5790,8 +5825,8 @@ function bzStart(w) {
 }
 function bzShot() {
   const b = bz, f = bzFeel(b.s, b.lv);
-  b.green = f.green; b.pace = f.pace;
-  b.lo = 3 + Math.random() * (94 - f.green); b.hi = b.lo + f.green;
+  b.green = CX.f.easy ? Math.min(60, f.green * 3) : f.green; b.pace = f.pace * (CX.f.easy ? .6 : 1);
+  b.lo = 3 + Math.random() * (94 - b.green); b.hi = b.lo + b.green;
   b.t0 = performance.now(); b.u0 = Math.random() * 200; b.x = null; b.made = null;
   b.live = true;
   renderBuzz();
@@ -6238,7 +6273,7 @@ function renderGuess() {
 const SPD_SECS = 8;
 let spdRaf = 0, spdAuto = false;
 const spdBonus = left => Math.round((left || []).reduce((a, b) => a + b, 0) * 10);
-const spdLeft = () => S && S.speedAt ? Math.max(0, SPD_SECS - (Date.now() - S.speedAt.t) / 1000) : SPD_SECS;
+const spdLeft = () => CX.f.easy ? SPD_SECS : S && S.speedAt ? Math.max(0, SPD_SECS - (Date.now() - S.speedAt.t) / 1000) : SPD_SECS;
 // Runs on every render: shows the clock and starts it when a roll lands (the clock lives in S, so a reload keeps it)
 function spdClock() {
   const bar = $("speedBar");
@@ -6469,7 +6504,7 @@ function xLose(x, y, label = "Miss") {
   if (!X || X.over) return;
   if (x != null) xFloat(x, y, label, XC.loss);
   xShake(8); sfx("brick"); X.combo = 0;
-  if (!X.s.lives) return;           // a game on the clock: misses don't cost lives
+  if (!X.s.lives || CX.f.inf) { if (CX.f.inf) X.cx = 1; return; } // a game on the clock: misses don't cost lives
   X.s.lives--;
   if (X.s.lives <= 0) xEnd();
 }
