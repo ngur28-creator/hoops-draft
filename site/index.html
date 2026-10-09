@@ -410,6 +410,27 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
 @media (prefers-reduced-motion: reduce) { .games .g.now { animation: none; } }
 /* The long panels further down skip their layout and painting while they're off screen */
 #bookPanel, #trophyPanel, #collPanel, #h2hPanel, #lbPanel { content-visibility: auto; contain-intrinsic-size: auto 900px; }
+#cxGate { position: fixed; top: 12px; left: 50%; transform: translateX(-50%); z-index: 10001; display: flex; gap: 6px; background: #111; padding: 8px; border-radius: 10px; box-shadow: 0 6px 24px #0008; }
+#cxGate input { width: 150px; font: 16px system-ui, sans-serif; padding: 6px 8px; border-radius: 6px; border: 1px solid #444; background: #000; color: #fff; }
+#cxSheet { position: fixed; left: 0; right: 0; bottom: 0; max-height: 80vh; overflow: auto; z-index: 10000; background: #12141c; color: #eee; border-top: 2px solid #ff6a2b; box-shadow: 0 -10px 40px #000a; font: 14px/1.35 system-ui, sans-serif; overscroll-behavior: contain; text-align: left; }
+#cxSheet[hidden] { display: none; }
+.cxin { max-width: 640px; margin: 0 auto; padding: 0 16px 28px; }
+.cxh { display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1; background: #12141c; padding: 10px 0 8px; font-size: 16px; }
+#cxSheet h4 { margin: 16px 0 4px; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: #ff9b6b; }
+.cxt { display: flex; gap: 10px; align-items: flex-start; padding: 6px 0; cursor: pointer; }
+.cxt input { width: 20px; height: 20px; margin: 1px 0 0; accent-color: #ff6a2b; flex: none; }
+.cxt i, .cxr small { display: block; font-style: normal; color: #9aa3b5; font-size: 12px; }
+.cxrow { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+.cxb { font: inherit; padding: 7px 10px; border-radius: 8px; border: 1px solid #343a55; background: #23263a; color: #fff; cursor: pointer; }
+.cxb:disabled { opacity: .4; cursor: default; }
+#cxQ { flex: 1; min-width: 0; font: 16px system-ui, sans-serif; padding: 7px 9px; border-radius: 8px; border: 1px solid #343a55; background: #000; color: #fff; }
+#cxSheet select { font: 15px system-ui, sans-serif; padding: 6px; border-radius: 8px; background: #000; color: #fff; border: 1px solid #343a55; max-width: 40%; }
+#cxBoost { width: 100%; accent-color: #ff6a2b; }
+.cxn { color: #bcc4d6; font-size: 12.5px; margin: 6px 0; }
+.cxr { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 6px 0; border-bottom: 1px solid #23263a; }
+.cxr > span { flex: 1 1 180px; min-width: 0; }
+.chip.cxo { background: #13894a; color: #fff; border-color: #13894a; }
+.prow.cxbest { box-shadow: inset 4px 0 0 #2bd67b; }
 /* Card levels: tier colors (text, border, fill) for light and dark */
 .lvchip i { font-style: normal; font-weight: 900; opacity: .9; } .lvboost { color: var(--win); }
 .lvchip, .lvcard { --tc: var(--muted); --tb: var(--line); --tf: none; }
@@ -1189,7 +1210,7 @@ body.xplaying .toast { pointer-events: none; opacity: .88; }
 <div class="toast" id="toast" hidden role="status"></div>
 
 <script>
-const APP_VERSION = 43;
+const APP_VERSION = 44;
 // How leaderboard points are counted. Version 1 also counted team rating; entries saved under it are re-scored when shown.
 const SCORE_V = 2;
 // Anything that goes wrong is noted (last 20, in this browser and in your private cloud save) so it can be fixed
@@ -1379,15 +1400,16 @@ function newDraw() {
   // About one roll in 16 is golden: one of the 24 legendary rosters (when your rules allow it)
   const gold = opts.filter(x => LEGENDS.some(t => t.key === x.dec + "|" + x.fid));
   // R is seeded in the Monthly Draft, so golden rolls land the same for everyone
-  spin(seeded(() => { goldenRoll = gold.length > 0 && R() < 1 / 16; return rnd(goldenRoll ? gold : opts); }));
+  spin(seeded(() => { goldenRoll = gold.length > 0 && (R() < 1 / 16 || !!CX.f.gold); return rnd(goldenRoll ? gold : opts); }));
 }
 // Re-draw team: another franchise from the same decade (blocked once Franchise lock has locked in)
 const teamOpts = () => !S.draw || S.lockName ? [] : allowedDraws().filter(x => x.dec === S.draw.dec && x.fid !== S.draw.fid);
 function redrawTeam() {
-  if (!S.teamRedraw || S.spinning || !S.draw) return;
+  if ((!S.teamRedraw && !CX.f.redraw) || S.spinning || !S.draw) return;
   const opts = teamOpts();
   if (!opts.length) return;
-  S.teamRedraw--; S.redrawsUsed++; goldenRoll = false;
+  if (!CX.f.redraw) { S.teamRedraw--; S.redrawsUsed++; } else S.cx = 1;
+  goldenRoll = false;
   spin(seeded(() => rnd(opts)));
 }
 // Re-draw era: the same franchise name from another decade (blocked once Era lock has locked in)
@@ -1397,10 +1419,11 @@ const eraOpts = () => {
   return allowedDraws().filter(x => x.dec !== S.draw.dec && DATA[x.dec][x.fid].name === name);
 };
 function redrawEra() {
-  if (!S.eraRedraw || S.spinning) return;
+  if ((!S.eraRedraw && !CX.f.redraw) || S.spinning) return;
   const opts = eraOpts();
   if (!opts.length) return;
-  S.eraRedraw--; S.redrawsUsed++; goldenRoll = false;
+  if (!CX.f.redraw) { S.eraRedraw--; S.redrawsUsed++; } else S.cx = 1;
+  goldenRoll = false;
   spin(seeded(() => rnd(opts)));
 }
 function flash(slot) {
@@ -1408,6 +1431,7 @@ function flash(slot) {
   if (el) { el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash"); }
 }
 function draft(p, slot) {
+  cxMark();
   if (S.mode === "speed") spdPicked();
   const team = DATA[S.draw.dec][S.draw.fid].name;
   if (!picks()) {
@@ -1510,6 +1534,7 @@ function renderRoster(hard) {
   const box = $("roster");
   box.innerHTML = "";
   const open = openSlots();
+  const cxv = CX.f.oracle ? cxPickVals(list) : null;
   for (const p of list) {
     const row = document.createElement("div");
     const ok = pickable(p);
@@ -1520,6 +1545,7 @@ function renderRoster(hard) {
     const newChip = isNew ? `<span class="chip new${!hard && p.ovr >= 95 ? " legend" : ""}">${!hard && p.ovr >= 95 ? "New legend" : "New"}</span>` : "";
     const lvChip = isNew ? "" : cardBadge(collKey(S.draw.dec, team.name, p.name));
     row.innerHTML = `<div class="pname"><b>${esc(p.name)}</b><span class="chips">${chips}${newChip}${lvChip}</span></div><div class="pstats">${statCells(vals, hard, sort.key)}</div><div class="pdraft"></div>`;
+    if (cxv && cxv.has(p.id)) { const v = cxv.get(p.id); row.querySelector(".chips").insertAdjacentHTML("beforeend", `<span class="chip cxo">${v.w.toFixed(0)}W ${v.k}</span>`); if (cxv.best === p.id) row.classList.add("cxbest"); }
     const cell = row.querySelector(".pdraft");
     if (drafted(p.id)) cell.innerHTML = `<span class="note">Drafted</span>`;
     else if (ruleBlock(p) && open.length) cell.innerHTML = `<span class="note">${ruleBlock(p)}</span>`;
@@ -1551,6 +1577,7 @@ function renderProjection(hard) {
   $("projGrades").innerHTML = [["Offense", r.off], ["Defense", r.def], ["Team", r.team]].map(([k, v]) =>
     `<div class="grade"><span class="label">${k}</span><b>${hard ? "?" : letter(v)}</b><span class="foot">${hard ? "hidden" : v.toFixed(1)}</span></div>`).join("");
   $("chem").innerHTML = hard ? "" : r.notes.map(([c, t]) => `<span class="tag ${c}">${t}</span>`).join("");
+  if (CX.f.oracle) { const pj = cxProj(S.lineup, 300); $("chem").insertAdjacentHTML("beforeend", `<span class="tag good cxo">≈${pj.ew.toFixed(1)} wins · 82–0 chance ${cxPct(pj.p82)}</span>`); }
   $("speedSeg").innerHTML = [["normal", "Normal"], ["fast", "Fast"], ["instant", "Instant"]].map(([k, l]) => `<button data-s="${k}" aria-pressed="${speed === k}">${l}</button>`).join("");
   $("speedSeg").querySelectorAll("button").forEach(b => b.onclick = () => { speed = b.dataset.s; store.set(KEY_SPEED, speed); renderProjection(hard); });
 }
@@ -1565,7 +1592,7 @@ function renderHeader() {
 
 function render() { renderInner(); saveCur(); }
 function renderInner() {
-  const hard = $("hardmode").checked;
+  const hard = $("hardmode").checked && !CX.f.xray;
   $("hardmode").disabled = picks() > 0 || S.done || S.mode !== "free";
   $("hardmode").closest("label").hidden = S.mode !== "free";
   spdClock();
@@ -1585,8 +1612,8 @@ function renderInner() {
   if (noDraft || S.locked || S.offseason) { $("drawPanel").hidden = $("simPanel").hidden = true; $("seasonPanel").hidden = !S.done || noDraft; return; }
   if (full) { if (!S.done) renderProjection(hard); return; }
   $("pickNo").textContent = `Pick ${picks() + 1} / 5`;
-  $("rTeam").disabled = S.spinning || !S.teamRedraw || !S.draw || !teamOpts().length;
-  $("rEra").disabled = S.spinning || !S.eraRedraw || !S.draw || !eraOpts().length;
+  $("rTeam").disabled = S.spinning || (!S.teamRedraw && !CX.f.redraw) || !S.draw || !teamOpts().length;
+  $("rEra").disabled = S.spinning || (!S.eraRedraw && !CX.f.redraw) || !S.draw || !eraOpts().length;
   $("rTeam").textContent = `Re-draw team (${S.teamRedraw})`;
   $("rEra").textContent = `Re-draw era (${S.eraRedraw})`;
   // Rules are for free play; a Speed Draft has no re-draws, so the roster comes straight after the clock
@@ -1603,12 +1630,218 @@ function renderInner() {
 }
 
 /* ---------- Season sim ---------- */
-function playGame(r, oOff, oDef, home, base) {
+/* ---------- Back office ----------
+   Only opens with five quick taps on the dash in the title plus a code. Nothing here is saved: reloading turns it
+   all off. While anything is on, nothing posts to any board, and every season played with it on is tagged so it
+   never posts later either. */
+const CX = { ok: false, boost: 0, f: { oracle: 0, redraw: 0, gold: 0, xray: 0, win: 0, hot: 0, diamond: 0, monthly: 0, rules: 0, slow: 0, x2: 0, wheel: 0, hol: 0 } };
+const cxAny = () => CX.boost > 0 || Object.values(CX.f).some(Boolean);
+const cxMark = () => { if (S && cxAny()) S.cx = 1; };
+const cxPhi = x => {
+  const t = 1 / (1 + 0.2316419 * Math.abs(x)), d = 0.3989423 * Math.exp(-x * x / 2);
+  const p = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));
+  return x > 0 ? 1 - p : p;
+};
+const CX_Z = [-1.59, -0.97, -0.59, -0.28, 0, 0.28, 0.59, 0.97, 1.59];
+// One game's win chance against the season's spread of opponents (home and road averaged)
+function cxPWin(r, raw) {
+  if (CX.f.win && !raw) return 1;
+  let s = 0;
+  for (const z of CX_Z) {
+    const q = Math.min(95, Math.max(64, 75 + z * 5)), m = 0.7 * ((r.off - q) + (r.def - q));
+    s += cxPhi((m + 1.5) / 12.18) + cxPhi((m - 1.5) / 12.18);
+  }
+  return s / (CX_Z.length * 2);
+}
+// Expected wins and the chance of 82-0 over a few hundred rolled seasons of form
+function cxProj(L, n = 200) {
+  const L2 = withCards(L, S ? S.mode : "free"), r = teamRatings(L2);
+  let p82 = 0;
+  const prevR = R; R = Math.random;
+  try { for (let i = 0; i < n; i++) p82 += Math.pow(cxPWin(withForm(r, rollForms(L2))), 82); } finally { R = prevR; }
+  return { ew: 82 * cxPWin(r), p82: p82 / n, team: r.team };
+}
+const cxPct = p => p >= .995 ? ">99%" : p < .001 ? "<0.1%" : (p * 100).toFixed(p < .1 ? 1 : 0) + "%";
+const CX_FILL = { PG: [18, 4.5, 7.5, 1.6, .3], SG: [22, 5, 4, 1.5, .5], SF: [20, 7, 4, 1.4, .7], PF: [18, 10, 3, 1, 1.2], C: [18, 11.5, 2.5, .9, 2.2] };
+const cxFill = k => { const [ppg, rpg, apg, spg, bpg] = CX_FILL[k]; return { id: "cxf" + k, name: "", ovr: 88, ppg, rpg, apg, spg, bpg, pos: [k], dec: "2000s", team: "" }; };
+const cxQuickW = L => 82 * cxPWin(teamRatings(withCards(L, S.mode)), true);
+// For every player on the roll: projected wins with him in his best open spot (open spots filled with a good starter)
+function cxPickVals(list) {
+  const out = new Map(), open = openSlots();
+  if (!open.length || !S.draw) return out;
+  const base = {}; for (const k of SLOTS) base[k] = S.lineup[k] || cxFill(k);
+  const team = DATA[S.draw.dec][S.draw.fid].name;
+  let best = null;
+  for (const p of list) {
+    if (!pickable(p)) continue;
+    const pp = { ...p, dec: S.draw.dec, fid: S.draw.fid, team };
+    let bw = -1, bk = null;
+    for (const k of open) { const w = cxQuickW({ ...base, [k]: pp }); if (w > bw) { bw = w; bk = k; } }
+    out.set(p.id, { w: bw, k: bk });
+    if (!best || bw > best.w) best = { id: p.id, w: bw };
+  }
+  if (best) out.best = best.id;
+  return out;
+}
+let cxAll = null, cxFound = null;
+const cxIndex = () => cxAll || (cxAll = ALL_DRAWS.flatMap(x => { const t = DATA[x.dec][x.fid]; return t.players.map(p => ({ p, x, team: t.name })); }));
+const cxCanDraft = () => !!S && !S.done && !S.spinning && !S.locked && !S.offseason && mode !== "arcade" && mode !== "duel";
+// Every roster in the game, ranked by how far its best pick moves your five toward 82-0 (open spots filled with good starters)
+function cxScan() {
+  const live = S && !S.done && !S.locked, open = live ? openSlots() : SLOTS, md = S ? S.mode : "free";
+  const base = {}; for (const k of SLOTS) base[k] = (live && S.lineup[k]) || cxFill(k);
+  const res = [];
+  for (const x of ALL_DRAWS) {
+    const t = DATA[x.dec][x.fid];
+    if (!t) continue;
+    let best = null;
+    for (const p of t.players) {
+      if (live && drafted(p.id)) continue;
+      const pp = { ...p, dec: x.dec, fid: x.fid, team: t.name };
+      for (const k of open) { const v = teamRatings(withCards({ ...base, [k]: pp }, md)).team; if (!best || v > best.v) best = { v, p: pp, k }; }
+    }
+    if (best) res.push({ x, label: `${short(x.dec)} ${t.name}`, ...best });
+  }
+  res.sort((a, b) => b.v - a.v);
+  cxFound = res.slice(0, 12).map(e => ({ ...e, last: open.length === 1, ...cxProj({ ...base, [e.k]: e.p }, 400) }));
+}
+function cxDream() {
+  const pool = cxIndex().filter(e => e.p.ovr >= 86);
+  for (const k of openSlots()) {
+    const base = {}; for (const s of SLOTS) base[s] = S.lineup[s] || cxFill(s);
+    let best = null, bw = -1;
+    for (const e of pool) {
+      if (drafted(e.p.id)) continue;
+      const pp = { ...e.p, dec: e.x.dec, fid: e.x.fid, team: e.team }, w = teamRatings(withCards({ ...base, [k]: pp }, S.mode)).team;
+      if (w > bw) { bw = w; best = pp; }
+    }
+    if (best) S.lineup[k] = { ...best, fresh: false };
+  }
+  S.draw = null; S.cx = 1; render();
+}
+function cxFoundHtml() {
+  if (!cxFound) return "";
+  if (!cxFound.length) return `<p class="cxn">Your five is already set.</p>`;
+  return `<p class="cxn">${cxFound[0].last ? "Your last pick: the exact chance your five goes 82–0 with him." : "Best pick on each roll, with good starters assumed in your other open spots."}</p>` +
+    cxFound.map((e, i) => `<div class="cxr"><span><b>${esc(e.label)}</b> → ${esc(e.p.name)} at ${e.k}<small>≈${e.ew.toFixed(1)} wins · 82–0 chance <b>${cxPct(e.p82)}</b></small></span><button class="cxb" data-a="froll" data-i="${i}">🎯 Roll it</button><button class="cxb" data-a="ftake" data-i="${i}">⚡ Draft him</button></div>`).join("");
+}
+function cxSearch() {
+  const box = $("cxRes"), q = ($("cxQ").value || "").trim().toLowerCase();
+  if (!box) return;
+  if (q.length < 2) { box.innerHTML = ""; return; }
+  const open = S ? openSlots() : [];
+  const hits = cxIndex().filter(e => e.p.name.toLowerCase().includes(q)).sort((a, b) => b.p.ovr - a.p.ovr).slice(0, 8);
+  box.innerHTML = hits.length ? hits.map((e, i) => `<div class="cxr"><span><b>${esc(e.p.name)}</b> · ${short(e.x.dec)} ${esc(e.team)} · ${e.p.ovr} · ${e.p.pos.join("/")}</span>${open.map(k => `<button class="cxb" data-a="any" data-i="${i}" data-k="${k}">${k}</button>`).join("") || `<i class="cxn">no open spot</i>`}</div>`).join("") : `<p class="cxn">Nobody by that name.</p>`;
+  box.querySelectorAll("button[data-a=any]").forEach(b => b.onclick = () => {
+    const e = hits[+b.dataset.i];
+    if (!cxCanDraft() || S.lineup[b.dataset.k] || drafted(e.p.id)) return;
+    S.cx = 1; S.draw = e.x; goldenRoll = false;
+    draft(e.p, b.dataset.k);
+    $("cxQ").value = ""; cxPanel();
+  });
+}
+function cxAfter(k) {
+  cxMark();
+  try {
+    if (k === "monthly" && mode === "monthly" && S && !S.done) startOver();
+    else if (mode === "arcade") { if (arcView === "hol" && hol) renderHol(); }
+    else if (S) render();
+  } catch (e) {}
+  cxPanel();
+}
+function cxPanel() {
+  let el = $("cxSheet");
+  const keep = el ? el.scrollTop : 0;
+  if (!el) { el = document.createElement("div"); el.id = "cxSheet"; document.body.appendChild(el); }
+  el.hidden = false;
+  const T = (k, label, sub) => `<label class="cxt"><input type="checkbox" data-f="${k}"${CX.f[k] ? " checked" : ""}><span><b>${label}</b>${sub ? `<i>${sub}</i>` : ""}</span></label>`;
+  const can = !!S && !S.done && !S.locked && !S.offseason && mode !== "arcade" && mode !== "duel", dis = can ? "" : " disabled";
+  const B = (a, label, d = "") => `<button class="cxb" data-a="${a}"${d}>${label}</button>`;
+  let myst = ""; try { const c = gsCur(); if (c && c.m) myst = c.m.name; } catch (e) {}
+  const dec = CX.dec || (S && S.draw ? S.draw.dec : DECS[DECS.length - 1]);
+  const teams = ALL_DRAWS.filter(x => x.dec === dec).map(x => [x.fid, DATA[x.dec][x.fid].name]).sort((a, b) => a[1].localeCompare(b[1]));
+  el.innerHTML = `<div class="cxin"><div class="cxh"><b>🛠 Back office</b><button class="cxb" data-a="close" aria-label="Close">✕</button></div>
+    <p class="cxn">${cxAny() ? "<b>Something's on:</b> nothing you play right now goes on any leaderboard." : "Everything's off. Turn anything on and that run stays off every leaderboard."} Reloading the page turns it all off.</p>
+    <h4>Draft</h4>
+    ${T("oracle", "🔮 Oracle", "projected wins on every player, the best pick glows green, 82–0 chance on your finished five")}
+    ${T("redraw", "♾️ Unlimited re-draws", "the re-draw buttons never run out (Monthly Draft too)")}
+    ${T("gold", "✨ Always golden", "every roll is one of the all-time great rosters")}
+    ${T("xray", "👁️ X-ray hard mode", "see ratings and stats in hard mode")}
+    <div class="cxrow">${B("roll", "🎲 New roll", can && picks() < 5 ? "" : " disabled")}${B("dream", "🤖 Auto-draft a dream team", can && picks() < 5 ? "" : " disabled")}</div>
+    <div class="cxrow"><select id="cxDec" aria-label="Era">${DECS.map(d => `<option value="${d}"${d === dec ? " selected" : ""}>${d}</option>`).join("")}</select><select id="cxTeam" aria-label="Team">${teams.map(([f, n]) => `<option value="${f}">${esc(n)}</option>`).join("")}</select>${B("pick", "🎯 Roll this", can && picks() < 5 ? "" : " disabled")}</div>
+    <div class="cxrow"><input id="cxQ" type="text" autocomplete="off" placeholder="🌍 Draft anyone ever: type a name"></div><div id="cxRes"></div>
+    ${S && picks() && !S.done ? `<div class="cxrow">${SLOTS.filter(k => S.lineup[k]).map(k => `<button class="cxb" data-a="clr" data-k="${k}"${dis}>↩️ Undo ${k}</button>`).join("")}</div>` : ""}
+    <div class="cxrow">${B("scan", cxFound ? "🧭 Scan again" : "🧭 Which teams get me to 82–0?")}</div><div id="cxFound">${cxFoundHtml()}</div>
+    <h4>Season</h4>
+    ${T("win", "🏆 Win every game", "season, playoffs, Head-to-head, Gauntlet, Survival")}
+    ${T("hot", "🔥 Monster seasons", "every starter has a career year")}
+    <div class="cxt"><span><b>💪 Rating boost: +<span id="cxBv">${CX.boost}</span></b><i>added to every player you play with</i></span></div><input type="range" id="cxBoost" min="0" max="30" step="1" value="${CX.boost}" aria-label="Rating boost">
+    ${T("diamond", "💎 Every card Diamond", "all your players get the Diamond +3")}
+    ${T("monthly", "📅 Unlimited Monthly Draft tries", "")}
+    ${T("rules", "🧪 Every challenge rule unlocked", "")}
+    <h4>Arcade</h4>
+    ${T("slow", "🐢 Slow motion", "the canvas games run at half speed")}
+    ${T("x2", "✖️ Double scores", "")}
+    ${T("wheel", "🎡 Free Prize Wheel spins", "")}
+    ${T("hol", "🔼 Higher or Lower tell", "the right button has a faint line along its bottom")}
+    <div class="cxrow">${B("tix", "🎟 +500 tickets")}${B("pack", "👑 Free Legend pack")}${B("xp", "⭐ +5,000 XP")}</div>
+    ${myst ? `<p class="cxn">🕵️ Today's Mystery Player: <b>${esc(myst)}</b></p>` : ""}
+    <div class="cxrow">${B("off", "Turn everything off")}${B("close", "Close")}</div></div>`;
+  el.scrollTop = keep;
+  el.querySelectorAll("input[data-f]").forEach(c => c.onchange = () => { CX.f[c.dataset.f] = c.checked ? 1 : 0; cxAfter(c.dataset.f); });
+  $("cxBoost").oninput = () => { $("cxBv").textContent = $("cxBoost").value; };
+  $("cxBoost").onchange = () => { CX.boost = +$("cxBoost").value; cxAfter("boost"); };
+  $("cxDec").onchange = () => { CX.dec = $("cxDec").value; cxPanel(); };
+  $("cxQ").oninput = cxSearch;
+  el.querySelectorAll("button[data-a]").forEach(b => b.onclick = () => {
+    const a = b.dataset.a;
+    if (a === "close") { el.hidden = true; return; }
+    if (a === "off") { for (const k in CX.f) CX.f[k] = 0; CX.boost = 0; cxAfter("off"); return; }
+    if (a === "tix") { xTix(500); saveCareer(); }
+    else if (a === "pack") givePack("legend");
+    else if (a === "xp") gainXp(5000);
+    else if (a === "scan") { b.textContent = "Scanning every roster…"; b.disabled = true; setTimeout(() => { cxScan(); cxPanel(); }, 30); return; }
+    else if (a === "roll") { if (cxCanDraft() && picks() < 5) { S.cx = 1; newDraw(); } }
+    else if (a === "dream") { if (cxCanDraft() && picks() < 5) cxDream(); }
+    else if (a === "pick") { if (cxCanDraft() && picks() < 5) { const x = ALL_DRAWS.find(d => d.dec === $("cxDec").value && String(d.fid) === $("cxTeam").value); if (x) { S.cx = 1; S.draw = x; goldenRoll = false; query = ""; render(); } } }
+    else if (a === "clr") { if (cxCanDraft()) { S.lineup[b.dataset.k] = null; S.cx = 1; if (!S.draw) newDraw(); else render(); } }
+    else if (a === "froll" || a === "ftake") {
+      const e = cxFound && cxFound[+b.dataset.i];
+      if (!e || !cxCanDraft()) return;
+      S.cx = 1; goldenRoll = false;
+      if (picks() >= 5) return;
+      if (a === "froll") { S.draw = e.x; query = ""; render(); }
+      else if (!S.lineup[e.k] && !drafted(e.p.id)) { S.draw = e.x; draft(e.p, e.k); cxFound = null; }
+    }
+    cxPanel();
+  });
+}
+function cxGate() {
+  if (CX.ok) { cxPanel(); return; }
+  if ($("cxGate")) return;
+  const g = document.createElement("div");
+  g.id = "cxGate";
+  g.innerHTML = `<input type="password" id="cxCode" autocomplete="off" aria-label="Code"><button class="cxb" id="cxGo" aria-label="OK">→</button>`;
+  document.body.appendChild(g);
+  const go = () => { const v = ($("cxCode").value || "").trim().toLowerCase(); g.remove(); if (hashStr("cx:" + v) === 2819385829) { CX.ok = true; cxPanel(); } };
+  $("cxGo").onclick = go;
+  $("cxCode").onkeydown = e => { e.stopPropagation(); if (e.key === "Enter") go(); if (e.key === "Escape") g.remove(); };
+  $("cxCode").focus();
+  setTimeout(() => { if (g.isConnected && document.activeElement !== $("cxCode")) g.remove(); }, 20000);
+}
+(() => {
+  const d = document.querySelector("h1 .dash");
+  if (!d) return;
+  let n = 0, t0 = 0;
+  d.addEventListener("click", () => { const now = Date.now(); if (now - t0 > 2500) { n = 0; t0 = now; } if (++n >= 5) { n = 0; cxGate(); } });
+})();
+function playGame(r, oOff, oDef, home, base, raw) {
   const hca = home ? 1.5 : -1.5;
   let us = Math.round(base + (r.off - oDef) * 0.7 + hca / 2 + gauss() * 8.5);
   let them = Math.round(base + (oOff - r.def) * 0.7 - hca / 2 + gauss() * 8.5);
   let ot = 0;
   while (us === them) { ot++; us += Math.round(10 + gauss() * 3); them += Math.round(10 + gauss() * 3); }
+  if (CX.f.win && !raw && us < them) { const t = us; us = them; them = t; }
   return { us, them, won: us > them, ot, home };
 }
 /* ---------- Season form ----------
@@ -1630,7 +1863,8 @@ function rollForms(L) {
   for (const k of SLOTS) {
     const p = L[k], sd = 0.13 + (p.ovr < 80 ? 0.05 : 0) + (p.ovr < 70 ? 0.03 : 0);
     const m = Math.min(1.7, Math.max(0.6, Math.exp(gauss() * sd - sd * sd / 2)));
-    f[k] = { m, id: formOf(m, p.ovr) };
+    const mm = CX.f.hot ? Math.max(m, 1.32) : m;
+    f[k] = { m: mm, id: formOf(mm, p.ovr) };
   }
   return f;
 }
@@ -1681,6 +1915,7 @@ function seasonRng() {
 let lastResult = "", curRun = null, poRunning = false, simRunning = false;
 function simulate() {
   if (simRunning) return;
+  cxMark();
   simRunning = true;
   S.done = true; render(); resetPlayoffs();
   $("afterPanel").hidden = true;
@@ -1863,6 +2098,7 @@ function finishSeason(w, l, res) {
   curRes = res;
   const { pf, pa, home, away, r } = res;
   const run = makeRun(res, S.lineup, { hard: $("hardmode").checked, rules: S.rules || [], redraws: S.redrawsUsed || 0 });
+  if (S.cx || cxAny()) run.cx = 1;
   const news = seasonNews(res, run);
   run.news = news;
   $("news").innerHTML = newsList(news);
@@ -2008,6 +2244,7 @@ function playoffSim(r, seed, w) {
 
 async function playoffs() {
   if (!curRun || poRunning || curRun.po === "played") return;
+  if (cxAny()) curRun.cx = 1;
   poRunning = true;
   try { await playoffsInner(); }
   catch (e) { console.error(e); logError(e && e.message, e && e.stack); }
@@ -2517,12 +2754,13 @@ function renderCollection() {
 const CARD_LV = [0, 30, 70, 120, 180, 260, 360, 480, 630, 800]; // XP to reach level 1, 2, … 10
 const CARD_TIERS = [[10, "diamond", "Diamond"], [7, "gold", "Gold"], [4, "silver", "Silver"], [1, "bronze", "Bronze"]];
 const cardBoostAt = L => L >= 10 ? 3 : Math.round((L - 1) * 3) / 10;
-const cardBoost = p => cardBoostAt(cardInfo(cardKeyOf(p)).L);
+const cardBoost = p => CX.f.diamond ? 3 : cardBoostAt(cardInfo(cardKeyOf(p)).L);
 // Your lineup with each card's boost attached (a copy; the Monthly Draft stays level for everyone)
 function withCards(L, mode) {
-  if (!L || mode === "monthly" || !career.cards) return L;
+  const bx = CX.boost || 0, cards = mode !== "monthly" && !!career.cards;
+  if (!L || (!cards && !bx)) return L;
   const o = {};
-  for (const k of SLOTS) o[k] = L[k] ? { ...L[k], cb: cardBoost(L[k]) } : L[k];
+  for (const k of SLOTS) o[k] = L[k] ? { ...L[k], cb: (cards ? cardBoost(L[k]) : 0) + bx } : L[k];
   return o;
 }
 function cardLevel(xp) { let L = 1; while (L < 10 && xp >= CARD_LV[L]) L++; return L; }
@@ -2679,7 +2917,7 @@ const RULES = [
   { id: "budget", name: "Budget squad", desc: "Nobody rated over 85 can be drafted", bonus: .35, lvl: 8 },
   { id: "onestar", name: "One superstar", desc: "Only one player rated 90+ on your team", bonus: .2, lvl: 10 },
 ];
-const ruleUnlocked = id => { const r = RULES.find(x => x.id === id); return !!r && lvl() >= r.lvl; };
+const ruleUnlocked = id => { const r = RULES.find(x => x.id === id); return !!r && (!!CX.f.rules || lvl() >= r.lvl); };
 const ruleName = id => (RULES.find(x => x.id === id) || {}).name || id;
 const xpMult = run => 1 + (run.hard ? .5 : 0) + (run.rules || []).reduce((a, id) => a + ((RULES.find(x => x.id === id) || {}).bonus || 0), 0);
 function renderRules() {
@@ -3252,7 +3490,7 @@ function betterRun(a, b) {
   return (lbScore(a) - lbScore(b)) || (((a.pf || 0) - (a.pa || 0)) - ((b.pf || 0) - (b.pa || 0))) || ((a.id || 0) - (b.id || 0));
 }
 function bestOf(list) { return list.length ? list.reduce((best, r) => betterRun(r, best) > 0 ? r : best) : null; }
-function lbBest() { return bestOf(runs); }
+function lbBest() { return bestOf(runs.filter(r => !r.cx)); }
 // "79–3 🏆 16–1" or "75–7, 15 playoff wins"
 function recText(r) {
   if (!r) return "";
@@ -3452,7 +3690,7 @@ function updateLbRank() {
 }
 
 function lbBestForMode(mode) {
-  return bestOf(runs.filter(r => mode === "hard" ? !!r.hard : !r.hard));
+  return bestOf(runs.filter(r => !r.cx && (mode === "hard" ? !!r.hard : !r.hard)));
 }
 
 function switchLbTab(mode) {
@@ -4351,6 +4589,7 @@ $("h2hFriendName").addEventListener("keydown", e => { if (e.key === "Enter") fin
 let autoBusy = false;
 // Puts a season up as your entry on one board. Unless `replace` is set, an entry with as many points stays.
 async function postClaude(board, run, replace) {
+  if (run.cx || cxAny()) return { kept: true, score: lbScore(run), same: true };
   const guest = lbWay === "guest", id = myDocId();
   if (!id) throw { code: "invalid_argument" };
   let name = guest ? String(store.get(KEY_LBNAME, "") || "").trim() : "";
@@ -4368,6 +4607,7 @@ async function postClaude(board, run, replace) {
   return { ok: true, score };
 }
 async function postRest(board, run, name, replace) {
+  if (run.cx || cxAny()) return { kept: true, score: lbScore(run) };
   const r = await fetch(LB_API, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ board, token: lbToken, name, run: slimRun(run), replace: !!replace }) });
   const out = await r.json().catch(() => ({}));
   if (!r.ok) throw { status: r.status, message: out.error || "Couldn't post your score. Try again in a moment." };
@@ -4400,7 +4640,7 @@ function showViewOnlyNote() {
   $("lbAuto").hidden = false;
 }
 async function autoPost(prompt) {
-  if (autoBusy) return;
+  if (autoBusy || cxAny()) return;
   if (!LB_REST && !(lbDb && lbWay)) {
     if (prompt && lbReadOnly) showViewOnlyNote();
     renderPostState();
@@ -4472,6 +4712,7 @@ const modeBoardCache = {};
 function modeDocId(kind, day) { const id = myDocId(); return id ? (day ? `${day}_${id}` : id) : null; }
 function boardName() { return LB_REST || lbWay === "guest" ? String(store.get(KEY_LBNAME, "") || "").trim() : (lbMeName || "Anonymous"); }
 async function postModeBoard(kind, entry, day) {
+  if (cxAny() || (S && S.cx)) return { kept: true, score: (entry && entry.score) || 0 };
   if (LB_REST) {
     const name = boardName();
     if (!name) throw { code: "need_name" };
@@ -4590,6 +4831,7 @@ const DAILY_STREAK_PACKS = { 3: "normal", 7: "gold", 14: "gold", 30: "legend", 6
 function monthlyFinished(run) {
   const m = monthlyState();
   run.mode = "monthly"; run.day = S.day; run.month = S.month;
+  if (run.cx) return;
   if (m.day === S.day && m.runId && m.runId !== run.id) return; // already tried today (in another tab, say)
   m.streak = m.last === prevDay(S.day) ? m.streak + 1 : m.last === S.day ? m.streak : 1;
   m.bestStreak = Math.max(m.bestStreak, m.streak);
@@ -4602,7 +4844,7 @@ function monthlyFinished(run) {
 }
 // Posts a try to its month's board (the board keeps your best) and counts titles and top-3 spots
 function postMonthly(run) {
-  if (!run || run.mode !== "monthly" || !run.month) return;
+  if (!run || run.cx || run.mode !== "monthly" || !run.month) return;
   const m = monthlyState(), score = lbScore(run);
   m.best = Math.max(m.best, score);
   if (run.champ && run.po === "played" && !run.monthlyTitle) { run.monthlyTitle = true; m.titles++; }
@@ -4717,7 +4959,7 @@ function dynastySeasonDone(run) {
     career.dynBest = Math.max(career.dynBest || 0, d.titles * 1000 + d.wins);
     career.dynDone = (career.dynDone || 0) + 1;
     toast(`👑 Dynasty complete: ${d.titles} title${d.titles === 1 ? "" : "s"} in ${DYN_YEARS} years · +${xp} XP${reward ? ` · a free ${PACKS[reward].name.toLowerCase()}` : ""}`);
-    modePost("dynasty", { score: d.titles * 1000 + d.wins, titles: d.titles, wins: d.wins, years: d.years.map(({ runId, ...y }) => y), players: slimPlayers(d.lineup) });
+    if (!d.cx) modePost("dynasty", { score: d.titles * 1000 + d.wins, titles: d.titles, wins: d.wins, years: d.years.map(({ runId, ...y }) => y), players: slimPlayers(d.lineup) });
   } else {
     d.stage = "offseason";
     d.aging = SLOTS.map(k => ({ k, d: ageDelta(d.lineup[k], d.year) }));
@@ -4811,6 +5053,7 @@ function modeAfterSeason(run) {
   const d = dynState();
   if (S.mode === "dynasty" && d && d.stage !== "done" && d.stage !== "offseason") {
     run.mode = "dynasty"; run.dyn = { id: d.id, year: d.year };
+    if (run.cx) d.cx = 1;
     d.stage = "season";
     d.lineup = cloneLineup(S.lineup); // the team that played, aged ratings and all
     saveCareer();
@@ -4982,7 +5225,7 @@ function duelSeries(dl) {
     let a = 0, b = 0;
     while (a < 4 && b < 4) {
       const home = homeA ? !!PO_PATTERN[games.length] : !PO_PATTERN[games.length];
-      const x = playGame(rA, rB.off, rB.def, home, 106);
+      const x = playGame(rA, rB.off, rB.def, home, 106, true);
       games.push([x.us, x.them, home ? 1 : 0, x.ot ? 1 : 0]);
       x.won ? a++ : b++;
     }
@@ -5247,6 +5490,7 @@ const arcKind = v => v.startsWith("x:") ? "x_" + v.slice(2) : v;
 let arcWaiting = null; // { id, entry }
 const arcNeedsName = () => (LB_REST || lbWay === "guest") && !boardName();
 async function arcPost(id, entry) {
+  if (cxAny() || (S && S.cx)) return null;
   const day = arcDay(id);
   if (arcNeedsName()) { arcWaiting = { id, entry }; return null; }
   if (arcWaiting && arcWaiting.id === id) arcWaiting = null;
@@ -5475,6 +5719,7 @@ function renderHol() {
   arcMount("hol", s.best ? `Best ${s.best} in a row` : "One miss ends it", body);
   if ($("holB") && reveal && h.right != null) $("holB").classList.add(h.right ? "right" : "wrong");
   if ($("holHi")) { $("holHi").onclick = () => holGuess(true); $("holLo").onclick = () => holGuess(false); }
+  if (CX.f.hol && !h.over && $("holHi")) $(h.b[k] > h.a[k] ? "holHi" : "holLo").style.boxShadow = "inset 0 -2px 0 rgba(255,255,255,.4)";
   if ($("holAgain")) $("holAgain").onclick = () => { holStart(); renderHol(); };
 }
 async function holGuess(up) {
@@ -6132,7 +6377,7 @@ function xStarTotal() {
 }
 const xPlayedCount = () => { const a = xState(); return XG.filter(g => a.xg[g.id] && a.xg[g.id].played).length + X_CLASSIC.filter(c => (a[c.id] && (a[c.id].played || a[c.id].wins)) > 0).length; };
 const xGotd = () => XG[hashStr("gotd:" + dayPT()) % XG.length];
-const xSpinReady = () => xState().spinDay !== dayPT();
+const xSpinReady = () => !!CX.f.wheel || xState().spinDay !== dayPT();
 function xTix(n, why) {
   const a = xState();
   a.tix = Math.max(0, a.tix + n);
@@ -6285,7 +6530,8 @@ function xFrame(now) {
   X.raf = 0;
   const cv = X.cv;
   if (!cv || !cv.isConnected || mode !== "arcade" || arcView !== "x:" + X.g.id) { X.live = false; return; }
-  const dt = Math.min(.05, Math.max(0, (now - (X.last || now)) / 1000));
+  const dt = Math.min(.05, Math.max(0, (now - (X.last || now)) / 1000)) * (CX.f.slow ? .5 : 1);
+  if (cxAny()) X.cx = 1;
   X.last = now;
   const s = X.s;
   if (X.cd > 0) X.cd = Math.max(0, X.cd - dt);
@@ -6435,16 +6681,17 @@ function xFinish() {
   if (!X || X.done) return;
   X.done = true;
   const g = X.g, s = X.s, st = xG(g.id), a = xState();
-  const sc = Math.max(0, Math.min(g.cap, Math.floor(s.score)));
+  if (cxAny()) X.cx = 1;
+  const sc = Math.max(0, Math.min(g.cap, Math.floor(s.score * (CX.f.x2 ? 2 : 1))));
   const best = sc > st.best, before = st.stars, now = xStarsOf(g, sc), gained = Math.max(0, now - before);
-  if (best) st.best = sc;
+  if (best && !X.cx) st.best = sc;
   st.stars = Math.max(st.stars, now);
   if (now === 3 && before < 3) a.threes++;
   const gotd = xGotd().id === g.id, mult = gotd ? 2 : 1;
   const tix = (1 + now * 2 + gained * 5) * mult, xp = (8 + now * 12 + gained * 15) * mult;
   xTix(tix);
   gainXp(xp);
-  if (best && sc > 0) arcPost("x_" + g.id, { score: sc });
+  if (best && sc > 0 && !X.cx) arcPost("x_" + g.id, { score: sc });
   questEvent("xplay", g.id);
   if (gained) questEvent("xstar", gained);
   if (gotd) questEvent("xgotd", 1);
@@ -10971,8 +11218,8 @@ function xSpin() {
   const a = xState(), free = xSpinReady();
   if (!free && a.tix < 15) return;
   xSpinning = true;
-  if (free) { a.spinStreak = a.spinDay === prevDay(dayPT()) ? a.spinStreak + 1 : 1; a.spinBest = Math.max(a.spinBest, a.spinStreak); a.spinDay = dayPT(); }
-  else a.tix -= 15;
+  if (free && a.spinDay !== dayPT()) { a.spinStreak = a.spinDay === prevDay(dayPT()) ? a.spinStreak + 1 : 1; a.spinBest = Math.max(a.spinBest, a.spinStreak); a.spinDay = dayPT(); }
+  else if (!free) a.tix -= 15;
   a.spins++;
   saveCareer();
   const i = X_WHEEL.indexOf(pickW(X_WHEEL)), n = X_WHEEL.length, seg = 360 / n;
@@ -11501,7 +11748,7 @@ function startOver() {
   clearInterval(duelTimer); duelTimer = 0;
   // Already played today's Daily Draft: show it (one try a day)
   // Already had today's Monthly Draft try: show it (one a day)
-  if (mode === "monthly" && monthlyRunToday()) { S.locked = true; S.lineup = lineupFromRun(monthlyRunToday()) || S.lineup; render(); return; }
+  if (mode === "monthly" && monthlyRunToday() && !CX.f.monthly) { S.locked = true; S.lineup = lineupFromRun(monthlyRunToday()) || S.lineup; render(); return; }
   if (mode === "dynasty") {
     let d = dynState();
     if (!d) { startDynasty(); d = dynState(); }
