@@ -73,7 +73,7 @@ function boardKey(kind, day) {
 }
 const SHOWN = 500;
 // The page version the server expects; older pages get a bar asking them to reload
-const PAGE_V = 49;
+const PAGE_V = 50;
 
 export default async (req, context) => {
   // Deploy previews and branch deploys get their own throwaway store, so testing never touches the real board
@@ -213,6 +213,7 @@ async function submit(req, store) {
   let body;
   try { body = JSON.parse(text); } catch { return reply({ error: "Bad request" }, 400); }
   if (body && body.action === "season") return seasonSeed(store, body);
+  if (body && body.action === "claim") return claimName(store, body);
   const { board: kind, token } = body || {};
   if (!KINDS.has(kind) && !xCap(kind)) return reply({ error: "Unknown board" }, 400);
   // A Daily Draft or Mystery Player entry is for today (in California), or the day either side of it; a Monthly
@@ -302,6 +303,44 @@ async function submit(req, store) {
   await store.set(entry.idx, "1");
   if (prev && prev.idx && prev.idx !== entry.idx) await store.delete(prev.idx);
   return reply({ ok: true, id, score, rank: await rankOf(store, board, id, kind) });
+}
+
+// The owner moves their name, and every board entry under it, to the browser they're on now (each browser has
+// its own token, so a new phone or a cleared browser would otherwise be a stranger to its own name)
+async function claimName(store, body) {
+  if (!isOwner(body.owner)) return reply({ error: "That owner key isn't right." }, 403);
+  const { token } = body;
+  if (typeof token !== "string" || !/^[0-9a-f]{32}$/.test(token)) return reply({ error: "Bad player token. Reload the page and try again." }, 400);
+  const id = createHash("sha256").update(token).digest("hex").slice(0, 20);
+  const name = cleanName(body.name), nk = nameKey(name);
+  if (!nk) return reply({ error: "Type your name for the board first." }, 400);
+  const owner = await store.get(`n/${nk}`, { type: "json" });
+  const old = owner && owner.id;
+  let moved = 0;
+  if (old && old !== id) {
+    const { blobs } = await store.list({ prefix: "e/" });
+    for (const { key } of blobs) {
+      if (!key.endsWith("/" + old)) continue;
+      const board = key.slice(2, -old.length - 1);
+      const e = await store.get(key, { type: "json" });
+      if (!e) continue;
+      const mine = await store.get(`e/${board}/${id}`, { type: "json" });
+      // Keep whichever entry is better; the other goes
+      if (!mine || (e.score || 0) > (mine.score || 0)) {
+        if (mine && mine.idx) await store.delete(mine.idx);
+        const ne = { ...e, id, name };
+        ne.idx = typeof e.idx === "string" ? e.idx.replace(`i/${board}/${old}~`, `i/${board}/${id}~`) : null;
+        if (ne.idx) { const p = ne.idx.split("~"); p[6] = Buffer.from(name, "utf8").toString("base64url"); ne.idx = p.join("~"); }
+        await store.setJSON(`e/${board}/${id}`, ne);
+        if (ne.idx) await store.set(ne.idx, "1");
+      }
+      if (e.idx) await store.delete(e.idx);
+      await store.delete(key);
+      moved++;
+    }
+  }
+  await store.setJSON(`n/${nk}`, { id });
+  return reply({ ok: true, id, moved });
 }
 
 async function rankOf(store, board, id, kind = board) {

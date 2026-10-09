@@ -135,7 +135,27 @@ await t("a page from before the update is asked to reload", async () => {
   const { pv, ...proof } = botDraft("free", seed, { tk });
   const r = await call("POST", "", { board: "normal", token: tok("d"), name: "Dee", run: botFinish(proof, seed, "b".repeat(32)) });
   assert.equal(r.status, 400); assert.match(r.body.error, /Reload the page/);
-  assert.equal((await call("GET", "?ticket=1")).body.v, 49);
+  assert.equal((await call("GET", "?ticket=1")).body.v, 50);
+});
+await t("the owner moves their name and entries to a new browser", async () => {
+  const a = await real(), h = await real({ hard: true });
+  assert.equal((await call("POST", "", { board: "normal", token: tok("3"), name: "Ivo", run: a })).status, 200);
+  assert.equal((await call("POST", "", { board: "hard", token: tok("3"), name: "Ivo", run: h })).status, 200);
+  // a new browser can't use the name
+  let r = await call("POST", "", { board: "normal", token: tok("4"), name: "Ivo", run: await real() });
+  assert.equal(r.status, 409);
+  assert.equal((await call("POST", "", { action: "claim", token: tok("4"), name: "Ivo", owner: "nope" })).status, 403);
+  r = await call("POST", "", { action: "claim", token: tok("4"), name: "Ivo", owner: "test-owner" });
+  assert.equal(r.status, 200, JSON.stringify(r.body)); assert.equal(r.body.moved, 2);
+  for (const b of ["normal", "hard"]) {
+    const list = (await call("GET", `?board=${b}`)).body.entries.filter(e => e.name === "Ivo");
+    assert.equal(list.length, 1, b); assert.equal(list[0].id, r.body.id, b);
+    assert.equal((await call("GET", `?board=${b}&id=${r.body.id}`)).status, 200);
+  }
+  // and from now on it posts from the new browser
+  r = await call("POST", "", { board: "normal", token: tok("4"), name: "Ivo", run: await real() });
+  assert.equal(r.status, 200, JSON.stringify(r.body));
+  assert.equal((await call("POST", "", { board: "normal", token: tok("3"), name: "Ivo", run: await real() })).status, 409);
 });
 await t("challenge rules replay too", async () => {
   for (const rules of [["eralock"], ["franlock"], ["budget", "onestar"], ["noredraw"]]) {

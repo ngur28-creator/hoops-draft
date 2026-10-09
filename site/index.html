@@ -1287,7 +1287,7 @@ body.xplaying .toast { pointer-events: none; opacity: .88; }
 <div class="toast" id="toast" hidden role="status"></div>
 
 <script>
-const APP_VERSION = 49;
+const APP_VERSION = 50;
 // How leaderboard points are counted. Version 1 also counted team rating; entries saved under it are re-scored when shown.
 const SCORE_V = 2;
 // Anything that goes wrong is noted (last 20, in this browser and in your private cloud save) so it can be fixed
@@ -1911,6 +1911,7 @@ function cxPanel() {
     <h4>Leaderboard</h4>
     <p class="cxn">Put any of your seasons on the board: one played with cheats, or one from before the server started checking.${LB_REST ? " The server checks your owner key (this device remembers it)." : ""}</p>
     ${LB_REST ? `<div class="cxrow"><input id="cxPw" type="password" autocomplete="off" placeholder="Owner key" aria-label="Owner key" value="${esc(CX.pw || (() => { try { return localStorage.getItem("hoops82.ok") || ""; } catch (e) { return ""; } })())}"></div>` : ""}
+    ${LB_REST ? `<div class="cxrow">${B("claim", "🔑 Make my name mine on this device")}</div><p class="cxn">Use it if this phone or browser can't post as you (it's new, or its data got cleared): your name and your board entries move here.</p>` : ""}
     <div id="cxPost">${cxPostHtml()}</div><p class="cxn" id="cxPostNote"></p>
     <h4>Season</h4>
     ${T("win", "🏆 Win every game", "season, playoffs, Head-to-head, Gauntlet, Survival")}
@@ -1960,6 +1961,7 @@ function cxPanel() {
     else if (a === "god") { Object.assign(CX.f, { oracle: 1, redraw: 1, gold: 1, win: 1, po: 1, hot: 1, stats: 1, diamond: 1 }); CX.boost = Math.max(CX.boost, 15); CX.rec = null; cxAfter("god"); return; }
     else if (a === "sneaky") { CX.rec = 82; CX.f.po = 1; CX.f.win = 0; cxAfter("sneaky"); return; }
     else if (a === "packs") givePack("legend", 10);
+    else if (a === "claim") { cxClaim(b); return; }
     else if (a === "post") { const r = runs.find(x => String(x.id) === b.dataset.id); if (r) cxPostRun(r, b); return; }
     else if (a === "rankup" || a === "legend") { const st = rankState(); st.rp = a === "legend" ? Math.max(st.rp, 1500) : st.rp + 100; st.best = Math.max(st.best, st.rp); saveCareer(); renderHeader(); renderRankBox(); }
     else if (a === "packs25") { givePack("normal", 25); givePack("gold", 25); givePack("legend", 25); }
@@ -1997,6 +1999,24 @@ function cxPostHtml() {
   const list = runs.filter(r => !r.dyn && r.players && r.players.length === 5 && r.mode !== "monthly" && r.mode !== "speed").sort((a, b) => lbScore(b) - lbScore(a)).slice(0, 8);
   if (!list.length) return `<p class="cxn">No seasons yet.</p>`;
   return list.map(r => `<div class="cxr"><span><b>${esc(recText(r))}</b>${r.hard ? " · 🔥 Hard" : ""}${r.cx ? " · 🛠 cheats" : ""} · ${fmtPts(lbScore(r))} pts<small>${r.players.map(p => esc(p.name)).join(", ")}</small></span><button class="cxb" data-a="post" data-id="${r.id}">📤 Post to ${r.hard ? "Hard Mode" : "Normal"}</button></div>`).join("");
+}
+async function cxClaim(btn) {
+  const note = $("cxPostNote"), pw = (($("cxPw") && $("cxPw").value) || "").trim(), name = boardName();
+  if (!pw) { note.textContent = "Type your owner key first."; return; }
+  if (!name) { note.textContent = "Pick your name for the board in the leaderboard section first."; return; }
+  btn.disabled = true; note.textContent = "Moving your name here…";
+  try {
+    try { localStorage.setItem("hoops82.ok", pw); } catch (e) {}
+    const res = await fetch(LB_API, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ action: "claim", token: lbToken, name, owner: pw }) });
+    const out = await res.json().catch(() => ({}));
+    if (!res.ok) throw { message: out.error || "Couldn't move it." };
+    lbMyId = out.id; lbMine.normal = lbMine.hard = null; career.posted = {}; saveCareer();
+    note.textContent = `✓ "${name}" is yours on this device${out.moved ? `, with ${out.moved} board entr${out.moved === 1 ? "y" : "ies"} moved here` : ""}. New seasons post as you now.`;
+    try { loadLbTabRest(lbCurrentTab, true); } catch (e) {}
+    setTimeout(() => autoPost(false), 500);
+    sfx("cheer");
+  } catch (e) { note.textContent = (e && e.message) || "Couldn't move it."; }
+  btn.disabled = false;
 }
 async function cxPostRun(r, btn) {
   const note = $("cxPostNote"), board = r.hard ? "hard" : "normal", where = board === "hard" ? "Hard Mode" : "Normal";
@@ -4383,9 +4403,13 @@ function updateLbSubmit() {
   // Your name is typed in on the website, and by invited editors Claude doesn't name
   $("lbName").hidden = !(LB_REST || lbWay === "guest");
   const mineB = lbMine[lbCurrentTab], better = !!(LB_REST && best && mineB && mineB.score >= lbScore(best));
+  const all = bestOf(runs.filter(r => !r.cx && !r.dyn && (lbCurrentTab === "hard" ? !!r.hard : !r.hard)));
+  const older = LB_REST && all && (!best || lbScore(all) > lbScore(best)) ? all : null;
   $("lbSubmitBtn").hidden = better;
-  if (better) $("lbSubmitNote").textContent = `Your entry on this board${mineB.rec ? ` (${mineB.rec})` : ""} is ${fmtPts(mineB.score)} pts, better than any season you can post right now. Beat it and the new one replaces it by itself.`;
-  else if (/better than any season/.test($("lbSubmitNote").textContent)) $("lbSubmitNote").textContent = "";
+  const why = older ? `Your best ${lbCurrentTab === "hard" ? "hard mode " : ""}season, ${recText(older)}, was played before the leaderboard started checking seasons, so it can't be sent from here (if it's on the board already, it stays there).${best ? ` The best season you can send is ${recText(best)}.` : " Seasons you play now can be sent."} ` : "";
+  if (better) $("lbSubmitNote").textContent = why + `Your entry on this board${mineB.rec ? ` (${mineB.rec})` : ""} is ${fmtPts(mineB.score)} pts, better than any season you can send right now. Beat it and the new one replaces it by itself.`;
+  else $("lbSubmitNote").textContent = why;
+
   if (canSubmit) {
     $("lbSubmitWrap").hidden = false;
     if (lbCurrentTab === "hard") {
@@ -4395,7 +4419,8 @@ function updateLbSubmit() {
       $("lbSubmitBtn").textContent = `Submit normal score — ${best.w}–${best.l || 0}${best.champ ? " 🏆" : ""} on ${best.date || "unknown date"} (${fmtPts(lbScore(best))} pts)`;
     }
   } else {
-    $("lbSubmitWrap").hidden = true;
+    $("lbSubmitWrap").hidden = !older;
+    $("lbSubmitBtn").hidden = true;
   }
   // Visitors who can't post always see how to get on the board: a score code to send the owner
   $("lbCodeWrap").hidden = !lbReadOnly;
