@@ -1,29 +1,31 @@
 #!/usr/bin/env node
 // PitchRank updater: fetches every newly finished match from Sofascore, adds it to pitchrank/data,
-// then rebuilds site/pitchrank/data.json for the website.
+// then rebuilds site/data.json (this season) and site/history/*.json (1999/00 onwards) for the website.
 //
 //   node pitchrank/update.mjs            update matches (and photos once a day)
 //   node pitchrank/update.mjs --images   also re-match photos and badges now
 //   node pitchrank/update.mjs --build    only rebuild data.json from what is stored
 //
 // Runs in GitHub Actions (.github/workflows/pitchrank-update.yml) every few hours, or on your own computer.
-import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { mapImages } from '../site/pitchrank/lib/images.mjs';
+import { mapImages } from '../site/lib/images.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const DATA = join(HERE, 'data');
-const OUT = join(HERE, '..', 'site', 'pitchrank', 'data.json');
+const OUT = join(HERE, '..', 'site', 'data.json');
 const args = new Set(process.argv.slice(2));
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const log = (...a) => console.log(new Date().toISOString().slice(11, 19), ...a);
 
 // Competitions: [sofascore id, L = league, C = domestic cup, E = continental]
-export const COMPS = [[17,'L'],[18,'L'],[8,'L'],[23,'L'],[35,'L'],[34,'L'],[37,'L'],[238,'L'],[38,'L'],[36,'L'],[52,'L'],[45,'L'],[215,'L'],[39,'L'],[20,'L'],[40,'L'],[185,'L'],[172,'L'],[170,'L'],[210,'L'],[202,'L'],[218,'L'],[152,'L'],[187,'L'],[211,'L'],[212,'L'],[247,'L'],[192,'L'],[41,'L'],[203,'L'],[11621,'L'],[955,'L'],[266,'L'],[242,'L'],[19,'C'],[21,'C'],[329,'C'],[328,'C'],[217,'C'],[335,'C'],[336,'C'],[330,'C'],[96,'C'],[332,'C'],[7,'E'],[679,'E'],[17015,'E'],[463,'E'],[13783,'E']];
-const AMERICAS = new Set([11621, 242, 13783]);
-const ASIA = new Set([955, 463]);
-const region = (id) => (AMERICAS.has(id) ? 'am' : ASIA.has(id) ? 'as' : 'eu');
+export const COMPS = [[17,'L'],[18,'L'],[8,'L'],[23,'L'],[35,'L'],[34,'L'],[37,'L'],[238,'L'],[38,'L'],[36,'L'],[52,'L'],[45,'L'],[215,'L'],[39,'L'],[20,'L'],[40,'L'],[185,'L'],[172,'L'],[170,'L'],[210,'L'],[202,'L'],[218,'L'],[152,'L'],[187,'L'],[211,'L'],[212,'L'],[247,'L'],[192,'L'],[41,'L'],[203,'L'],[11621,'L'],[955,'L'],[266,'L'],[242,'L'],[19,'C'],[21,'C'],[329,'C'],[328,'C'],[217,'C'],[335,'C'],[336,'C'],[330,'C'],[96,'C'],[332,'C'],[7,'E'],[679,'E'],[17015,'E'],[463,'E'],[13783,'E'],
+  [44,'L'],[54,'L'],[53,'L'],[182,'L'],[24,'L'],[25,'L'],[131,'L'],[239,'L'],[325,'L'],[155,'L'],[11539,'L'],[196,'L'],[410,'L'],[136,'L'],[649,'L'],[825,'L'],[971,'L'],[808,'L'],[937,'L'],[406,'L'],[278,'L'],[13363,'L'],[384,'E'],[480,'E'],[498,'E'],[668,'E']];
+const AMERICAS = new Set([11621, 242, 13783, 325, 155, 11539, 406, 278, 13363, 384, 480, 498]);
+const ASIA = new Set([955, 463, 196, 410, 136, 649, 825, 971, 668]);
+const AFRICA = new Set([808, 937]);
+const region = (id) => (AMERICAS.has(id) ? 'am' : ASIA.has(id) ? 'as' : AFRICA.has(id) ? 'af' : 'eu');
 
 const HEADERS = {
   'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36',
@@ -228,6 +230,76 @@ function build() {
   log(`data.json: ${pl.length} players, ${cur.length} matches, ${(JSON.stringify(data).length / 1e6).toFixed(1)} MB`);
 }
 
+// ---------- history (season totals since 1999/00) ----------
+const GOALP = { F: 5, M: 6, D: 7, G: 7 }, CSP = { G: 4, D: 4, M: 1, F: 0 };
+function buildHistory() {
+  const file = join(DATA, 'history.ndjson');
+  if (!existsSync(file)) return;
+  const FK = meta.histFields;
+  const fi = Object.fromEntries(FK.map((k, i) => [k, i + 5]));
+  const posOf = {};
+  for (const [pid, info] of Object.entries(meta.players)) if ('GDMF'.includes(info[1]) && info[1]) posOf[pid] = info[1];
+  for (const [pid, p] of Object.entries(meta.histPos || {})) if (!posOf[pid]) posOf[pid] = p;
+  const compType = new Map(meta.comps.map((c) => [c.id, c.type]));
+  for (const c of meta.histComps || []) if (!compType.has(c.id)) compType.set(c.id, c.type);
+  const names = {}, teams = {}, byYear = new Map(), all = new Map();
+  for (const line of readFileSync(file, 'utf8').split('\n')) {
+    if (!line) continue;
+    const cs = JSON.parse(line);
+    const type = compType.get(cs.t) || 'L';
+    const out = [];
+    for (const r of cs.rows) {
+      const v = (k) => { const x = r[fi[k]]; return x == null || x < 0 ? 0 : x; };
+      const has = (k) => r[fi[k]] != null && r[fi[k]] >= 0;
+      const apps = v('appearances'); if (!apps) continue;
+      const pid = r[0];
+      let pos = r[2] || posOf[pid] || '';
+      if (!'GDMF'.includes(pos) || !pos) pos = v('saves') > 0 ? 'G' : 'M';
+      names[pid] = r[1]; if (r[3]) teams[r[3]] = r[4];
+      const min = v('minutesPlayed');
+      const starts = has('matchesStarted') ? v('matchesStarted') : Math.min(apps, Math.round(min / 85));
+      const g = v('goals'), a = v('assists');
+      const pts = apps + starts + g * GOALP[pos] + a * 3 + v('cleanSheet') * CSP[pos] + Math.floor(v('clearances') / 3)
+        + Math.floor((v('tackles') + v('interceptions')) / 4) + Math.floor(v('shotsOnTarget') / 2) + Math.floor(v('saves') / 3)
+        + v('penaltySave') * 5 + (type === 'E' ? g + a : 0) - v('yellowCards') - 3 * v('redCards') - 2 * v('ownGoals')
+        - (pos === 'G' ? Math.floor(v('goalsConceded') / 2) : 0);
+      const rt = has('rating') ? v('rating') : 0;
+      out.push([pid, r[3] || 0, pos, apps, min, g, a, pts, v('cleanSheet'), rt, v('expectedGoals')]);
+      const A = all.get(pid) || { pts: 0, apps: 0, g: 0, a: 0, min: 0, seasons: new Set(), best: 0, bestY: '', pos, teams: new Map() };
+      A.pts += pts; A.apps += apps; A.g += g; A.a += a; A.min += min; A.seasons.add(cs.y); A.pos = pos;
+      A.teams.set(r[3], (A.teams.get(r[3]) || 0) + apps);
+      if (pts > A.best) { A.best = pts; A.bestY = cs.year; }
+      all.set(pid, A);
+    }
+    if (!out.length) continue;
+    if (!byYear.has(cs.y)) byYear.set(cs.y, []);
+    byYear.get(cs.y).push({ t: cs.t, label: cs.year, rows: out });
+  }
+  const dir = join(HERE, '..', 'site', 'history');
+  mkdirSync(dir, { recursive: true });
+  const years = [...byYear.keys()].sort((a, b) => b - a);
+  for (const y of years) {
+    const comps = byYear.get(y);
+    const pids = new Set(); const tids = new Set();
+    for (const c of comps) for (const r of c.rows) { pids.add(r[0]); tids.add(r[1]); }
+    const n = {}; for (const pid of pids) n[pid] = names[pid];
+    const tm = {}; for (const tid of tids) if (teams[tid]) tm[tid] = teams[tid];
+    writeFileSync(join(dir, `${y}.json`), JSON.stringify({ y, comps, names: n, teams: tm }));
+  }
+  const top = [...all.entries()].filter(([, A]) => A.pts >= 40).sort((a, b) => b[1].pts - a[1].pts);
+  const tm = {};
+  const rows = top.map(([pid, A]) => {
+    const mainTeam = [...A.teams.entries()].sort((a, b) => b[1] - a[1])[0][0];
+    if (teams[mainTeam]) tm[mainTeam] = teams[mainTeam];
+    const ys = [...A.seasons].sort();
+    return [+pid, names[pid], A.pos, A.pts, A.apps, A.g, A.a, A.min, ys.length, ys[0], ys[ys.length - 1], A.best, A.bestY, mainTeam];
+  });
+  const comps = {}; for (const c of meta.histComps || []) comps[c.id] = [c.name, c.country, c.alpha2 || '', c.type];
+  for (const c of meta.comps) comps[c.id] ||= [c.name, c.country, c.alpha2 || '', c.type];
+  writeFileSync(join(dir, 'index.json'), JSON.stringify({ years, comps, teams: tm, all: rows }));
+  log(`history: ${years.length} seasons, ${rows.length} players in the all-time table`);
+}
+
 function save() {
   writeFileSync(join(DATA, 'meta.json'), JSON.stringify(meta));
   matches.sort((a, b) => a.ts - b.ts || a.id - b.id);
@@ -240,3 +312,4 @@ if (!args.has('--build')) {
   save();
 }
 build();
+buildHistory();

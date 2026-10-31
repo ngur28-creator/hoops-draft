@@ -1,11 +1,3 @@
-# 82-0 Hoops Draft: a static game page plus one leaderboard function.
+# PitchRank: a static site. Everything in site/ is served as is.
 [build]
   publish = "site"
-  # Runs the leaderboard tests on every deploy; if they fail, the live site stays on the last good version
-  command = "npm test"
-
-[build.environment]
-  NODE_VERSION = "22"
-
-[functions]
-  node_bundler = "esbuild"
