@@ -1,0 +1,31 @@
+# Refreshes PitchRank's stats after games: fetches newly finished matches and rebuilds site/pitchrank/data.json.
+# Each data commit redeploys the site.
+name: PitchRank stats update
+on:
+  schedule:
+    - cron: '17 */3 * * *'   # every 3 hours
+  workflow_dispatch: {}
+permissions:
+  contents: write
+concurrency:
+  group: pitchrank-update
+  cancel-in-progress: false
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Fetch new matches and rebuild data
+        run: node pitchrank/update.mjs
+      - name: Commit if anything changed
+        run: |
+          git config user.name "pitchrank-bot"
+          git config user.email "pitchrank-bot@users.noreply.github.com"
+          git add pitchrank/data site/pitchrank/data.json
+          if git diff --cached --quiet; then echo "No new matches"; exit 0; fi
+          git commit -m "PitchRank: stats update $(date -u +'%Y-%m-%d %H:%M UTC')"
+          git push
