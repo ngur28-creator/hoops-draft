@@ -1,3 +1,9 @@
-# PitchRank: a static site. Everything in site/ is served as is.
+# PitchRank: a static site. Everything in site/ is served as is; there is nothing to build.
 [build]
   publish = "site"
+  command = "echo 'PitchRank: static site, nothing to build'"
+
+[[headers]]
+  for = "/*.json"
+  [headers.values]
+    Cache-Control = "public, max-age=300"
