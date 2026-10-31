@@ -7,4 +7,7 @@ Soccer player points and leaderboards from real match stats, live at https://cla
 - `pitchrank/` holds the collected data and the updater. See `pitchrank/README.md`.
 - `.github/workflows/pitchrank-update.yml` refreshes the stats every 3 hours.
 
-Run it locally: `cd site && python3 -m http.server 8000`, then open http://localhost:8000.
+Run it on your computer: double-click `start-mac.command` (Mac) or `start-windows.bat` (Windows). Both need Python 3 and open http://localhost:8000.
+Or by hand: `cd site && python3 -m http.server 8000`.
+
+Update the stats by hand: `node pitchrank/update.mjs` (Node 22).
