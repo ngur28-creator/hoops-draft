@@ -1,3 +1,4 @@
+<meta charset="utf-8">
 <title>PitchRank</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -392,6 +393,7 @@ td.rank{font-family:var(--display);font-weight:700;color:var(--muted);width:44px
 .flg{position:relative;display:inline-grid;place-items:center;width:22px;height:15px;border-radius:3px;overflow:hidden;background:var(--sunk);font-size:8px;font-weight:800;color:var(--muted);flex:none;vertical-align:-2px;box-shadow:0 0 0 1px rgba(255,255,255,.08)}
 .flg img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .flg.lg{width:30px;height:20px}
+.lbig .flg{width:48px;height:32px;border-radius:5px}.lgr .flg{width:26px;height:18px}
 .llogo{position:relative;display:inline-grid;place-items:center;width:28px;height:28px;flex:none;border-radius:8px;background:rgba(255,255,255,.06)}
 .llogo img{position:absolute;inset:3px;width:calc(100% - 6px);height:calc(100% - 6px);object-fit:contain}
 .llogo .flg{width:20px;height:14px}
@@ -731,7 +733,7 @@ function compIcon(c){const sp=SPRITE&&SPRITE.l&&c.fm&&SPRITE.l[c.fm];if(sp)retur
   if(c.fm&&IMGOK)return`<span class="llogo" aria-hidden="true">${flagHTML(c.alpha2,c.country)}<img src="https://images.fotmob.com/image_resources/logo/leaguelogo/dark/${c.fm}.png" alt="" loading="lazy" onload="this.previousElementSibling.style.visibility='hidden'" onerror="this.remove()"></span>`;
   return`<span class="llogo" aria-hidden="true">${flagHTML(c.alpha2,c.country)}</span>`}
 let SPRITE=null;const IMGOK=!(window.claude&&window.claude.use);
-function sprite(sp,kind){const meta=SPRITE.meta[kind];const [sheet,idx]=sp;const col=idx%meta.cols,row=Math.floor(idx/meta.cols);const sz=meta.size;
+function sprite(sp,kind){const [sheet,idx]=sp;const meta=SPRITE.meta[kind][sheet]||SPRITE.meta[kind];const col=idx%meta.cols,row=Math.floor(idx/meta.cols);const sz=meta.size;
   return`<i class="spr" style="background-image:url(sprites/${kind}${sheet}.webp);background-size:${meta.cols*100}% ${meta.rows*100}%;background-position:${meta.cols>1?col/(meta.cols-1)*100:0}% ${meta.rows>1?row/(meta.rows-1)*100:0}%"></i>`}
 function flagOf(a2,country){
   const sp={England:'🏴󠁧󠁢󠁥󠁮󠁧󠁿',Scotland:'🏴󠁧󠁢󠁳󠁣󠁴󠁿',Wales:'🏴󠁧󠁢󠁷󠁬󠁳󠁿',Europe:'🇪🇺','North & Central America':'🌎',Asia:'🌏',World:'🌍'};
@@ -850,7 +852,7 @@ const VIEWS=['home','table','stats','fantasy','matches','clubs','history','xi','
 const NAV={home:'nav_home',stats:'nav_stats',table:'nav_table',fantasy:'nav_fantasy',matches:'nav_matches',clubs:'nav_clubs',history:'nav_history',xi:'nav_xi',compare:'nav_compare',ask:'nav_ask',rules:'nav_rules'};
 function chrome(){
   $('#tabs').innerHTML=VIEWS.map(v=>`<button data-go="${v}" ${S.view===v?'aria-current="page"':''}>${esc(t(NAV[v]))}</button>`).join('');
-  $('#q').placeholder=t('search_ph');$('#langFlag').textContent=LANG?LANG.flag:'🌐';$('#langName').textContent=LANG?LANG.native:'Language';
+  $('#q').placeholder=t('search_ph');$('#langFlag').innerHTML=LANG?lflag(LANG):'🌐';$('#langName').textContent=LANG?LANG.native:'Language';
   $('#fabTxt').textContent=t('nav_ask');$('#fab').hidden=!D||S.view==='ask';
   if(D){const d=updatedStr();$('#foot').innerHTML=`<div>${esc(t('foot1',{d}))}</div><div>${esc(t('foot2',{p:fmtN(PL.length),n:fmtN(EV.length),m:COMPS.length}))}</div>`}
   document.documentElement.lang=LANG?LANG.code:'en';document.documentElement.dir=LANG&&RTL.has(LANG.code)?'rtl':'ltr'}
@@ -1287,15 +1289,19 @@ async function ask(q){if(S.view!=='ask')go('ask');if(ctlChat){ctlChat.abort();ct
   done()}
 
 /* =============== language =============== */
-function langSheet(first){const big=(code,word)=>{const L=LANGS.find(l=>l.code===code);return`<button class="lbig" data-lang="${code}"><span class="f">${L.flag}</span><span class="w">${word}</span><span class="muted">${esc(L.native)}</span></button>`};
-  const grid=q=>{const n=norm(q||'');return LANGS.filter(l=>!['en-GB','en-US'].includes(l.code)&&(!n||norm(l.native).includes(n)||norm(l.en).includes(n))).map(l=>`<button data-lang="${l.code}"><span class="f">${l.flag}</span><span style="min-width:0"><span class="nn">${esc(l.native)}</span><span class="e">${esc(l.en)}</span></span></button>`).join('')};
+function lflag(l){const cps=[...(l.flag||'')].map(c=>c.codePointAt(0));let c='';
+  if(cps.length===2&&cps.every(x=>x>=0x1F1E6&&x<=0x1F1FF))c=cps.map(x=>String.fromCharCode(x-0x1F1E6+97)).join('');
+  else if(cps[0]===0x1F3F4&&cps.length>3){const tg=cps.slice(1,-1).map(x=>String.fromCharCode(x-0xE0000)).join('');c=tg.slice(0,2)+'-'+tg.slice(2)}
+  return c?flagHTML(c,''):`<span class="flg" aria-hidden="true">${l.flag||'🌐'}</span>`}
+function langSheet(first){const big=(code,word)=>{const L=LANGS.find(l=>l.code===code);return`<button class="lbig" data-lang="${code}"><span class="f">${lflag(L)}</span><span class="w">${word}</span><span class="muted">${esc(L.native)}</span></button>`};
+  const grid=q=>{const n=norm(q||'');return LANGS.filter(l=>!['en-GB','en-US'].includes(l.code)&&(!n||norm(l.native).includes(n)||norm(l.en).includes(n))).map(l=>`<button data-lang="${l.code}"><span class="f">${lflag(l)}</span><span style="min-width:0"><span class="nn">${esc(l.native)}</span><span class="e">${esc(l.en)}</span></span></button>`).join('')};
   sheet(`<div class="lang"><div class="sec" style="gap:6px;padding-right:44px"><h2>${esc(t('lang_title'))}</h2><span class="muted">${esc(t('lang_sub'))}</span></div><div class="lhero">${big('en-GB','Football')}${big('en-US','Soccer')}</div><div class="mini"><input id="lq" placeholder="${esc(t('lang_search',{n:LANGS.length}))}" autocomplete="off"></div><div class="lgr" id="lg">${grid('')}</div></div>`,first);
   $('#lq').oninput=e=>{$('#lg').innerHTML=grid(e.target.value)}}
 async function setLang(code){const L=LANGS.find(l=>l.code===code)||LANGS[0];closeSheet();
   if(BUILTIN[code]){LANG=L;DICT=BUILTIN[code];ls.set('pr2_lang',code);render();return}
   let cached=null;try{cached=JSON.parse(ls.get('pr3_dict_'+code)||'null')}catch(e){}
   if(cached){LANG=L;DICT=cached;ls.set('pr2_lang',code);render();return}
-  const ov=document.createElement('div');ov.className='overlay';ov.innerHTML=`<div class="box"><div class="spin"></div><b>${esc(t('translating'))}</b><span class="muted">${L.flag} ${esc(L.native)}</span></div>`;document.body.appendChild(ov);
+  const ov=document.createElement('div');ov.className='overlay';ov.innerHTML=`<div class="box"><div class="spin"></div><b>${esc(t('translating'))}</b><span class="muted">${lflag(L)} ${esc(L.native)}</span></div>`;document.body.appendChild(ov);
   try{let d;try{d=await translateDict(code)}catch(e1){const sm=await claudeSample();if(!sm)throw e1;const out=await sm.json(`Translate the VALUES of this JSON object of website interface strings from English into ${L.en} (${L.native}). Keep every key. Keep placeholders such as {n}, {m}, {a}, {b}, {d}, {p}, {pos}, {name}, {club}, {budget} and {sport} exactly as written. The key "sport" is the everyday word for association football. Reply with only the JSON object.\n\n`+JSON.stringify(EN),{modelTier:'quick',cache:{gcTime:86400000}});d={};for(const k in EN)d[k]=typeof out[k]==='string'&&out[k].trim()?out[k]:EN[k]}ls.set('pr3_dict_'+code,JSON.stringify(d));LANG=L;DICT=d;ls.set('pr2_lang',code)}
   catch(e){toast(t('lang_fail'))}
   ov.remove();render()}

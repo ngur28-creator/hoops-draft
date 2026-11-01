@@ -284,7 +284,8 @@ function buildWorld() {
   const FK = W.FK, mi = FK.indexOf('minutesPlayed');
   const comps = [], cidx = new Map();
   const NATIONAL = /world cup|nations league|euro 20|european championship|copa am[eé]rica|africa cup|asian cup|gold cup|qualif|friendl|olympic/i;
-  const tourn = Object.values(W.tourn).filter((t) => t.rows && t.rows.length && String(t.country).toLowerCase() !== 'world' && !NATIONAL.test(t.name)).sort((a, b) => (b.users || 0) - (a.users || 0));
+  const stale = (season) => { const ys = String(season || '').match(/\b(19|20)\d\d\b/g); return !!ys && Math.max(...ys.map(Number)) < new Date().getUTCFullYear() - 1; };
+  const tourn = Object.values(W.tourn).filter((t) => t.rows && t.rows.length && String(t.country).toLowerCase() !== 'world' && !NATIONAL.test(t.name) && !/^euro$/i.test(t.name) && !stale(t.season)).sort((a, b) => (b.users || 0) - (a.users || 0));
   for (const t of tourn) {
     const type = CUP_IDS.has(t.id) ? 'C' : CONT_IDS.has(t.id) ? 'E' : 'L';
     cidx.set(t.id, comps.length);
