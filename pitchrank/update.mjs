@@ -226,8 +226,100 @@ function build() {
     comps: meta.comps.map((c) => [c.id, c.type, c.name, c.country, c.alpha2 || '', c.season, region(c.id)]),
     teams, ev, pl, ap, img,
   };
-  writeFileSync(OUT, JSON.stringify(data));
+  // split players across two files so each stays well under 10 MB
+  const half = Math.ceil(pl.length / 2);
+  writeFileSync(OUT, JSON.stringify({ ...data, pl: pl.slice(0, half), ap: ap.slice(0, half), parts: 2 }));
+  writeFileSync(OUT.replace('data.json', 'data-2.json'), JSON.stringify({ pl: pl.slice(half), ap: ap.slice(half) }));
   log(`data.json: ${pl.length} players, ${cur.length} matches, ${(JSON.stringify(data).length / 1e6).toFixed(1)} MB`);
+}
+
+
+// ---------- world season stats: every player in every crawled competition ----------
+const AM2 = new Set('us ca mx gt hn sv ni cr pa cu do ht jm tt bb bs bz ag dm gd kn lc vc pr aw cw bm gy sr gf br ar uy py cl bo pe ec co ve gp mq'.split(' '));
+const AF2 = new Set('dz eg ly ma tn sd ss et er dj so ke ug tz rw bi cd cg ga gq cm cf td ne ng bj tg gh ci bf ml sn gm gw gn sl lr mr cv st ao zm zw mw mz na bw za ls sz mg mu sc km re'.split(' '));
+const AS2 = new Set('sa ae qa bh kw om ye iq ir jo lb sy ps af pk in bd lk np bt mv mm th la kh vn my sg id ph bn tl cn hk mo tw kr kp jp mn uz kg tj tm'.split(' '));
+const OC2 = new Set('au nz fj pg sb vu nc pf ws to'.split(' '));
+const REGION_NAME = { europe: 'eu', 'south america': 'am', 'north & central america': 'am', 'north america': 'am', asia: 'as', africa: 'af', oceania: 'oc', world: 'eu' };
+const COUNTRY2 = existsSync(join(DATA, 'countries.json')) ? JSON.parse(readFileSync(join(DATA, 'countries.json'), 'utf8')) : {};
+function country2(name) { if (!name) return ''; const k = String(name).toLowerCase(); return COUNTRY2[k] || ''; }
+function regionOf(country, a2) {
+  const n = String(country || '').toLowerCase(); if (REGION_NAME[n]) return REGION_NAME[n];
+  const c = (country2(country) || String(a2 || '')).toLowerCase();
+  return AM2.has(c) ? 'am' : AF2.has(c) ? 'af' : AS2.has(c) ? 'as' : OC2.has(c) ? 'oc' : 'eu';
+}
+const CUP_IDS = new Set([19, 21, 329, 328, 217, 335, 336, 330, 96, 332]);
+const CONT_IDS = new Set([7, 679, 17015, 463, 13783, 384, 480, 498, 668]);
+async function worldUpdate() {
+  const file = join(DATA, 'world.json');
+  if (!existsSync(file)) return;
+  const W = JSON.parse(readFileSync(file, 'utf8'));
+  const last = W.at ? Date.parse(W.at) : 0;
+  if (!args.has('--world') && Date.now() - last < 20 * 3600 * 1000) return;
+  const F = W.FK.join(',');
+  let n = 0;
+  await pool(W.plan, 3, async (t) => {
+    const prev = W.tourn[t.id];
+    if (!prev || !prev.seasonId) return;
+    const rows = [];
+    for (let off = 0; off < 8000; off += 100) {
+      const j = await get(`unique-tournament/${t.id}/season/${prev.seasonId}/statistics?limit=100&offset=${off}&order=-minutesPlayed&accumulation=total&fields=${F}`);
+      if (!j || !j.results || !j.results.length) break;
+      for (const r of j.results) {
+        if (!r.player) continue; const p = r.player, tm = r.team || {};
+        if (tm.id) prev.teams[tm.id] = tm.name;
+        rows.push([p.id, p.name, p.position || '', tm.id || 0, ...W.FK.map((k) => { const v = r[k]; return v == null ? -1 : (['rating', 'expectedGoals', 'expectedAssists', 'goalsPrevented'].includes(k) ? Math.round(v * 100) : v); })]);
+      }
+      if (off / 100 + 1 >= (j.pages || 1)) break;
+    }
+    if (rows.length) { prev.rows = rows; n++; }
+  });
+  W.at = new Date().toISOString();
+  writeFileSync(file, JSON.stringify(W));
+  log(`world stats refreshed for ${n} competitions`);
+}
+function buildWorld() {
+  const file = join(DATA, 'world.json');
+  if (!existsSync(file)) return;
+  const W = JSON.parse(readFileSync(file, 'utf8'));
+  const FK = W.FK, mi = FK.indexOf('minutesPlayed');
+  const comps = [], cidx = new Map();
+  const NATIONAL = /world cup|nations league|euro 20|european championship|copa am[eé]rica|africa cup|asian cup|gold cup|qualif|friendl|olympic/i;
+  const tourn = Object.values(W.tourn).filter((t) => t.rows && t.rows.length && String(t.country).toLowerCase() !== 'world' && !NATIONAL.test(t.name)).sort((a, b) => (b.users || 0) - (a.users || 0));
+  for (const t of tourn) {
+    const type = CUP_IDS.has(t.id) ? 'C' : CONT_IDS.has(t.id) ? 'E' : 'L';
+    cidx.set(t.id, comps.length);
+    comps.push([t.id, t.name, t.country, t.alpha2 || '', t.season || '', regionOf(t.country, t.alpha2), t.users || 0, (W.fmLeagues || {})[t.id] || 0, type]);
+  }
+  const teamLeague = {}, teams = {}, rows = [], used = new Set();
+  for (const t of tourn) {
+    const ci = cidx.get(t.id);
+    for (const r of t.rows) {
+      if (!(r[4 + mi] > 0)) continue;
+      const vals = r.slice(4).map((x) => (x < 0 ? '' : Math.trunc(x).toString(36)));
+      while (vals.length && vals[vals.length - 1] === '') vals.pop();
+      rows.push(`${r[0]}|${String(r[1]).replace(/\|/g, ' ')}|${r[2]}|${r[3]}|${ci}|${vals.join(',')}`);
+      used.add(r[0]);
+      if (r[3]) {
+        const c = comps[ci];
+        if (c[8] === 'L' && (teamLeague[r[3]] == null || comps[teamLeague[r[3]]][6] < c[6])) teamLeague[r[3]] = ci;
+        if (!teams[r[3]]) teams[r[3]] = [t.teams[r[3]] || meta.teams[r[3]] || '?', ...((t.colors || {})[r[3]] || meta.colors[r[3]] || ['', ''])];
+      }
+    }
+  }
+  for (const tid in teams) { teams[tid][3] = (W.fm.t[tid] || meta.images.t[tid] || 0); teams[tid][4] = teamLeague[tid] ?? null; }
+  const info = {};
+  for (const pid of used) {
+    const f = W.fm.p[pid];
+    if (!f) { const fm = meta.images && meta.images.p[pid]; if (fm) info[pid] = [fm, 0, '', 0, 0, '']; continue; }
+    const [fm, dob, ccode, h, val, pd, cname] = f;
+    const d = dob ? +dob.replace(/-/g, '') : 0;
+    info[pid] = [fm, d, country2(cname) || '', h || 0, val || 0, pd || ''];
+  }
+  const n = 3, size = Math.ceil(rows.length / n);
+  const out = { at: W.at, F: FK, comps, teams, info, rows: rows.slice(0, size), parts: n };
+  writeFileSync(join(HERE, '..', 'site', 'world.json'), JSON.stringify(out));
+  for (let k = 1; k < n; k++) writeFileSync(join(HERE, '..', 'site', `world-${k + 1}.json`), JSON.stringify({ rows: rows.slice(k * size, (k + 1) * size) }));
+  log(`world.json: ${rows.length} player rows in ${comps.length} competitions, ${(JSON.stringify(out).length / 1e6).toFixed(1)} MB`);
 }
 
 // ---------- history (season totals since 1999/00) ----------
@@ -309,7 +401,9 @@ function save() {
 if (!args.has('--build')) {
   await update();
   await images();
+  await worldUpdate();
   save();
 }
 build();
 buildHistory();
+buildWorld();
